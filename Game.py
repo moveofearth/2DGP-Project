@@ -1,5 +1,3 @@
-import pico2d
-
 import pch
 
 class Game:
