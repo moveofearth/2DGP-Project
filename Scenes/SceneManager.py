@@ -1,4 +1,4 @@
-import TitleScene
+from Scenes import TitleScene
 
 
 class SceneManager:

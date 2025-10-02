@@ -1,6 +1,6 @@
 import pico2d
 import Config
-import SceneManager
+from Scenes import SceneManager
 
 
 class Game:
