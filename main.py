@@ -1,10 +1,14 @@
 import Game
 
-def main():
-    game = Game.Game()
-    game.initialize()
+game = Game.Game()
+game.initialize()
 
-    game.run()
+def main():
+
+
+    while game.running:
+        game.run()
+
 
 
 if __name__ == "__main__":
