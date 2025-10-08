@@ -6,7 +6,7 @@ class TitleScene:
     def __init__(self):
         self.image = None
     def initialize(self):
-        path = pathlib.Path.cwd() / 'Resources' / 'Scene' / 'temptitle.png'
+        path = pathlib.Path.cwd() / 'Resources' / 'Scene' / 'title.png'
         self.image = pico2d.load_image(str(path))
     def update(self, deltaTime):
         pass
