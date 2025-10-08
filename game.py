@@ -39,6 +39,13 @@ class Game:
             if event.type == pico2d.SDL_QUIT:
                 self.running = False
 
+        # 타이틀 씬에서는 스페이스바만 처리
+        if self.sceneManager.is_title_scene():
+            if self.ioManager.handleSpaceInput(events):
+                self.sceneManager.change_to_play_scene()
+            return
+
+        # 플레이 씬에서만 플레이어 입력 처리
         # 이동과 공격 입력을 분리해서 처리
         player1_move_input = self.ioManager.handleMoveInputPlayer1(events)
         player1_atk_input = self.ioManager.handleATKInputPlayer1(events)
@@ -67,7 +74,11 @@ class Game:
     def render(self):
         pico2d.clear_canvas()
         self.sceneManager.render()
-        self.spriteManager.render()
+
+        # 플레이 씬에서만 플레이어 렌더링
+        if not self.sceneManager.is_title_scene():
+            self.spriteManager.render()
+
         pico2d.update_canvas()
 
     def run(self):
