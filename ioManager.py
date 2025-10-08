@@ -8,6 +8,14 @@ class IOManager:
         self.player1_combo_input = False
         self.player2_combo_input = False
 
+    def handleSpaceInput(self, events):
+        """스페이스바 입력 처리"""
+        for event in events:
+            if event.type == pico2d.SDL_KEYDOWN:
+                if event.key == pico2d.SDLK_SPACE:
+                    return True
+        return False
+
     def handleCharacterChangePlayer1(self, events):
         """Player1의 캐릭터 변경 입력 처리"""
         for event in events:
