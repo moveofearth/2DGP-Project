@@ -1,14 +1,35 @@
 import pico2d
+from Scenes import titleScene
+from Scenes import playScene
 
 
 class SceneManager:
     def __init__(self):
-        self.background = None
+        self.current_scene = 'title'  # 'title' 또는 'play'
+        self.title_scene = titleScene.TitleScene()
+        self.play_scene = playScene.PlayScene()
 
     def initialize(self):
-        # 기본 배경 생성 (단색)
-        pass
+        self.title_scene.initialize()
+        self.play_scene.initialize()
+
+    def change_to_play_scene(self):
+        """플레이 씬으로 전환"""
+        self.current_scene = 'play'
+
+    def is_title_scene(self):
+        """현재 타이틀 씬인지 확인"""
+        return self.current_scene == 'title'
+
+    def update(self, deltaTime):
+        if self.current_scene == 'title':
+            self.title_scene.update(deltaTime)
+        elif self.current_scene == 'play':
+            self.play_scene.update(deltaTime)
 
     def render(self):
-        # 기본 배경 렌더링 (회색)
         pico2d.clear_canvas()
+        if self.current_scene == 'title':
+            self.title_scene.render()
+        elif self.current_scene == 'play':
+            self.play_scene.render()
