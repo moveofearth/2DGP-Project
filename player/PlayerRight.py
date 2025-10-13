@@ -10,7 +10,7 @@ class PlayerRight(Player):
 
     def update(self, deltaTime, input_dir=None):
         if input_dir == 'left':
-            self.x -= 5
+            self.x -= 3
             self.state = 'Walk'  # 왼쪽으로 갈 때 Walk
         elif input_dir == 'right':
             self.x += 1

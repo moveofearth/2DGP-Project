@@ -16,7 +16,7 @@ class PlayerLeft(Player):
             self.x -= 1
             self.state = 'BackWalk'  # 왼쪽으로 갈 때 BackWalk
         elif input_dir == 'right':
-            self.x += 5
+            self.x += 3
             self.state = 'Walk'  # 오른쪽으로 갈 때 Walk
         else:
             self.state = 'Idle'  # 입력이 없으면 Idle 상태
