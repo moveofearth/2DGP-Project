@@ -9,7 +9,14 @@ class PlayerRight(Player):
         self.dir = 1  # 왼쪽을 바라보도록 1로 설정
 
     def update(self, deltaTime, input_dir=None):
-        super().update(deltaTime, input_dir)
+        if input_dir == 'left':
+            self.x -= 5
+            self.state = 'Walk'  # 왼쪽으로 갈 때 Walk
+        elif input_dir == 'right':
+            self.x += 1
+            self.state = 'BackWalk'  # 오른쪽으로 갈 때 BackWalk
+        else:
+            self.state = 'Idle'  # 입력이 없으면 Idle 상태
 
     def render(self):
         pass

@@ -7,7 +7,7 @@ class Player:
         self.x, self.y = x, y
 
         self.dir = -1  # 항상 오른쪽을 바라보도록 -1로 고정
-        self.state = 'Idle'  # Idle, Walk
+        self.state = 'Idle'  # Idle, Walk, BackWalk
         # self.character = Character()  # SpriteManager 사용으로 주석 처리
 
     def initialize(self):
@@ -17,12 +17,10 @@ class Player:
     def update(self, deltaTime, input_dir=None):  # 입력 방향 매개변수 추가
         if input_dir == 'left':
             self.x -= 5
-            self.state = 'Walk'
-            # self.dir = 1  # 방향 변경 제거
+            self.state = 'Walk'  # 기본은 Walk, 각 플레이어에서 오버라이드
         elif input_dir == 'right':
             self.x += 5
-            self.state = 'Walk'
-            # self.dir = -1  # 방향 변경 제거
+            self.state = 'Walk'  # 기본은 Walk, 각 플레이어에서 오버라이드
         else:
             self.state = 'Idle'  # 입력이 없으면 Idle 상태
 
