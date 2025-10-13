@@ -13,8 +13,7 @@ class Priest(Character):
 
 
     def initialize(self):
-        path = pathlib.Path.cwd() / 'resources' / 'character' / 'priest' / '0000.png'
-        self.image = pico2d.load_image(str(path))
+        pass
 
 
     def update(self, deltaTime):
