@@ -3,9 +3,8 @@
 
 class Player:
 
-    def __init__(self):
-
-        self.x, self.y = 400, 300
+    def __init__(self, x=400, y=300):  # 초기 위치를 매개변수로 받도록 수정
+        self.x, self.y = x, y
 
         self.dir = -1  # 항상 오른쪽을 바라보도록 -1로 고정
         self.state = 'Idle'  # Idle, Walk

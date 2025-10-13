@@ -1,10 +1,11 @@
 import pico2d
 import Config
 
-from scenes.SceneManager import SceneManager  # import 수정
-from player.PlayerLeft import PlayerLeft  # import 수정
-from IOManager import IOManager  # IOManager 연결 추가
-from SpriteManager import SpriteManager  # SpriteManager 추가
+from scenes.SceneManager import SceneManager
+from player.PlayerLeft import PlayerLeft
+from player.PlayerRight import PlayerRight  # PlayerRight 추가
+from IOManager import IOManager
+from SpriteManager import SpriteManager
 
 
 class Game:
@@ -13,38 +14,47 @@ class Game:
         self.running = True
         self.sceneManager = SceneManager()
         self.playerLeft = PlayerLeft()
-        self.ioManager = IOManager()  # IOManager 초기화 추가
-        self.spriteManager = SpriteManager()  # SpriteManager 추가
+        self.playerRight = PlayerRight()  # PlayerRight 추가
+        self.ioManager = IOManager()
+        self.spriteManager = SpriteManager()
         pass
 
     def initialize(self):
         pico2d.open_canvas(Config.windowWidth, Config.windowHeight)
         self.sceneManager.initialize()
         self.playerLeft.initialize()
-        self.spriteManager.load_sprites()  # 스프라이트 로드
+        self.playerRight.initialize()  # PlayerRight 초기화
+        self.spriteManager.load_sprites()
         pass
 
     def update(self, deltaTime):
-        events = pico2d.get_events()  # 프레임마다 이벤트 가져오기 (IOManager에서 이동)
-        player1_input = self.ioManager.handleInputPlayer1(events)  # 이벤트 전달
-        self.playerLeft.update(deltaTime, player1_input)  # 입력을 Player에 연결
+        events = pico2d.get_events()
+        player1_input = self.ioManager.handleInputPlayer1(events)
+        player2_input = self.ioManager.handleInputPlayer2(events)  # 플레이어2 입력 처리
+
+        self.playerLeft.update(deltaTime, player1_input)
+        self.playerRight.update(deltaTime, player2_input)  # 플레이어2 업데이트
 
         # SpriteManager에 플레이어 상태 전달
         self.spriteManager.update_player1_state(self.playerLeft.state, deltaTime)
         self.spriteManager.update_player1_position(self.playerLeft.x, self.playerLeft.y)
         self.spriteManager.update_player1_direction(self.playerLeft.dir)
+
+        # 플레이어2 상태 전달
+        self.spriteManager.update_player2_state(self.playerRight.state, deltaTime)
+        self.spriteManager.update_player2_position(self.playerRight.x, self.playerRight.y)
+        self.spriteManager.update_player2_direction(self.playerRight.dir)
         pass
 
     def render(self):
         pico2d.clear_canvas()
         self.sceneManager.render()
-        # self.playerLeft.render()  # 기존 플레이어 렌더링 대신 SpriteManager 사용
-        self.spriteManager.render()  # SpriteManager로 렌더링
+        self.spriteManager.render()
         pico2d.update_canvas()
         pass
 
     def run(self):
-        self.update(deltaTime=0.01)  # deltaTime 조정 (delay와 맞춤)
+        self.update(deltaTime=0.01)
         self.render()
         pico2d.delay(0.01)
         pass
