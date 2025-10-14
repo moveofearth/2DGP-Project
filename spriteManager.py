@@ -3,8 +3,7 @@ import pathlib
 
 class SpriteManager:
     def __init__(self):
-        self.player1_sprite = None
-        self.player2_sprite = None
+        self.shared_sprites = None  # 공유 스프라이트 딕셔너리
         self.player1_state = 'Idle'
         self.player2_state = 'Idle'
         self.player1_frame = 0
@@ -29,27 +28,15 @@ class SpriteManager:
     def load_sprites(self):
         base_path = pathlib.Path.cwd() / 'Resources' / 'Character'
 
-        self.player1_sprite = {
-            # temp image load
+        # 공유 스프라이트 딕셔너리 - 한 번만 로딩
+        self.shared_sprites = {
             'Idle': [pico2d.load_image(str(base_path / 'priest' / 'idle' / f'{i}.png')) for i in range(4)],
             'Walk': [pico2d.load_image(str(base_path / 'priest' / 'walk' / f'{i}.png')) for i in range(8)],
-            'BackWalk': [pico2d.load_image(str(base_path / 'priest' / 'BackWalk' / f'{i}.png')) for i in range(8)], # BackWalk 추가
-            'fastMiddleATK' : [pico2d.load_image(str(base_path / 'priest' / 'fastMiddleATK' / f'{i}.png')) for i in range(6)],
-            'strongMiddleATK' : [pico2d.load_image(str(base_path / 'priest' / 'strongMiddleATK' / f'{i}.png')) for i in range(6)],
-            'strongMiddleATK2' : [pico2d.load_image(str(base_path / 'priest' / 'strongMiddleATK' / f'{i}.png')) for i in range(6, 14)],
-            'strongUpperATK' : [pico2d.load_image(str(base_path / 'priest' / 'strongUpperATK' / f'{i}.png')) for i in range(9)],
-            'strongLowerATK' : [pico2d.load_image(str(base_path / 'priest' / 'strongLowerATK' / f'{i}.png')) for i in range(9)]
-        }
-
-        # 플레이어2도 같은 스프라이트 사용 (추후 다른 캐릭터로 변경 가능)
-        self.player2_sprite = {
-            'Idle': [pico2d.load_image(str(base_path / 'priest' / 'idle' / f'{i}.png')) for i in range(4)],
-            'Walk': [pico2d.load_image(str(base_path / 'priest' / 'walk' / f'{i}.png')) for i in range(8)],
-            'BackWalk': [pico2d.load_image(str(base_path / 'priest' / 'BackWalk' / f'{i}.png')) for i in range(8)],  # BackWalk 추가
+            'BackWalk': [pico2d.load_image(str(base_path / 'priest' / 'BackWalk' / f'{i}.png')) for i in range(8)],
             'fastMiddleATK': [pico2d.load_image(str(base_path / 'priest' / 'fastMiddleATK' / f'{i}.png')) for i in range(6)],
             'strongMiddleATK': [pico2d.load_image(str(base_path / 'priest' / 'strongMiddleATK' / f'{i}.png')) for i in range(6)],
             'strongMiddleATK2': [pico2d.load_image(str(base_path / 'priest' / 'strongMiddleATK' / f'{i}.png')) for i in range(6, 14)],
-            'strongUpperATK': [pico2d.load_image(str(base_path / 'priest' / 'strongUpperATK' / f'{i}.png')) for i in range(9)],
+            'strongUpperATK': [pico2d.load_image(str(base_path / 'priest' / 'strongUpperATK' / f'{i}.png')) for i in range(12)],
             'strongLowerATK': [pico2d.load_image(str(base_path / 'priest' / 'strongLowerATK' / f'{i}.png')) for i in range(9)]
         }
 
@@ -64,8 +51,8 @@ class SpriteManager:
         self.frame_timer += deltaTime
         if self.frame_timer >= self.frame_time:
             self.frame_timer = 0.0
-            if self.player1_sprite and self.player1_state in self.player1_sprite:
-                sprite_count = len(self.player1_sprite[self.player1_state])
+            if self.shared_sprites and self.player1_state in self.shared_sprites:
+                sprite_count = len(self.shared_sprites[self.player1_state])
 
                 # 다음 프레임으로 진행
                 next_frame = (self.player1_frame + 1) % sprite_count
@@ -125,8 +112,8 @@ class SpriteManager:
         self.player2_frame_timer += deltaTime
         if self.player2_frame_timer >= self.frame_time:
             self.player2_frame_timer = 0.0
-            if self.player2_sprite and self.player2_state in self.player2_sprite:
-                sprite_count = len(self.player2_sprite[self.player2_state])
+            if self.shared_sprites and self.player2_state in self.shared_sprites:
+                sprite_count = len(self.shared_sprites[self.player2_state])
                 next_frame = (self.player2_frame + 1) % sprite_count
 
                 # strongMiddleATK 완료 시 연계 공격 체크
@@ -174,15 +161,15 @@ class SpriteManager:
 
     def render(self):
         # 플레이어1 렌더링 (오른쪽을 바라봄)
-        if self.player1_sprite and self.player1_state in self.player1_sprite:
-            sprite_list = self.player1_sprite[self.player1_state]
+        if self.shared_sprites and self.player1_state in self.shared_sprites:
+            sprite_list = self.shared_sprites[self.player1_state]
             if sprite_list:
                 frame = self.player1_frame % len(sprite_list)
                 sprite_list[frame].draw(self.player1_x, self.player1_y)
 
         # 플레이어2 렌더링 (왼쪽을 바라봄)
-        if self.player2_sprite and self.player2_state in self.player2_sprite:
-            sprite_list = self.player2_sprite[self.player2_state]
+        if self.shared_sprites and self.player2_state in self.shared_sprites:
+            sprite_list = self.shared_sprites[self.player2_state]
             if sprite_list:
                 frame = self.player2_frame % len(sprite_list)
                 # 왼쪽을 바라보도록 좌우 반전
