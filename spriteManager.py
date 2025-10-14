@@ -36,6 +36,7 @@ class SpriteManager:
             'BackWalk': [pico2d.load_image(str(base_path / 'priest' / 'BackWalk' / f'{i}.png')) for i in range(8)], # BackWalk 추가
             'fastMiddleATK' : [pico2d.load_image(str(base_path / 'priest' / 'fastMiddleATK' / f'{i}.png')) for i in range(6)],
             'strongMiddleATK' : [pico2d.load_image(str(base_path / 'priest' / 'strongMiddleATK' / f'{i}.png')) for i in range(6)],
+            'strongMiddleATK2' : [pico2d.load_image(str(base_path / 'priest' / 'strongMiddleATK' / f'{i}.png')) for i in range(6, 14)],
             'strongUpperATK' : [pico2d.load_image(str(base_path / 'priest' / 'strongUpperATK' / f'{i}.png')) for i in range(9)],
             'strongLowerATK' : [pico2d.load_image(str(base_path / 'priest' / 'strongLowerATK' / f'{i}.png')) for i in range(9)]
         }
@@ -47,6 +48,7 @@ class SpriteManager:
             'BackWalk': [pico2d.load_image(str(base_path / 'priest' / 'BackWalk' / f'{i}.png')) for i in range(8)],  # BackWalk 추가
             'fastMiddleATK': [pico2d.load_image(str(base_path / 'priest' / 'fastMiddleATK' / f'{i}.png')) for i in range(6)],
             'strongMiddleATK': [pico2d.load_image(str(base_path / 'priest' / 'strongMiddleATK' / f'{i}.png')) for i in range(6)],
+            'strongMiddleATK2': [pico2d.load_image(str(base_path / 'priest' / 'strongMiddleATK' / f'{i}.png')) for i in range(6, 14)],
             'strongUpperATK': [pico2d.load_image(str(base_path / 'priest' / 'strongUpperATK' / f'{i}.png')) for i in range(9)],
             'strongLowerATK': [pico2d.load_image(str(base_path / 'priest' / 'strongLowerATK' / f'{i}.png')) for i in range(9)]
         }
@@ -68,15 +70,41 @@ class SpriteManager:
                 # 다음 프레임으로 진행
                 next_frame = (self.player1_frame + 1) % sprite_count
 
-                # 공격 애니메이션이 한 번 완료되었는지 체크
-                if (self.player1_ref and self.player1_ref.is_attack_state() and
-                    next_frame == 0):  # 애니메이션이 한 바퀴 돌았을 때
+                # strongMiddleATK 완료 시 연계 공격 체크
+                if (self.player1_state == 'strongMiddleATK' and
+                    self.player1_ref and
+                    next_frame == 0):  # strongMiddleATK 애니메이션 완료
+
+                    if self.player1_ref.combo_reserved:  # 연계가 예약되어 있으면
+                        self.player1_ref.state = 'strongMiddleATK2'
+                        self.player1_ref.combo_reserved = False
+                        self.player1_ref.can_combo = False
+                        return  # strongMiddleATK2로 상태 변경을 위해 리턴
+                    else:  # 연계가 없으면 공격 종료
+                        self.player1_ref.is_attacking = False
+                        self.player1_ref.state = 'Idle'
+                        self.player1_state = 'Idle'
+                        self.player1_frame = 0
+                        self.player1_ref.can_combo = False
+                        return
+
+                # 다른 공격 애니메이션 완료 처리
+                elif (self.player1_ref and self.player1_ref.is_attack_state() and
+                      self.player1_state != 'strongMiddleATK' and
+                      next_frame == 0):
                     self.player1_ref.is_attacking = False
                     self.player1_ref.state = 'Idle'
                     self.player1_state = 'Idle'
                     self.player1_frame = 0
+                    self.player1_ref.can_combo = False
                 else:
                     self.player1_frame = next_frame
+
+        # strongMiddleATK에서 연계 가능 시점 체크
+        if (self.player1_state == 'strongMiddleATK' and
+            self.player1_ref and
+            self.player1_frame >= 3):  # 3프레임 이후부터 연계 가능
+            self.player1_ref.can_combo = True
 
     def update_player1_position(self, x, y):
         self.player1_x = x
@@ -99,19 +127,43 @@ class SpriteManager:
             self.player2_frame_timer = 0.0
             if self.player2_sprite and self.player2_state in self.player2_sprite:
                 sprite_count = len(self.player2_sprite[self.player2_state])
-
-                # 다음 프레임으로 진행
                 next_frame = (self.player2_frame + 1) % sprite_count
 
-                # 공격 애니메이션이 한 번 완료되었는지 체크
-                if (self.player2_ref and self.player2_ref.is_attack_state() and
-                    next_frame == 0):  # 애니메이션이 한 바퀴 돌았을 때
+                # strongMiddleATK 완료 시 연계 공격 체크
+                if (self.player2_state == 'strongMiddleATK' and
+                    self.player2_ref and
+                    next_frame == 0):  # strongMiddleATK 애니메이션 완료
+
+                    if self.player2_ref.combo_reserved:  # 연계가 예약되어 있으면
+                        self.player2_ref.state = 'strongMiddleATK2'
+                        self.player2_ref.combo_reserved = False
+                        self.player2_ref.can_combo = False
+                        return  # strongMiddleATK2로 상태 변경을 위해 리턴
+                    else:  # 연계가 없으면 공격 종료
+                        self.player2_ref.is_attacking = False
+                        self.player2_ref.state = 'Idle'
+                        self.player2_state = 'Idle'
+                        self.player2_frame = 0
+                        self.player2_ref.can_combo = False
+                        return
+
+                # 다른 공격 애니메이션 완료 처리
+                elif (self.player2_ref and self.player2_ref.is_attack_state() and
+                      self.player2_state != 'strongMiddleATK' and
+                      next_frame == 0):
                     self.player2_ref.is_attacking = False
                     self.player2_ref.state = 'Idle'
                     self.player2_state = 'Idle'
                     self.player2_frame = 0
+                    self.player2_ref.can_combo = False
                 else:
                     self.player2_frame = next_frame
+
+        # strongMiddleATK에서 연계 가능 시점 체크
+        if (self.player2_state == 'strongMiddleATK' and
+            self.player2_ref and
+            self.player2_frame >= 3):  # 3프레임 이후부터 연계 가능
+            self.player2_ref.can_combo = True
 
     def update_player2_position(self, x, y):
         self.player2_x = x

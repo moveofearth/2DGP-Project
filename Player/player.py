@@ -6,34 +6,49 @@ class Player:
         self.dir = -1  # 항상 오른쪽을 바라보도록 -1로 고정
         self.state = 'Idle'  # Idle, Walk, BackWalk
         self.is_attacking = False  # 공격 중인지 체크
+        self.can_combo = False  # 연계 가능 상태
+        self.combo_reserved = False  # 연계 공격 예약 상태
 
 
     def is_attack_state(self):
         """현재 상태가 공격 상태인지 확인"""
-        attack_states = ['fastMiddleATK', 'strongMiddleATK', 'strongUpperATK', 'strongLowerATK']
+        attack_states = ['fastMiddleATK', 'strongMiddleATK', 'strongMiddleATK2', 'strongUpperATK', 'strongLowerATK']
         return self.state in attack_states
 
     def initialize(self):
         # self.Character.initialize()  # SpriteManager 사용으로 주석 처리
         pass
 
-    def update(self, deltaTime, move_input=None, atk_input=None):  # 이동과 공격 입력을 분리
+    def update(self, deltaTime, move_input=None, atk_input=None, combo_input=False):  # 이동과 공격 입력을 분리
+        # 연계 공격 입력을 받으면 예약 상태로 설정 (즉시 전환하지 않음)
+        if combo_input and self.state == 'strongMiddleATK' and self.can_combo:
+            self.combo_reserved = True
+            return
+
         # 공격 입력 처리 (이동 중에도 가능)
         if atk_input == 'fastMiddleATK' and not self.is_attacking:
             self.state = 'fastMiddleATK'
             self.is_attacking = True
+            self.can_combo = False
+            self.combo_reserved = False
             return  # 공격 시작 시 이동은 무시
         elif atk_input == 'strongMiddleATK' and not self.is_attacking:
             self.state = 'strongMiddleATK'
             self.is_attacking = True
+            self.can_combo = True  # strongMiddleATK는 연계 가능
+            self.combo_reserved = False
             return  # 공격 시작 시 이동은 무시
         elif atk_input == 'strongUpperATK' and not self.is_attacking:
             self.state = 'strongUpperATK'
             self.is_attacking = True
+            self.can_combo = False
+            self.combo_reserved = False
             return  # 공격 시작 시 이동은 무시
         elif atk_input == 'strongLowerATK' and not self.is_attacking:
             self.state = 'strongLowerATK'
             self.is_attacking = True
+            self.can_combo = False
+            self.combo_reserved = False
             return  # 공격 시작 시 이동은 무시
 
         # 공격 중이 아닐 때만 이동 처리

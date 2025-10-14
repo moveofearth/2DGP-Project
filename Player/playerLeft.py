@@ -9,24 +9,37 @@ class PlayerLeft(Player):
     def initialize(self):
         self.dir = -1  # 오른쪽을 바라보도록 -1로 설정
 
-    def update(self, deltaTime, move_input=None, atk_input=None):  # 이동과 공격 입력을 분리
+    def update(self, deltaTime, move_input=None, atk_input=None, combo_input=False):
+        # 연계 공격 입력을 받으면 예약 상태로 설정
+        if combo_input and self.state == 'strongMiddleATK' and self.can_combo:
+            self.combo_reserved = True
+            return
+
         # 공격 입력 처리 (이동 중에도 가능)
         if atk_input == 'fastMiddleATK' and not self.is_attacking:
             self.state = 'fastMiddleATK'
             self.is_attacking = True
-            return  # 공격 시작 시 이동은 무시
+            self.can_combo = False
+            self.combo_reserved = False
+            return
         elif atk_input == 'strongMiddleATK' and not self.is_attacking:
             self.state = 'strongMiddleATK'
             self.is_attacking = True
-            return  # 공격 시작 시 이동은 무시
+            self.can_combo = True
+            self.combo_reserved = False
+            return
         elif atk_input == 'strongUpperATK' and not self.is_attacking:
             self.state = 'strongUpperATK'
             self.is_attacking = True
-            return  # 공격 시작 시 이동은 무시
+            self.can_combo = False
+            self.combo_reserved = False
+            return
         elif atk_input == 'strongLowerATK' and not self.is_attacking:
             self.state = 'strongLowerATK'
             self.is_attacking = True
-            return  # 공격 시작 시 이동은 무시
+            self.can_combo = False
+            self.combo_reserved = False
+            return
 
         # 공격 중이 아닐 때만 이동 처리
         if not self.is_attacking:
