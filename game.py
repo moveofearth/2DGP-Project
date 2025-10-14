@@ -1,11 +1,11 @@
 import pico2d
 import Config
 
-from scenes.SceneManager import SceneManager
-from player.PlayerLeft import PlayerLeft
-from player.PlayerRight import PlayerRight  # PlayerRight 추가
-from IOManager import IOManager
-from SpriteManager import SpriteManager
+from Scenes.sceneManager import SceneManager
+from Player.playerLeft import PlayerLeft
+from Player.playerRight import PlayerRight  # PlayerRight 추가
+from ioManager import IOManager
+from spriteManager import SpriteManager
 
 
 class Game:

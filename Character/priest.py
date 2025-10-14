@@ -1,4 +1,4 @@
-from .Character import Character  # 기존 그대로
+from .character import Character  # 기존 그대로
 import pathlib
 import pico2d
 

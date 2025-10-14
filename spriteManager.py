@@ -27,7 +27,7 @@ class SpriteManager:
         self.player2_ref = player2
 
     def load_sprites(self):
-        base_path = pathlib.Path.cwd() / 'resources' / 'character'
+        base_path = pathlib.Path.cwd() / 'Resources' / 'Character'
 
         self.player1_sprite = {
             # temp image load

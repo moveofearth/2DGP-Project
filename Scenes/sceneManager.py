@@ -1,4 +1,4 @@
-from scenes.TitleScene import TitleScene  # import 수정: 패키지.모듈 import 클래스
+from Scenes.titleScene import TitleScene  # import 수정: 패키지.모듈 import 클래스
 
 
 class SceneManager:
