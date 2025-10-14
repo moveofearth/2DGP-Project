@@ -93,10 +93,10 @@ class IOManager:
         # 공격 키 이벤트 처리
         for event in events:
             if event.type == pico2d.SDL_KEYDOWN:
-                if event.key == pico2d.SDLK_0:
+                if event.key == pico2d.SDLK_KP_0:
                     self.player2_keys['zero'] = True
             elif event.type == pico2d.SDL_KEYUP:
-                if event.key == pico2d.SDLK_0:
+                if event.key == pico2d.SDLK_KP_0:
                     self.player2_keys['zero'] = False
 
         # 현재 눌린 공격 키 상태 반환
