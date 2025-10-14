@@ -53,11 +53,17 @@ class IOManager:
                 if event.key == pico2d.SDLK_g:
                     self.player1_keys['g'] = False
 
-        # 현재 눌린 공격 키 상태 반환
+        # 공격키 조합 확인
         if self.player1_keys['f']:
             return 'fastMiddleATK'
-        if self.player1_keys['g']:
-            return 'strongMiddleATK'
+        elif self.player1_keys['g']:
+            # up/down 키와 조합 확인
+            if self.player1_keys['w']:
+                return 'strongUpperATK'
+            elif self.player1_keys['s']:
+                return 'strongLowerATK'
+            else:
+                return 'strongMiddleATK'
 
         return None
 
@@ -109,10 +115,16 @@ class IOManager:
                 if event.key == pico2d.SDLK_KP_2:
                     self.player2_keys['two'] = False
 
-        # 현재 눌린 공격 키 상태 반환
+        # 공격키 조합 확인
         if self.player2_keys['one']:
             return 'fastMiddleATK'
-        if self.player2_keys['two']:
-            return 'strongMiddleATK'
+        elif self.player2_keys['two']:
+            # up/down 키와 조합 확인
+            if self.player2_keys['up']:
+                return 'strongUpperATK'
+            elif self.player2_keys['down']:
+                return 'strongLowerATK'
+            else:
+                return 'strongMiddleATK'
 
         return None
