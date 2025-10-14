@@ -8,17 +8,23 @@ class PlayerRight(Player):
     def initialize(self):
         self.dir = 1  # 왼쪽을 바라보도록 1로 설정
 
-    def update(self, deltaTime, input_dir=None):
-        if input_dir == 'left':
-            self.x -= 3
-            self.state = 'Walk'  # 왼쪽으로 갈 때 Walk
-        elif input_dir == 'right':
-            self.x += 1
-            self.state = 'BackWalk'  # 오른쪽으로 갈 때 BackWalk
-        elif input_dir == 'fastMiddleATK':
+    def update(self, deltaTime, move_input=None, atk_input=None):  # 이동과 공격 입력을 분리
+        # 공격 입력 처리 (이동 중에도 가능)
+        if atk_input == 'fastMiddleATK' and not self.is_attacking:
             self.state = 'fastMiddleATK'
-        else:
-            self.state = 'Idle'  # 입력이 없으면 Idle 상태
+            self.is_attacking = True
+            return  # 공격 시작 시 이동은 무시
+
+        # 공격 중이 아닐 때만 이동 처리
+        if not self.is_attacking:
+            if move_input == 'left':
+                self.x -= 3
+                self.state = 'Walk'  # 왼쪽으로 갈 때 Walk
+            elif move_input == 'right':
+                self.x += 1
+                self.state = 'BackWalk'  # 오른쪽으로 갈 때 BackWalk
+            else:
+                self.state = 'Idle'  # 입력이 없으면 Idle 상태
 
     def render(self):
         pass

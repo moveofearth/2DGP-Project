@@ -18,6 +18,13 @@ class SpriteManager:
         self.player2_x = 600  # 플레이어2 초기 위치
         self.player2_y = 300
         self.player2_dir = -1
+        self.player1_ref = None  # Player1 참조
+        self.player2_ref = None  # Player2 참조
+
+    def set_player_references(self, player1, player2):
+        """플레이어 참조를 설정"""
+        self.player1_ref = player1
+        self.player2_ref = player2
 
     def load_sprites(self):
         base_path = pathlib.Path.cwd() / 'resources' / 'character'
@@ -51,7 +58,19 @@ class SpriteManager:
             self.frame_timer = 0.0
             if self.player1_sprite and self.player1_state in self.player1_sprite:
                 sprite_count = len(self.player1_sprite[self.player1_state])
-                self.player1_frame = (self.player1_frame + 1) % sprite_count
+
+                # 다음 프레임으로 진행
+                next_frame = (self.player1_frame + 1) % sprite_count
+
+                # 공격 애니메이션이 한 번 완료되었는지 체크
+                if (self.player1_ref and self.player1_ref.is_attack_state() and
+                    next_frame == 0):  # 애니메이션이 한 바퀴 돌았을 때
+                    self.player1_ref.is_attacking = False
+                    self.player1_ref.state = 'Idle'
+                    self.player1_state = 'Idle'
+                    self.player1_frame = 0
+                else:
+                    self.player1_frame = next_frame
 
     def update_player1_position(self, x, y):
         self.player1_x = x
@@ -74,7 +93,19 @@ class SpriteManager:
             self.player2_frame_timer = 0.0
             if self.player2_sprite and self.player2_state in self.player2_sprite:
                 sprite_count = len(self.player2_sprite[self.player2_state])
-                self.player2_frame = (self.player2_frame + 1) % sprite_count
+
+                # 다음 프레임으로 진행
+                next_frame = (self.player2_frame + 1) % sprite_count
+
+                # 공격 애니메이션이 한 번 완료되었는지 체크
+                if (self.player2_ref and self.player2_ref.is_attack_state() and
+                    next_frame == 0):  # 애니메이션이 한 바퀴 돌았을 때
+                    self.player2_ref.is_attacking = False
+                    self.player2_ref.state = 'Idle'
+                    self.player2_state = 'Idle'
+                    self.player2_frame = 0
+                else:
+                    self.player2_frame = next_frame
 
     def update_player2_position(self, x, y):
         self.player2_x = x

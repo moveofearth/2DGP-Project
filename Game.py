@@ -25,15 +25,21 @@ class Game:
         self.playerLeft.initialize()
         self.playerRight.initialize()  # PlayerRight 초기화
         self.spriteManager.load_sprites()
+        self.spriteManager.set_player_references(self.playerLeft, self.playerRight)  # 플레이어 참조 설정
         pass
 
     def update(self, deltaTime):
         events = pico2d.get_events()
-        player1_input = self.ioManager.handleInputPlayer1(events)
-        player2_input = self.ioManager.handleInputPlayer2(events)  # 플레이어2 입력 처리
 
-        self.playerLeft.update(deltaTime, player1_input)
-        self.playerRight.update(deltaTime, player2_input)  # 플레이어2 업데이트
+        # 이동과 공격 입력을 분리해서 처리
+        player1_move_input = self.ioManager.handleMoveInputPlayer1(events)
+        player1_atk_input = self.ioManager.handleATKInputPlayer1(events)
+        player2_move_input = self.ioManager.handleMoveInputPlayer2(events)
+        player2_atk_input = self.ioManager.handleATKInputPlayer2(events)
+
+        # 플레이어 업데이트 시 이동과 공격 입력을 모두 전달
+        self.playerLeft.update(deltaTime, player1_move_input, player1_atk_input)
+        self.playerRight.update(deltaTime, player2_move_input, player2_atk_input)
 
         # SpriteManager에 플레이어 상태 전달
         self.spriteManager.update_player1_state(self.playerLeft.state, deltaTime)
