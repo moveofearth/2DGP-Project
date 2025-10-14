@@ -2,8 +2,8 @@ import pico2d
 
 class IOManager:
     def __init__(self):
-        self.player1_keys = {'w': False, 's': False, 'a': False, 'd': False}
-        self.player2_keys = {'up': False, 'down': False, 'left': False, 'right': False}
+        self.player1_keys = {'w': False, 's': False, 'a': False, 'd': False, 'f': False}
+        self.player2_keys = {'up': False, 'down': False, 'left': False, 'right': False, 'zero': False}
 
     def handleInputPlayer1(self, events):
         # 이벤트로 키 상태 업데이트
@@ -17,6 +17,8 @@ class IOManager:
                     self.player1_keys['a'] = True
                 elif event.key == pico2d.SDLK_d:
                     self.player1_keys['d'] = True
+                elif event.key == pico2d.SDLK_f:
+                    self.player1_keys['f'] = True
             elif event.type == pico2d.SDL_KEYUP:
                 if event.key == pico2d.SDLK_w:
                     self.player1_keys['w'] = False
@@ -36,6 +38,8 @@ class IOManager:
             return 'left'
         elif self.player1_keys['d']:
             return 'right'
+        elif self.player1_keys['f']:
+            return 'fastMiddleATK'
 
         return None
 
@@ -51,6 +55,8 @@ class IOManager:
                     self.player2_keys['left'] = True
                 elif event.key == pico2d.SDLK_RIGHT:
                     self.player2_keys['right'] = True
+                elif event.key == pico2d.SDLK_0:
+                    self.player1_keys['zero'] = True
             elif event.type == pico2d.SDL_KEYUP:
                 if event.key == pico2d.SDLK_UP:
                     self.player2_keys['up'] = False
@@ -70,5 +76,7 @@ class IOManager:
             return 'left'
         elif self.player2_keys['right']:
             return 'right'
+        elif self.player2_keys['zero']:
+            return 'fastMiddleATK'
 
         return None

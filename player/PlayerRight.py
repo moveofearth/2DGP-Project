@@ -15,6 +15,8 @@ class PlayerRight(Player):
         elif input_dir == 'right':
             self.x += 1
             self.state = 'BackWalk'  # 오른쪽으로 갈 때 BackWalk
+        elif input_dir == 'fastMiddleATK':
+            self.state = 'fastMiddleATK'
         else:
             self.state = 'Idle'  # 입력이 없으면 Idle 상태
 

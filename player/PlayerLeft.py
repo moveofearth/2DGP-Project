@@ -8,8 +8,6 @@ class PlayerLeft(Player):
 
     def initialize(self):
         self.dir = -1  # 오른쪽을 바라보도록 -1로 설정
-        # self.character = Priest()  # SpriteManager 사용으로 주석 처리
-        # self.character.initialize()  # SpriteManager 사용으로 주석 처리
 
     def update(self, deltaTime, input_dir=None):  # 입력 매개변수 추가
         if input_dir == 'left':
@@ -18,10 +16,10 @@ class PlayerLeft(Player):
         elif input_dir == 'right':
             self.x += 3
             self.state = 'Walk'  # 오른쪽으로 갈 때 Walk
+        elif input_dir == 'fastMiddleATK':
+            self.state = 'fastMiddleATK'  # 공격 상태 추가
         else:
             self.state = 'Idle'  # 입력이 없으면 Idle 상태
-        # super().update(deltaTime, input_dir) 제거 - 중복 이동 방지
 
     def render(self):
-        # self.character.render()  # SpriteManager에서 렌더링하므로 주석 처리
         pass
