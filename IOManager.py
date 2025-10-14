@@ -2,8 +2,8 @@ import pico2d
 
 class IOManager:
     def __init__(self):
-        self.player1_keys = {'w': False, 's': False, 'a': False, 'd': False, 'f': False}
-        self.player2_keys = {'up': False, 'down': False, 'left': False, 'right': False, 'zero': False}
+        self.player1_keys = {'w': False, 's': False, 'a': False, 'd': False, 'f': False, 'g': False}
+        self.player2_keys = {'up': False, 'down': False, 'left': False, 'right': False, 'one': False, 'two': False}
 
     def handleMoveInputPlayer1(self, events):
         # 이벤트로 키 상태 업데이트
@@ -45,13 +45,19 @@ class IOManager:
             if event.type == pico2d.SDL_KEYDOWN:
                 if event.key == pico2d.SDLK_f:
                     self.player1_keys['f'] = True
+                if event.key == pico2d.SDLK_g:
+                    self.player1_keys['g'] = True
             elif event.type == pico2d.SDL_KEYUP:
                 if event.key == pico2d.SDLK_f:
                     self.player1_keys['f'] = False
+                if event.key == pico2d.SDLK_g:
+                    self.player1_keys['g'] = False
 
         # 현재 눌린 공격 키 상태 반환
         if self.player1_keys['f']:
             return 'fastMiddleATK'
+        if self.player1_keys['g']:
+            return 'strongMiddleATK'
 
         return None
 
@@ -93,14 +99,20 @@ class IOManager:
         # 공격 키 이벤트 처리
         for event in events:
             if event.type == pico2d.SDL_KEYDOWN:
-                if event.key == pico2d.SDLK_KP_0:
-                    self.player2_keys['zero'] = True
+                if event.key == pico2d.SDLK_KP_1:
+                    self.player2_keys['one'] = True
+                if event.key == pico2d.SDLK_KP_2:
+                    self.player2_keys['two'] = True
             elif event.type == pico2d.SDL_KEYUP:
-                if event.key == pico2d.SDLK_KP_0:
-                    self.player2_keys['zero'] = False
+                if event.key == pico2d.SDLK_KP_1:
+                    self.player2_keys['one'] = False
+                if event.key == pico2d.SDLK_KP_2:
+                    self.player2_keys['two'] = False
 
         # 현재 눌린 공격 키 상태 반환
-        if self.player2_keys['zero']:
+        if self.player2_keys['one']:
             return 'fastMiddleATK'
+        if self.player2_keys['two']:
+            return 'strongMiddleATK'
 
         return None

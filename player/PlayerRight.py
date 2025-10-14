@@ -14,6 +14,10 @@ class PlayerRight(Player):
             self.state = 'fastMiddleATK'
             self.is_attacking = True
             return  # 공격 시작 시 이동은 무시
+        elif atk_input == 'strongMiddleATK' and not self.is_attacking:
+            self.state = 'strongMiddleATK'
+            self.is_attacking = True
+            return  # 공격 시작 시 이동은 무시
 
         # 공격 중이 아닐 때만 이동 처리
         if not self.is_attacking:

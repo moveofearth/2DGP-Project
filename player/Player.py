@@ -13,7 +13,7 @@ class Player:
 
     def is_attack_state(self):
         """현재 상태가 공격 상태인지 확인"""
-        attack_states = ['fastMiddleATK']  # 추후 다른 공격 상태도 추가 가능
+        attack_states = ['fastMiddleATK', 'strongMiddleATK']  # strongMiddleATK 추가
         return self.state in attack_states
 
     def initialize(self):
@@ -24,6 +24,10 @@ class Player:
         # 공격 입력 처리 (이동 중에도 가능)
         if atk_input == 'fastMiddleATK' and not self.is_attacking:
             self.state = 'fastMiddleATK'
+            self.is_attacking = True
+            return  # 공격 시작 시 이동은 무시
+        elif atk_input == 'strongMiddleATK' and not self.is_attacking:
+            self.state = 'strongMiddleATK'
             self.is_attacking = True
             return  # 공격 시작 시 이동은 무시
 
