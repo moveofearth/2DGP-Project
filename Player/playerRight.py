@@ -43,10 +43,10 @@ class PlayerRight(Player):
         # 공격 중이 아닐 때만 이동 처리
         if not self.is_attacking:
             if move_input == 'left':
-                self.x -= 3
+                self.x -= 1
                 self.state = 'Walk'  # 왼쪽으로 갈 때 Walk
             elif move_input == 'right':
-                self.x += 1
+                self.x += 0.5
                 self.state = 'BackWalk'  # 오른쪽으로 갈 때 BackWalk
             else:
                 self.state = 'Idle'  # 입력이 없으면 Idle 상태

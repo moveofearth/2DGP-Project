@@ -3,6 +3,6 @@ import pathlib
 global windowWidth
 global windowHeight
 
-windowWidth = 1920
-windowHeight = 1080
+windowWidth = 1280
+windowHeight = 720
 

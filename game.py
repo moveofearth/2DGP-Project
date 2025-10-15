@@ -66,5 +66,4 @@ class Game:
     def run(self):
         self.update(deltaTime=0.01)
         self.render()
-        pico2d.delay(0.01)
         pass

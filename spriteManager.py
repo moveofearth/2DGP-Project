@@ -8,7 +8,7 @@ class SpriteManager:
         self.player2_state = 'Idle'
         self.player1_frame = 0
         self.player2_frame = 0
-        self.frame_time = 0.1  # 프레임 전환 시간
+        self.frame_time = 0.5  # 프레임 전환 시간을 0.5초로 설정
         self.frame_timer = 0.0  # 프레임 타이머
         self.player2_frame_timer = 0.0  # 플레이어2용 프레임 타이머
         self.player1_x = 400
@@ -36,7 +36,7 @@ class SpriteManager:
             'fastMiddleATK': [pico2d.load_image(str(base_path / 'priest' / 'fastMiddleATK' / f'{i}.png')) for i in range(6)],
             'strongMiddleATK': [pico2d.load_image(str(base_path / 'priest' / 'strongMiddleATK' / f'{i}.png')) for i in range(6)],
             'strongMiddleATK2': [pico2d.load_image(str(base_path / 'priest' / 'strongMiddleATK' / f'{i}.png')) for i in range(6, 14)],
-            'strongUpperATK': [pico2d.load_image(str(base_path / 'priest' / 'strongUpperATK' / f'{i}.png')) for i in range(12)],
+            'strongUpperATK': [pico2d.load_image(str(base_path / 'priest' / 'strongUpperATK' / f'{i}.png')) for i in range(13)],
             'strongLowerATK': [pico2d.load_image(str(base_path / 'priest' / 'strongLowerATK' / f'{i}.png')) for i in range(9)]
         }
 
@@ -47,7 +47,7 @@ class SpriteManager:
             self.player1_frame = 0
             self.frame_timer = 0.0
 
-        # 프레임 애니메이션 업데이트
+        # 프레임 애니메이션 업데이트 (deltaTime 사용하되 0.5초마다 프레임 전환)
         self.frame_timer += deltaTime
         if self.frame_timer >= self.frame_time:
             self.frame_timer = 0.0
@@ -108,7 +108,7 @@ class SpriteManager:
             self.player2_frame = 0
             self.player2_frame_timer = 0.0
 
-        # 프레임 애니메이션 업데이트
+        # 프레임 애니메이션 업데이트 (deltaTime 사용하되 0.5초마다 프레임 전환)
         self.player2_frame_timer += deltaTime
         if self.player2_frame_timer >= self.frame_time:
             self.player2_frame_timer = 0.0
