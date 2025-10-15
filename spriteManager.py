@@ -3,7 +3,7 @@ import pathlib
 
 class SpriteManager:
     def __init__(self):
-        self.shared_sprites = None  # 공유 스프라이트 딕셔너리
+        self.shared_sprites = {}  # 캐릭터별 공유 스프라이트 딕셔너리
         self.player1_state = 'Idle'
         self.player2_state = 'Idle'
         self.player1_frame = 0
@@ -28,8 +28,8 @@ class SpriteManager:
     def load_sprites(self):
         base_path = pathlib.Path.cwd() / 'Resources' / 'Character'
 
-        # 공유 스프라이트 딕셔너리 - 한 번만 로딩
-        self.shared_sprites = {
+        # Priest 캐릭터 스프라이트 로딩
+        self.shared_sprites['priest'] = {
             'Idle': [pico2d.load_image(str(base_path / 'priest' / 'idle' / f'{i}.png')) for i in range(4)],
             'Walk': [pico2d.load_image(str(base_path / 'priest' / 'walk' / f'{i}.png')) for i in range(8)],
             'BackWalk': [pico2d.load_image(str(base_path / 'priest' / 'BackWalk' / f'{i}.png')) for i in range(8)],
@@ -39,6 +39,13 @@ class SpriteManager:
             'strongUpperATK': [pico2d.load_image(str(base_path / 'priest' / 'strongUpperATK' / f'{i}.png')) for i in range(13)],
             'strongLowerATK': [pico2d.load_image(str(base_path / 'priest' / 'strongLowerATK' / f'{i}.png')) for i in range(9)]
         }
+
+        # 추후 다른 캐릭터 추가 시
+        # self.shared_sprites['warrior'] = { ... }
+
+    def get_character_sprites(self, character_type):
+        """캐릭터 타입에 따른 스프라이트 반환"""
+        return self.shared_sprites.get(character_type, self.shared_sprites.get('priest', {}))
 
     def update_player1_state(self, new_state, deltaTime):
         # 상태가 변경되면 프레임을 0으로 리셋
@@ -51,8 +58,13 @@ class SpriteManager:
         self.frame_timer += deltaTime
         if self.frame_timer >= self.frame_time:
             self.frame_timer = 0.0
-            if self.shared_sprites and self.player1_state in self.shared_sprites:
-                sprite_count = len(self.shared_sprites[self.player1_state])
+
+            # 플레이어1의 캐릭터 타입에 따른 스프라이트 가져오기
+            character_type = self.player1_ref.get_character_type() if self.player1_ref else 'priest'
+            sprites = self.get_character_sprites(character_type)
+
+            if sprites and self.player1_state in sprites:
+                sprite_count = len(sprites[self.player1_state])
 
                 # 다음 프레임으로 진행
                 next_frame = (self.player1_frame + 1) % sprite_count
@@ -112,8 +124,13 @@ class SpriteManager:
         self.player2_frame_timer += deltaTime
         if self.player2_frame_timer >= self.frame_time:
             self.player2_frame_timer = 0.0
-            if self.shared_sprites and self.player2_state in self.shared_sprites:
-                sprite_count = len(self.shared_sprites[self.player2_state])
+
+            # 플레이어2의 캐릭터 타입에 따른 스프라이트 가져오기
+            character_type = self.player2_ref.get_character_type() if self.player2_ref else 'priest'
+            sprites = self.get_character_sprites(character_type)
+
+            if sprites and self.player2_state in sprites:
+                sprite_count = len(sprites[self.player2_state])
                 next_frame = (self.player2_frame + 1) % sprite_count
 
                 # strongMiddleATK 완료 시 연계 공격 체크
@@ -161,16 +178,24 @@ class SpriteManager:
 
     def render(self):
         # 플레이어1 렌더링 (오른쪽을 바라봄)
-        if self.shared_sprites and self.player1_state in self.shared_sprites:
-            sprite_list = self.shared_sprites[self.player1_state]
-            if sprite_list:
-                frame = self.player1_frame % len(sprite_list)
-                sprite_list[frame].draw(self.player1_x, self.player1_y)
+        if self.player1_ref:
+            character_type = self.player1_ref.get_character_type()
+            sprites = self.get_character_sprites(character_type)
+
+            if sprites and self.player1_state in sprites:
+                sprite_list = sprites[self.player1_state]
+                if sprite_list:
+                    frame = self.player1_frame % len(sprite_list)
+                    sprite_list[frame].draw(self.player1_x, self.player1_y)
 
         # 플레이어2 렌더링 (왼쪽을 바라봄)
-        if self.shared_sprites and self.player2_state in self.shared_sprites:
-            sprite_list = self.shared_sprites[self.player2_state]
-            if sprite_list:
-                frame = self.player2_frame % len(sprite_list)
-                # 왼쪽을 바라보도록 좌우 반전
-                sprite_list[frame].composite_draw(0, 'h', self.player2_x, self.player2_y)
+        if self.player2_ref:
+            character_type = self.player2_ref.get_character_type()
+            sprites = self.get_character_sprites(character_type)
+
+            if sprites and self.player2_state in sprites:
+                sprite_list = sprites[self.player2_state]
+                if sprite_list:
+                    frame = self.player2_frame % len(sprite_list)
+                    # 왼쪽을 바라보도록 좌우 반전
+                    sprite_list[frame].composite_draw(0, 'h', self.player2_x, self.player2_y)

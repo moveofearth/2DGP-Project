@@ -3,12 +3,20 @@ from .player import Player
 
 class PlayerRight(Player):
     def __init__(self):
-        super().__init__(x=600, y=300)  # 플레이어2는 오른쪽에 위치
+        super().__init__(x=600, y=300, character_type='priest')  # priest 캐릭터로 초기화
 
     def initialize(self):
+        super().initialize()
         self.dir = 1  # 왼쪽을 바라보도록 1로 설정
 
     def update(self, deltaTime, move_input=None, atk_input=None, combo_input=False):
+        # 캐릭터 위치 동기화
+        self.character.x, self.character.y = self.x, self.y
+        self.character.state = self.state
+
+        # Character 업데이트
+        self.character.update(deltaTime)
+
         # 연계 공격 입력을 받으면 예약 상태로 설정
         if combo_input and self.state == 'strongMiddleATK' and self.can_combo:
             self.combo_reserved = True
@@ -52,4 +60,4 @@ class PlayerRight(Player):
                 self.state = 'Idle'  # 입력이 없으면 Idle 상태
 
     def render(self):
-        pass
+        super().render()  # Character 렌더링

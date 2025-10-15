@@ -1,15 +1,22 @@
-# from Character.Priest import Priest  # SpriteManager 사용으로 주석 처리
-from .player import Player  # 같은 디렉터리 상대 import
+from .player import Player
 
 
 class PlayerLeft(Player):
     def __init__(self):
-        super().__init__()  # 부모 __init__ 호출 추가
+        super().__init__(character_type='priest')  # priest 캐릭터로 초기화
 
     def initialize(self):
+        super().initialize()
         self.dir = -1  # 오른쪽을 바라보도록 -1로 설정
 
     def update(self, deltaTime, move_input=None, atk_input=None, combo_input=False):
+        # 캐릭터 위치 동기화
+        self.character.x, self.character.y = self.x, self.y
+        self.character.state = self.state
+
+        # Character 업데이트
+        self.character.update(deltaTime)
+
         # 연계 공격 입력을 받으면 예약 상태로 설정
         if combo_input and self.state == 'strongMiddleATK' and self.can_combo:
             self.combo_reserved = True
@@ -53,4 +60,4 @@ class PlayerLeft(Player):
                 self.state = 'Idle'  # 입력이 없으면 Idle 상태
 
     def render(self):
-        pass
+        super().render()  # Character 렌더링
