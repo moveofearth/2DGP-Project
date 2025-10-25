@@ -12,4 +12,4 @@ class TitleScene:
         pass
     def render(self):
         if self.image:
-            self.image.draw(Config.windowWidth // 2, Config.windowHeight // 2)
+            self.image.draw(config.windowWidth // 2, config.windowHeight // 2)
