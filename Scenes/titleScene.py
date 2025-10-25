@@ -1,5 +1,5 @@
 import pico2d
-import Config  # 기존 그대로
+import config  # 기존 그대로
 import pathlib
 
 class TitleScene:
