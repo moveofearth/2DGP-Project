@@ -1,5 +1,5 @@
 import pico2d
-import Config
+import config
 import time
 
 from Scenes.sceneManager import SceneManager
