@@ -23,7 +23,7 @@ class Game:
         self.frame_time = 1.0 / self.target_fps
 
     def initialize(self):
-        pico2d.open_canvas(Config.windowWidth, Config.windowHeight)
+        pico2d.open_canvas(config.windowWidth, config.windowHeight)
         self.sceneManager.initialize()
         self.playerLeft.initialize()
         self.playerRight.initialize()
