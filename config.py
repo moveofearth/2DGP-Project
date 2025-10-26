@@ -20,7 +20,7 @@ windowHeight = 720
 # 동작별 상세 프레임 수:
 # priest:
 #   - Idle: 4프레임, Walk: 8프레임, BackWalk: 8프레임
-#   - fastMiddleATK: 10프레임, strongMiddleATK: 10+10프레임 (연계시)
-#   - strongUpperATK: 15프레임, strongLowerATK: 15프레임
+#   - fastMiddleATK: 6프레임, strongMiddleATK: 6+8프레임 (연계시)
+#   - strongUpperATK: 12프레임, strongLowerATK: 9프레임
 #   - rageSkill: 18프레임
 
