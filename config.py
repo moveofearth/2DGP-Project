@@ -17,4 +17,10 @@ windowHeight = 720
 # Strong 공격 (strongMiddleATK, strongUpperATK, strongLowerATK): 6.67 fps (0.15초 간격)
 # Rage 스킬 (rageSkill): 18 fps (0.056초 간격) - 1초 동안 18프레임 재생
 #
+# 동작별 상세 프레임 수:
+# priest:
+#   - Idle: 4프레임, Walk: 8프레임, BackWalk: 8프레임
+#   - fastMiddleATK: 10프레임, strongMiddleATK: 10+10프레임 (연계시)
+#   - strongUpperATK: 15프레임, strongLowerATK: 15프레임
+#   - rageSkill: 18프레임
 
