@@ -12,7 +12,8 @@ class Character:
 
     def initialize(self):
         # 캐릭터 타입에 따른 초기화
-        if self.currentCharacter == 'priest':
+        if self.currentCharacter == 'priest' or self.currentCharacter == 'thief':
+            # thief는 priest와 같은 초기화 로직 사용
             self._initialize_priest()
 
     def _initialize_priest(self):
@@ -22,7 +23,8 @@ class Character:
 
     def update(self, deltaTime):
         # 캐릭터 타입에 따른 업데이트
-        if self.currentCharacter == 'priest':
+        if self.currentCharacter == 'priest' or self.currentCharacter == 'thief':
+            # thief는 priest와 같은 업데이트 로직 사용
             self._update_priest(deltaTime)
 
     def _update_priest(self, deltaTime):
