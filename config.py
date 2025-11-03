@@ -25,5 +25,5 @@ windowHeight = 720
 #   - rageSkill: 18프레임
 # thief:
 #   - Idle: 6프레임, Walk: 6프레임, BackWalk: 7프레임
-#   - fastMiddleATK: 8+8+8프레임 (3단 연계), strongMiddleATK: 5+5프레임 (연계시)
-#   - strongUpperATK: 7+7프레임 (연계시), strongLowerATK: 6프레임
+#   - fastMiddleATK: 6+6+6프레임 (3단 연계), strongMiddleATK: 5+5프레임 (연계시)
+#   - strongUpperATK: 5+5프레임 (연계시), strongLowerATK: 4프레임
