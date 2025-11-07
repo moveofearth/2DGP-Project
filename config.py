@@ -29,5 +29,5 @@ windowHeight = 720
 #   - strongUpperATK: 5+5프레임 (연계시), strongLowerATK: 4프레임
 # fighter:
 #   - Idle: 4프레임, Walk: 8프레임, BackWalk: 5프레임
-#   - fastMiddleATK: 4+4+4프레임 (3단 연계), fastLowerATK: 4프레임, fastUpperATK: 6프레임
+#   - fastMiddleATK: 4+3+3프레임 (3단 연계), fastLowerATK: 4프레임, fastUpperATK: 6프레임
 #   - strongMiddleATK: 5프레임, strongUpperATK: 4+4프레임 (연계시), strongLowerATK: 5프레임
