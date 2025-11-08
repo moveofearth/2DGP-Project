@@ -16,7 +16,7 @@ class Player:
 
     def is_attack_state(self):
         """현재 상태가 공격 상태인지 확인"""
-        attack_states = ['fastMiddleATK', 'strongMiddleATK', 'strongMiddleATK2', 'strongUpperATK', 'strongLowerATK']
+        attack_states = ['fastMiddleATK', 'fastMiddleATK2', 'fastMiddleATK3', 'strongMiddleATK', 'strongMiddleATK2', 'strongUpperATK', 'strongLowerATK']
         return self.state in attack_states
 
     def initialize(self):

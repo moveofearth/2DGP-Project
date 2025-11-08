@@ -45,9 +45,11 @@ class SpriteManager:
             'Idle': [pico2d.load_image(str(base_path / 'thief' / 'idle' / f'{i}.png')) for i in range(5)],
             'Walk': [pico2d.load_image(str(base_path / 'thief' / 'walk' / f'{i}.png')) for i in range(6)],
             'BackWalk': [pico2d.load_image(str(base_path / 'thief' / 'BackWalk' / f'{i}.png')) for i in range(7)],
-            #'fastMiddleATK': [pico2d.load_image(str(base_path / 'thief' / 'fastMiddleATK' / f'{i}.png')) for i in range(6)],
-            #'strongMiddleATK': [pico2d.load_image(str(base_path / 'thief' / 'strongMiddleATK' / f'{i}.png')) for i in range(6)],
-            #'strongMiddleATK2': [pico2d.load_image(str(base_path / 'thief' / 'strongMiddleATK' / f'{i}.png')) for i in range(6, 14)],
+            'fastMiddleATK': [pico2d.load_image(str(base_path / 'thief' / 'fastMiddleATK' / f'{i}.png')) for i in range(6)],  # 첫 번째 동작 (0~5)
+            'fastMiddleATK2': [pico2d.load_image(str(base_path / 'thief' / 'fastMiddleATK' / f'{i}.png')) for i in range(6, 12)],  # 두 번째 동작 (6~11)
+            'fastMiddleATK3': [pico2d.load_image(str(base_path / 'thief' / 'fastMiddleATK' / f'{i}.png')) for i in range(12, 18)],  # 세 번째 동작 (12~17)
+            'strongMiddleATK': [pico2d.load_image(str(base_path / 'thief' / 'strongMiddleATK' / f'{i}.png')) for i in range(5)],
+            #'strongMiddleATK2': [pico2d.load_image(str(base_path / 'thief' / 'strongMiddleATK' / f'{i}.png')) for i in range(5, 10)],
             #'strongUpperATK': [pico2d.load_image(str(base_path / 'thief' / 'strongUpperATK' / f'{i}.png')) for i in range(13)],
             #'strongLowerATK': [pico2d.load_image(str(base_path / 'thief' / 'strongLowerATK' / f'{i}.png')) for i in range(9)]
         }
@@ -81,8 +83,29 @@ class SpriteManager:
                 # 다음 프레임으로 진행
                 next_frame = (self.player1_frame + 1) % sprite_count
 
+                # thief 캐릭터의 fastMiddleATK 연계 처리
+                if (character_type == 'thief' and
+                    self.player1_ref and
+                    next_frame == 0):  # 애니메이션 완료
+
+                    if self.player1_state == 'fastMiddleATK':
+                        # 첫 번째 동작 완료 -> 두 번째 동작으로 전환
+                        self.player1_ref.state = 'fastMiddleATK2'
+                        return
+                    elif self.player1_state == 'fastMiddleATK2':
+                        # 두 번째 동작 완료 -> 세 번째 동작으로 전환
+                        self.player1_ref.state = 'fastMiddleATK3'
+                        return
+                    elif self.player1_state == 'fastMiddleATK3':
+                        # 세 번째 동작 완료 -> 공격 종료
+                        self.player1_ref.is_attacking = False
+                        self.player1_ref.state = 'Idle'
+                        self.player1_state = 'Idle'
+                        self.player1_frame = 0
+                        return
+
                 # strongMiddleATK 완료 시 연계 공격 체크
-                if (self.player1_state == 'strongMiddleATK' and
+                elif (self.player1_state == 'strongMiddleATK' and
                     self.player1_ref and
                     next_frame == 0):  # strongMiddleATK 애니메이션 완료
 
@@ -101,7 +124,7 @@ class SpriteManager:
 
                 # 다른 공격 애니메이션 완료 처리
                 elif (self.player1_ref and self.player1_ref.is_attack_state() and
-                      self.player1_state != 'strongMiddleATK' and
+                      self.player1_state not in ['strongMiddleATK', 'fastMiddleATK', 'fastMiddleATK2'] and
                       next_frame == 0):
                     self.player1_ref.is_attacking = False
                     self.player1_ref.state = 'Idle'
@@ -145,8 +168,29 @@ class SpriteManager:
                 sprite_count = len(sprites[self.player2_state])
                 next_frame = (self.player2_frame + 1) % sprite_count
 
+                # thief 캐릭터의 fastMiddleATK 연계 처리
+                if (character_type == 'thief' and
+                    self.player2_ref and
+                    next_frame == 0):  # 애니메이션 완료
+
+                    if self.player2_state == 'fastMiddleATK':
+                        # 첫 번째 동작 완료 -> 두 번째 동작으로 전환
+                        self.player2_ref.state = 'fastMiddleATK2'
+                        return
+                    elif self.player2_state == 'fastMiddleATK2':
+                        # 두 번째 동작 완료 -> 세 번째 동작으로 전환
+                        self.player2_ref.state = 'fastMiddleATK3'
+                        return
+                    elif self.player2_state == 'fastMiddleATK3':
+                        # 세 번째 동작 완료 -> 공격 종료
+                        self.player2_ref.is_attacking = False
+                        self.player2_ref.state = 'Idle'
+                        self.player2_state = 'Idle'
+                        self.player2_frame = 0
+                        return
+
                 # strongMiddleATK 완료 시 연계 공격 체크
-                if (self.player2_state == 'strongMiddleATK' and
+                elif (self.player2_state == 'strongMiddleATK' and
                     self.player2_ref and
                     next_frame == 0):  # strongMiddleATK 애니메이션 완료
 
@@ -165,7 +209,7 @@ class SpriteManager:
 
                 # 다른 공격 애니메이션 완료 처리
                 elif (self.player2_ref and self.player2_ref.is_attack_state() and
-                      self.player2_state != 'strongMiddleATK' and
+                      self.player2_state not in ['strongMiddleATK', 'fastMiddleATK', 'fastMiddleATK2'] and
                       next_frame == 0):
                     self.player2_ref.is_attacking = False
                     self.player2_ref.state = 'Idle'
