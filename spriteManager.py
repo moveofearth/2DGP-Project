@@ -42,7 +42,7 @@ class SpriteManager:
 
         # thief 캐릭터 스프라이트 로딩
         self.shared_sprites['thief'] = {
-            'Idle': [pico2d.load_image(str(base_path / 'thief' / 'idle' / f'{i}.png')) for i in range(5)],
+            'Idle': [pico2d.load_image(str(base_path / 'thief' / 'idle' / f'{i}.png')) for i in range(6)],
             'Walk': [pico2d.load_image(str(base_path / 'thief' / 'walk' / f'{i}.png')) for i in range(6)],
             'BackWalk': [pico2d.load_image(str(base_path / 'thief' / 'BackWalk' / f'{i}.png')) for i in range(7)],
             'fastMiddleATK': [pico2d.load_image(str(base_path / 'thief' / 'fastMiddleATK' / f'{i}.png')) for i in range(6)],
@@ -50,7 +50,8 @@ class SpriteManager:
             'fastMiddleATK3': [pico2d.load_image(str(base_path / 'thief' / 'fastMiddleATK' / f'{i}.png')) for i in range(12, 18)],
             'strongMiddleATK': [pico2d.load_image(str(base_path / 'thief' / 'strongMiddleATK' / f'{i}.png')) for i in range(5)],  # 0~4
             'strongMiddleATK2': [pico2d.load_image(str(base_path / 'thief' / 'strongMiddleATK' / f'{i}.png')) for i in range(5, 10)],  # 5~9
-            'strongUpperATK': [pico2d.load_image(str(base_path / 'priest' / 'strongUpperATK' / f'{i}.png')) for i in range(13)],  # 임시로 priest 사용
+            'strongUpperATK': [pico2d.load_image(str(base_path / 'thief' / 'strongUpperATK' / f'{i}.png')) for i in range(5)],  # 0~4
+            'strongUpperATK2': [pico2d.load_image(str(base_path / 'thief' / 'strongUpperATK' / f'{i}.png')) for i in range(5, 10)],  # 5~9
             'strongLowerATK': [pico2d.load_image(str(base_path / 'priest' / 'strongLowerATK' / f'{i}.png')) for i in range(9)]   # 임시로 priest 사용
         }
 
@@ -142,6 +143,28 @@ class SpriteManager:
                         self.player1_state = 'Idle'
                         self.player1_frame = 0
                         return
+                    elif self.player1_state == 'strongUpperATK':
+                        # thief의 strongUpperATK도 G키 입력 대기
+                        if self.player1_ref.combo_reserved:
+                            self.player1_ref.state = 'strongUpperATK2'
+                            self.player1_ref.combo_reserved = False
+                            self.player1_ref.can_combo = False
+                            return
+                        else:
+                            # 연계 입력이 없으면 공격 종료
+                            self.player1_ref.is_attacking = False
+                            self.player1_ref.state = 'Idle'
+                            self.player1_state = 'Idle'
+                            self.player1_frame = 0
+                            self.player1_ref.can_combo = False
+                            return
+                    elif self.player1_state == 'strongUpperATK2':
+                        # strongUpperATK2 완료 -> 공격 종료
+                        self.player1_ref.is_attacking = False
+                        self.player1_ref.state = 'Idle'
+                        self.player1_state = 'Idle'
+                        self.player1_frame = 0
+                        return
 
                 # priest 캐릭터의 strongMiddleATK 연계 처리
                 elif (character_type == 'priest' and
@@ -164,7 +187,7 @@ class SpriteManager:
 
                 # 다른 공격 애니메이션 완료 처리
                 elif (self.player1_ref and self.player1_ref.is_attack_state() and
-                      self.player1_state not in ['strongMiddleATK', 'fastMiddleATK', 'fastMiddleATK2'] and
+                      self.player1_state not in ['strongMiddleATK', 'fastMiddleATK', 'fastMiddleATK2', 'strongUpperATK'] and
                       next_frame == 0):
                     self.player1_ref.is_attacking = False
                     self.player1_ref.state = 'Idle'
@@ -184,7 +207,7 @@ class SpriteManager:
             self.player1_ref.can_combo = True
         # thief의 연계 가능 시점 체크
         elif (character_type == 'thief' and
-              (self.player1_state in ['fastMiddleATK', 'fastMiddleATK2', 'strongMiddleATK']) and
+              (self.player1_state in ['fastMiddleATK', 'fastMiddleATK2', 'strongMiddleATK', 'strongUpperATK']) and
               self.player1_ref and
               self.player1_frame >= 3):  # 3프레임 이후부터 연계 가능
             self.player1_ref.can_combo = True
@@ -280,6 +303,28 @@ class SpriteManager:
                         self.player2_state = 'Idle'
                         self.player2_frame = 0
                         return
+                    elif self.player2_state == 'strongUpperATK':
+                        # thief의 strongUpperATK도 2키 입력 대기
+                        if self.player2_ref.combo_reserved:
+                            self.player2_ref.state = 'strongUpperATK2'
+                            self.player2_ref.combo_reserved = False
+                            self.player2_ref.can_combo = False
+                            return
+                        else:
+                            # 연계 입력이 없으면 공격 종료
+                            self.player2_ref.is_attacking = False
+                            self.player2_ref.state = 'Idle'
+                            self.player2_state = 'Idle'
+                            self.player2_frame = 0
+                            self.player2_ref.can_combo = False
+                            return
+                    elif self.player2_state == 'strongUpperATK2':
+                        # strongUpperATK2 완료 -> 공격 종료
+                        self.player2_ref.is_attacking = False
+                        self.player2_ref.state = 'Idle'
+                        self.player2_state = 'Idle'
+                        self.player2_frame = 0
+                        return
 
                 # priest 캐릭터의 strongMiddleATK 연계 처리
                 elif (character_type == 'priest' and
@@ -302,7 +347,7 @@ class SpriteManager:
 
                 # 다른 공격 애니메이션 완료 처리
                 elif (self.player2_ref and self.player2_ref.is_attack_state() and
-                      self.player2_state not in ['strongMiddleATK', 'fastMiddleATK', 'fastMiddleATK2'] and
+                      self.player2_state not in ['strongMiddleATK', 'fastMiddleATK', 'fastMiddleATK2', 'strongUpperATK'] and
                       next_frame == 0):
                     self.player2_ref.is_attacking = False
                     self.player2_ref.state = 'Idle'
@@ -320,7 +365,7 @@ class SpriteManager:
             self.player2_ref.can_combo = True
         # thief의 연계 가능 시점 체크
         elif (character_type == 'thief' and
-              (self.player2_state in ['fastMiddleATK', 'fastMiddleATK2', 'strongMiddleATK']) and
+              (self.player2_state in ['fastMiddleATK', 'fastMiddleATK2', 'strongMiddleATK', 'strongUpperATK']) and
               self.player2_ref and
               self.player2_frame >= 3):  # 3프레임 이후부터 연계 가능
             self.player2_ref.can_combo = True
