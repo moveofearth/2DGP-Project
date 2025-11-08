@@ -52,7 +52,7 @@ class SpriteManager:
             'strongMiddleATK2': [pico2d.load_image(str(base_path / 'thief' / 'strongMiddleATK' / f'{i}.png')) for i in range(5, 10)],  # 5~9
             'strongUpperATK': [pico2d.load_image(str(base_path / 'thief' / 'strongUpperATK' / f'{i}.png')) for i in range(5)],  # 0~4
             'strongUpperATK2': [pico2d.load_image(str(base_path / 'thief' / 'strongUpperATK' / f'{i}.png')) for i in range(5, 10)],  # 5~9
-            'strongLowerATK': [pico2d.load_image(str(base_path / 'priest' / 'strongLowerATK' / f'{i}.png')) for i in range(9)]   # 임시로 priest 사용
+            'strongLowerATK': [pico2d.load_image(str(base_path / 'thief' / 'strongLowerATK' / f'{i}.png')) for i in range(4)]  # 0~3
         }
 
     def get_character_sprites(self, character_type):
@@ -165,6 +165,13 @@ class SpriteManager:
                             return
                     elif self.player1_state == 'strongUpperATK2':
                         # strongUpperATK2 완료 -> 공격 종료
+                        self.player1_ref.is_attacking = False
+                        self.player1_ref.state = 'Idle'
+                        self.player1_state = 'Idle'
+                        self.player1_frame = 0
+                        return
+                    elif self.player1_state == 'strongLowerATK':
+                        # thief의 strongLowerATK 완료 -> 공격 종료 (연계 없음)
                         self.player1_ref.is_attacking = False
                         self.player1_ref.state = 'Idle'
                         self.player1_state = 'Idle'
@@ -329,6 +336,13 @@ class SpriteManager:
                             return
                     elif self.player2_state == 'strongUpperATK2':
                         # strongUpperATK2 완료 -> 공격 종료
+                        self.player2_ref.is_attacking = False
+                        self.player2_ref.state = 'Idle'
+                        self.player2_state = 'Idle'
+                        self.player2_frame = 0
+                        return
+                    elif self.player2_state == 'strongLowerATK':
+                        # thief의 strongLowerATK 완료 -> 공격 종료 (연계 없음)
                         self.player2_ref.is_attacking = False
                         self.player2_ref.state = 'Idle'
                         self.player2_state = 'Idle'
