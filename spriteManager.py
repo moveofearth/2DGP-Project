@@ -42,7 +42,7 @@ class SpriteManager:
 
         # thief 캐릭터 스프라이트 로딩
         self.shared_sprites['thief'] = {
-            'Idle': [pico2d.load_image(str(base_path / 'thief' / 'idle' / f'{i}.png')) for i in range(6)],
+            'Idle': [pico2d.load_image(str(base_path / 'thief' / 'idle' / f'{i}.png')) for i in range(6)],  # 0~5로 수정 (6개)
             'Walk': [pico2d.load_image(str(base_path / 'thief' / 'walk' / f'{i}.png')) for i in range(6)],
             'BackWalk': [pico2d.load_image(str(base_path / 'thief' / 'BackWalk' / f'{i}.png')) for i in range(7)],
             'fastMiddleATK': [pico2d.load_image(str(base_path / 'thief' / 'fastMiddleATK' / f'{i}.png')) for i in range(6)],
@@ -78,6 +78,11 @@ class SpriteManager:
             if sprites and self.player1_state in sprites:
                 sprite_count = len(sprites[self.player1_state])
                 next_frame = (self.player1_frame + 1) % sprite_count
+
+                # 공격 상태가 아닌 경우 (Idle, Walk, BackWalk) 단순히 다음 프레임으로 진행
+                if self.player1_state in ['Idle', 'Walk', 'BackWalk']:
+                    self.player1_frame = next_frame
+                    return
 
                 # thief 캐릭터의 연계 처리
                 if (character_type == 'thief' and
@@ -187,7 +192,6 @@ class SpriteManager:
 
                 # 다른 공격 애니메이션 완료 처리
                 elif (self.player1_ref and self.player1_ref.is_attack_state() and
-                      self.player1_state not in ['strongMiddleATK', 'fastMiddleATK', 'fastMiddleATK2', 'strongUpperATK'] and
                       next_frame == 0):
                     self.player1_ref.is_attacking = False
                     self.player1_ref.state = 'Idle'
@@ -238,6 +242,11 @@ class SpriteManager:
             if sprites and self.player2_state in sprites:
                 sprite_count = len(sprites[self.player2_state])
                 next_frame = (self.player2_frame + 1) % sprite_count
+
+                # 공격 상태가 아닌 경우 (Idle, Walk, BackWalk) 단순히 다음 프레임으로 진행
+                if self.player2_state in ['Idle', 'Walk', 'BackWalk']:
+                    self.player2_frame = next_frame
+                    return
 
                 # thief 캐릭터의 연계 처리
                 if (character_type == 'thief' and
@@ -347,7 +356,6 @@ class SpriteManager:
 
                 # 다른 공격 애니메이션 완료 처리
                 elif (self.player2_ref and self.player2_ref.is_attack_state() and
-                      self.player2_state not in ['strongMiddleATK', 'fastMiddleATK', 'fastMiddleATK2', 'strongUpperATK'] and
                       next_frame == 0):
                     self.player2_ref.is_attacking = False
                     self.player2_ref.state = 'Idle'
