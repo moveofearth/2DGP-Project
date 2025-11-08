@@ -16,7 +16,7 @@ class Player:
 
     def is_attack_state(self):
         """현재 상태가 공격 상태인지 확인"""
-        attack_states = ['fastMiddleATK', 'fastMiddleATK2', 'fastMiddleATK3', 'strongMiddleATK', 'strongMiddleATK2', 'strongUpperATK', 'strongLowerATK']
+        attack_states = ['fastMiddleATK', 'fastMiddleATK2', 'fastMiddleATK3', 'strongMiddleATK', 'strongMiddleATK2', 'strongUpperATK', 'strongUpperATK2', 'strongLowerATK']
         return self.state in attack_states
 
     def initialize(self):
@@ -33,7 +33,7 @@ class Player:
         # 연계 공격 입력 처리
         if combo_input and self.can_combo:
             if (self.get_character_type() == 'priest' and self.state == 'strongMiddleATK') or \
-               (self.get_character_type() == 'thief' and self.state in ['fastMiddleATK', 'fastMiddleATK2', 'strongMiddleATK']):
+               (self.get_character_type() == 'thief' and self.state in ['fastMiddleATK', 'fastMiddleATK2', 'strongMiddleATK', 'strongUpperATK']):
                 self.combo_reserved = True
                 return
 
@@ -55,7 +55,8 @@ class Player:
         elif atk_input == 'strongUpperATK' and not self.is_attacking:
             self.state = 'strongUpperATK'
             self.is_attacking = True
-            self.can_combo = False
+            # thief는 strongUpperATK에서도 연계 가능
+            self.can_combo = True if self.get_character_type() == 'thief' else False
             self.combo_reserved = False
             return  # 공격 시작 시 이동은 무시
         elif atk_input == 'strongLowerATK' and not self.is_attacking:
