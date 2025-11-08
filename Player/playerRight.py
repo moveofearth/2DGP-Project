@@ -17,21 +17,25 @@ class PlayerRight(Player):
         # Character 업데이트
         self.character.update(deltaTime)
 
-        # 연계 공격 입력을 받으면 예약 상태로 설정
-        if combo_input and self.state == 'strongMiddleATK' and self.can_combo:
-            self.combo_reserved = True
-            return
+        # 연계 공격 입력 처리
+        if combo_input and self.can_combo:
+            if (self.get_character_type() == 'priest' and self.state == 'strongMiddleATK') or \
+               (self.get_character_type() == 'thief' and self.state in ['fastMiddleATK', 'fastMiddleATK2', 'strongMiddleATK']):
+                self.combo_reserved = True
+                return
 
         # 공격 입력 처리 (이동 중에도 가능)
         if atk_input == 'fastMiddleATK' and not self.is_attacking:
             self.state = 'fastMiddleATK'
             self.is_attacking = True
-            self.can_combo = False
+            # thief는 fastMiddleATK에서도 연계 가능
+            self.can_combo = True if self.get_character_type() == 'thief' else False
             self.combo_reserved = False
             return
         elif atk_input == 'strongMiddleATK' and not self.is_attacking:
             self.state = 'strongMiddleATK'
             self.is_attacking = True
+            # 모든 캐릭터가 strongMiddleATK에서 연계 가능
             self.can_combo = True
             self.combo_reserved = False
             return

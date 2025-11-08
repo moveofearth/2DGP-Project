@@ -1,22 +1,14 @@
-from Scenes.titleScene import TitleScene  # import 수정: 패키지.모듈 import 클래스
+import pico2d
 
 
 class SceneManager:
     def __init__(self):
-        self.scenes = {}
-        self.currentScene = None
-
-    def addScene(self, sceneName, scene):
-        self.scenes[sceneName] = scene
+        self.background = None
 
     def initialize(self):
-        self.addScene("Title", TitleScene())  # 인스턴스 생성 수정
-        self.changeScene("Title")
-
-    def changeScene(self, sceneName):
-        self.currentScene = self.scenes[sceneName]
-        self.currentScene.initialize()
+        # 기본 배경 생성 (단색)
+        pass
 
     def render(self):
-        if self.currentScene is not None:
-            self.currentScene.render()
+        # 기본 배경 렌더링 (회색)
+        pico2d.clear_canvas()

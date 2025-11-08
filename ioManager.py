@@ -48,9 +48,11 @@ class IOManager:
             if event.type == pico2d.SDL_KEYDOWN:
                 if event.key == pico2d.SDLK_f:
                     self.player1_keys['f'] = True
+                    # F키로 모든 연계 공격 처리 (thief의 fastMiddleATK와 strongMiddleATK 연계)
+                    self.player1_combo_input = True
                 if event.key == pico2d.SDLK_g:
                     self.player1_keys['g'] = True
-                    # strongMiddleATK 중 추가 입력 감지
+                    # G키는 priest의 strongMiddleATK 연계만 처리
                     self.player1_combo_input = True
             elif event.type == pico2d.SDL_KEYUP:
                 if event.key == pico2d.SDLK_f:
@@ -119,9 +121,11 @@ class IOManager:
             if event.type == pico2d.SDL_KEYDOWN:
                 if event.key == pico2d.SDLK_KP_1:
                     self.player2_keys['one'] = True
+                    # 1키로 모든 연계 공격 처리 (thief의 fastMiddleATK와 strongMiddleATK 연계)
+                    self.player2_combo_input = True
                 if event.key == pico2d.SDLK_KP_2:
                     self.player2_keys['two'] = True
-                    # strongMiddleATK 중 추가 입력 감지
+                    # 2키는 priest의 strongMiddleATK 연계만 처리
                     self.player2_combo_input = True
             elif event.type == pico2d.SDL_KEYUP:
                 if event.key == pico2d.SDLK_KP_1:

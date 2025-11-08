@@ -40,22 +40,19 @@ class SpriteManager:
             'strongLowerATK': [pico2d.load_image(str(base_path / 'priest' / 'strongLowerATK' / f'{i}.png')) for i in range(9)]
         }
 
-        # thief 캐릭터 스프라이트 로딩 (경로명을 'thief'로 수정)
+        # thief 캐릭터 스프라이트 로딩
         self.shared_sprites['thief'] = {
             'Idle': [pico2d.load_image(str(base_path / 'thief' / 'idle' / f'{i}.png')) for i in range(5)],
             'Walk': [pico2d.load_image(str(base_path / 'thief' / 'walk' / f'{i}.png')) for i in range(6)],
             'BackWalk': [pico2d.load_image(str(base_path / 'thief' / 'BackWalk' / f'{i}.png')) for i in range(7)],
-            'fastMiddleATK': [pico2d.load_image(str(base_path / 'thief' / 'fastMiddleATK' / f'{i}.png')) for i in range(6)],  # 첫 번째 동작 (0~5)
-            'fastMiddleATK2': [pico2d.load_image(str(base_path / 'thief' / 'fastMiddleATK' / f'{i}.png')) for i in range(6, 12)],  # 두 번째 동작 (6~11)
-            'fastMiddleATK3': [pico2d.load_image(str(base_path / 'thief' / 'fastMiddleATK' / f'{i}.png')) for i in range(12, 18)],  # 세 번째 동작 (12~17)
-            'strongMiddleATK': [pico2d.load_image(str(base_path / 'thief' / 'strongMiddleATK' / f'{i}.png')) for i in range(5)],
-            'strongMiddleATK2': [pico2d.load_image(str(base_path / 'thief' / 'strongMiddleATK' / f'{i}.png')) for i in range(5, 10)],
-            #'strongUpperATK': [pico2d.load_image(str(base_path / 'thief' / 'strongUpperATK' / f'{i}.png')) for i in range(13)],
-            #'strongLowerATK': [pico2d.load_image(str(base_path / 'thief' / 'strongLowerATK' / f'{i}.png')) for i in range(9)]
+            'fastMiddleATK': [pico2d.load_image(str(base_path / 'thief' / 'fastMiddleATK' / f'{i}.png')) for i in range(6)],
+            'fastMiddleATK2': [pico2d.load_image(str(base_path / 'thief' / 'fastMiddleATK' / f'{i}.png')) for i in range(6, 12)],
+            'fastMiddleATK3': [pico2d.load_image(str(base_path / 'thief' / 'fastMiddleATK' / f'{i}.png')) for i in range(12, 18)],
+            'strongMiddleATK': [pico2d.load_image(str(base_path / 'thief' / 'strongMiddleATK' / f'{i}.png')) for i in range(5)],  # 0~4
+            'strongMiddleATK2': [pico2d.load_image(str(base_path / 'thief' / 'strongMiddleATK' / f'{i}.png')) for i in range(5, 10)],  # 5~9
+            'strongUpperATK': [pico2d.load_image(str(base_path / 'priest' / 'strongUpperATK' / f'{i}.png')) for i in range(13)],  # 임시로 priest 사용
+            'strongLowerATK': [pico2d.load_image(str(base_path / 'priest' / 'strongLowerATK' / f'{i}.png')) for i in range(9)]   # 임시로 priest 사용
         }
-
-        # 추후 다른 캐릭터 추가 시
-        # self.shared_sprites['warrior'] = { ... }
 
     def get_character_sprites(self, character_type):
         """캐릭터 타입에 따른 스프라이트 반환"""
@@ -68,7 +65,7 @@ class SpriteManager:
             self.player1_frame = 0
             self.frame_timer = 0.0
 
-        # 프레임 애니메이션 업데이트 (deltaTime 사용하되 0.5초마다 프레임 전환)
+        # 프레임 애니메이션 업데이트
         self.frame_timer += deltaTime
         if self.frame_timer >= self.frame_time:
             self.frame_timer = 0.0
@@ -79,23 +76,43 @@ class SpriteManager:
 
             if sprites and self.player1_state in sprites:
                 sprite_count = len(sprites[self.player1_state])
-
-                # 다음 프레임으로 진행
                 next_frame = (self.player1_frame + 1) % sprite_count
 
-                # thief 캐릭터의 fastMiddleATK 연계 처리
+                # thief 캐릭터의 연계 처리
                 if (character_type == 'thief' and
                     self.player1_ref and
                     next_frame == 0):  # 애니메이션 완료
 
                     if self.player1_state == 'fastMiddleATK':
-                        # 첫 번째 동작 완료 -> 두 번째 동작으로 전환
-                        self.player1_ref.state = 'fastMiddleATK2'
-                        return
+                        # 첫 번째 동작 완료 - F키 입력 대기
+                        if self.player1_ref.combo_reserved:
+                            self.player1_ref.state = 'fastMiddleATK2'
+                            self.player1_ref.combo_reserved = False
+                            self.player1_ref.can_combo = False
+                            return
+                        else:
+                            # 연계 입력이 없으면 공격 종료
+                            self.player1_ref.is_attacking = False
+                            self.player1_ref.state = 'Idle'
+                            self.player1_state = 'Idle'
+                            self.player1_frame = 0
+                            self.player1_ref.can_combo = False
+                            return
                     elif self.player1_state == 'fastMiddleATK2':
-                        # 두 번째 동작 완료 -> 세 번째 동작으로 전환
-                        self.player1_ref.state = 'fastMiddleATK3'
-                        return
+                        # 두 번째 동작 완료 - F키 입력 대기
+                        if self.player1_ref.combo_reserved:
+                            self.player1_ref.state = 'fastMiddleATK3'
+                            self.player1_ref.combo_reserved = False
+                            self.player1_ref.can_combo = False
+                            return
+                        else:
+                            # 연계 입력이 없으면 공격 종료
+                            self.player1_ref.is_attacking = False
+                            self.player1_ref.state = 'Idle'
+                            self.player1_state = 'Idle'
+                            self.player1_frame = 0
+                            self.player1_ref.can_combo = False
+                            return
                     elif self.player1_state == 'fastMiddleATK3':
                         # 세 번째 동작 완료 -> 공격 종료
                         self.player1_ref.is_attacking = False
@@ -103,18 +120,41 @@ class SpriteManager:
                         self.player1_state = 'Idle'
                         self.player1_frame = 0
                         return
+                    elif self.player1_state == 'strongMiddleATK':
+                        # thief의 strongMiddleATK도 G키 입력 대기
+                        if self.player1_ref.combo_reserved:
+                            self.player1_ref.state = 'strongMiddleATK2'
+                            self.player1_ref.combo_reserved = False
+                            self.player1_ref.can_combo = False
+                            return
+                        else:
+                            # 연계 입력이 없으면 공격 종료
+                            self.player1_ref.is_attacking = False
+                            self.player1_ref.state = 'Idle'
+                            self.player1_state = 'Idle'
+                            self.player1_frame = 0
+                            self.player1_ref.can_combo = False
+                            return
+                    elif self.player1_state == 'strongMiddleATK2':
+                        # strongMiddleATK2 완료 -> 공격 종료
+                        self.player1_ref.is_attacking = False
+                        self.player1_ref.state = 'Idle'
+                        self.player1_state = 'Idle'
+                        self.player1_frame = 0
+                        return
 
-                # strongMiddleATK 완료 시 연계 공격 체크
-                elif (self.player1_state == 'strongMiddleATK' and
-                    self.player1_ref and
-                    next_frame == 0):  # strongMiddleATK 애니메이션 완료
+                # priest 캐릭터의 strongMiddleATK 연계 처리
+                elif (character_type == 'priest' and
+                      self.player1_state == 'strongMiddleATK' and
+                      self.player1_ref and
+                      next_frame == 0):
 
-                    if self.player1_ref.combo_reserved:  # 연계가 예약되어 있으면
+                    if self.player1_ref.combo_reserved:
                         self.player1_ref.state = 'strongMiddleATK2'
                         self.player1_ref.combo_reserved = False
                         self.player1_ref.can_combo = False
-                        return  # strongMiddleATK2로 상태 변경을 위해 리턴
-                    else:  # 연계가 없으면 공격 종료
+                        return
+                    else:
                         self.player1_ref.is_attacking = False
                         self.player1_ref.state = 'Idle'
                         self.player1_state = 'Idle'
@@ -130,14 +170,23 @@ class SpriteManager:
                     self.player1_ref.state = 'Idle'
                     self.player1_state = 'Idle'
                     self.player1_frame = 0
-                    self.player1_ref.can_combo = False
+                    if hasattr(self.player1_ref, 'can_combo'):
+                        self.player1_ref.can_combo = False
                 else:
                     self.player1_frame = next_frame
 
-        # strongMiddleATK에서 연계 가능 시점 체크
-        if (self.player1_state == 'strongMiddleATK' and
+        # 연계 가능 시점 체크
+        character_type = self.player1_ref.get_character_type() if self.player1_ref else 'priest'
+        if (character_type == 'priest' and
+            self.player1_state == 'strongMiddleATK' and
             self.player1_ref and
-            self.player1_frame >= 3):  # 3프레임 이후부터 연계 가능
+            self.player1_frame >= 3):
+            self.player1_ref.can_combo = True
+        # thief의 연계 가능 시점 체크
+        elif (character_type == 'thief' and
+              (self.player1_state in ['fastMiddleATK', 'fastMiddleATK2', 'strongMiddleATK']) and
+              self.player1_ref and
+              self.player1_frame >= 3):  # 3프레임 이후부터 연계 가능
             self.player1_ref.can_combo = True
 
     def update_player1_position(self, x, y):
@@ -147,7 +196,6 @@ class SpriteManager:
     def update_player1_direction(self, direction):
         self.player1_dir = direction
 
-    # 플레이어2용 메서드 추가
     def update_player2_state(self, new_state, deltaTime):
         # 상태가 변경되면 프레임을 0으로 리셋
         if self.player2_state != new_state:
@@ -155,7 +203,7 @@ class SpriteManager:
             self.player2_frame = 0
             self.player2_frame_timer = 0.0
 
-        # 프레임 애니메이션 업데이트 (deltaTime 사용하되 0.5초마다 프레임 전환)
+        # 프레임 애니메이션 업데이트
         self.player2_frame_timer += deltaTime
         if self.player2_frame_timer >= self.frame_time:
             self.player2_frame_timer = 0.0
@@ -168,19 +216,41 @@ class SpriteManager:
                 sprite_count = len(sprites[self.player2_state])
                 next_frame = (self.player2_frame + 1) % sprite_count
 
-                # thief 캐릭터의 fastMiddleATK 연계 처리
+                # thief 캐릭터의 연계 처리
                 if (character_type == 'thief' and
                     self.player2_ref and
-                    next_frame == 0):  # 애니메이션 완료
+                    next_frame == 0):
 
                     if self.player2_state == 'fastMiddleATK':
-                        # 첫 번째 동작 완료 -> 두 번째 동작으로 전환
-                        self.player2_ref.state = 'fastMiddleATK2'
-                        return
+                        # 첫 번째 동작 완료 - 1키 입력 대기
+                        if self.player2_ref.combo_reserved:
+                            self.player2_ref.state = 'fastMiddleATK2'
+                            self.player2_ref.combo_reserved = False
+                            self.player2_ref.can_combo = False
+                            return
+                        else:
+                            # 연계 입력이 없으면 공격 종료
+                            self.player2_ref.is_attacking = False
+                            self.player2_ref.state = 'Idle'
+                            self.player2_state = 'Idle'
+                            self.player2_frame = 0
+                            self.player2_ref.can_combo = False
+                            return
                     elif self.player2_state == 'fastMiddleATK2':
-                        # 두 번째 동작 완료 -> 세 번째 동작으로 전환
-                        self.player2_ref.state = 'fastMiddleATK3'
-                        return
+                        # 두 번째 동작 완료 - 1키 입력 대기
+                        if self.player2_ref.combo_reserved:
+                            self.player2_ref.state = 'fastMiddleATK3'
+                            self.player2_ref.combo_reserved = False
+                            self.player2_ref.can_combo = False
+                            return
+                        else:
+                            # 연계 입력이 없으면 공격 종료
+                            self.player2_ref.is_attacking = False
+                            self.player2_ref.state = 'Idle'
+                            self.player2_state = 'Idle'
+                            self.player2_frame = 0
+                            self.player2_ref.can_combo = False
+                            return
                     elif self.player2_state == 'fastMiddleATK3':
                         # 세 번째 동작 완료 -> 공격 종료
                         self.player2_ref.is_attacking = False
@@ -188,18 +258,41 @@ class SpriteManager:
                         self.player2_state = 'Idle'
                         self.player2_frame = 0
                         return
+                    elif self.player2_state == 'strongMiddleATK':
+                        # thief의 strongMiddleATK도 2키 입력 대기
+                        if self.player2_ref.combo_reserved:
+                            self.player2_ref.state = 'strongMiddleATK2'
+                            self.player2_ref.combo_reserved = False
+                            self.player2_ref.can_combo = False
+                            return
+                        else:
+                            # 연계 입력이 없으면 공격 종료
+                            self.player2_ref.is_attacking = False
+                            self.player2_ref.state = 'Idle'
+                            self.player2_state = 'Idle'
+                            self.player2_frame = 0
+                            self.player2_ref.can_combo = False
+                            return
+                    elif self.player2_state == 'strongMiddleATK2':
+                        # strongMiddleATK2 완료 -> 공격 종료
+                        self.player2_ref.is_attacking = False
+                        self.player2_ref.state = 'Idle'
+                        self.player2_state = 'Idle'
+                        self.player2_frame = 0
+                        return
 
-                # strongMiddleATK 완료 시 연계 공격 체크
-                elif (self.player2_state == 'strongMiddleATK' and
-                    self.player2_ref and
-                    next_frame == 0):  # strongMiddleATK 애니메이션 완료
+                # priest 캐릭터의 strongMiddleATK 연계 처리
+                elif (character_type == 'priest' and
+                      self.player2_state == 'strongMiddleATK' and
+                      self.player2_ref and
+                      next_frame == 0):
 
-                    if self.player2_ref.combo_reserved:  # 연계가 예약되어 있으면
+                    if self.player2_ref.combo_reserved:
                         self.player2_ref.state = 'strongMiddleATK2'
                         self.player2_ref.combo_reserved = False
                         self.player2_ref.can_combo = False
-                        return  # strongMiddleATK2로 상태 변경을 위해 리턴
-                    else:  # 연계가 없으면 공격 종료
+                        return
+                    else:
                         self.player2_ref.is_attacking = False
                         self.player2_ref.state = 'Idle'
                         self.player2_state = 'Idle'
@@ -215,14 +308,21 @@ class SpriteManager:
                     self.player2_ref.state = 'Idle'
                     self.player2_state = 'Idle'
                     self.player2_frame = 0
-                    self.player2_ref.can_combo = False
                 else:
                     self.player2_frame = next_frame
 
-        # strongMiddleATK에서 연계 가능 시점 체크
-        if (self.player2_state == 'strongMiddleATK' and
+        # 연계 가능 시점 체크
+        character_type = self.player2_ref.get_character_type() if self.player2_ref else 'priest'
+        if (character_type == 'priest' and
+            self.player2_state == 'strongMiddleATK' and
             self.player2_ref and
-            self.player2_frame >= 3):  # 3프레임 이후부터 연계 가능
+            self.player2_frame >= 3):
+            self.player2_ref.can_combo = True
+        # thief의 연계 가능 시점 체크
+        elif (character_type == 'thief' and
+              (self.player2_state in ['fastMiddleATK', 'fastMiddleATK2', 'strongMiddleATK']) and
+              self.player2_ref and
+              self.player2_frame >= 3):  # 3프레임 이후부터 연계 가능
             self.player2_ref.can_combo = True
 
     def update_player2_position(self, x, y):
