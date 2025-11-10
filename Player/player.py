@@ -38,7 +38,7 @@ class Player:
         if combo_input and self.can_combo:
             if (self.get_character_type() == 'priest' and self.state == 'strongMiddleATK') or \
                (self.get_character_type() == 'thief' and self.state in ['fastMiddleATK', 'fastMiddleATK2', 'strongMiddleATK', 'strongUpperATK']) or \
-               (self.get_character_type() == 'fighter' and self.state in ['fastMiddleATK', 'fastMiddleATK2']):
+               (self.get_character_type() == 'fighter' and self.state in ['fastMiddleATK', 'fastMiddleATK2', 'strongUpperATK']):
                 self.combo_reserved = True
                 return
 
@@ -72,8 +72,8 @@ class Player:
         elif atk_input == 'strongUpperATK' and not self.is_attacking:
             self.state = 'strongUpperATK'
             self.is_attacking = True
-            # thief는 strongUpperATK에서도 연계 가능
-            self.can_combo = True if self.get_character_type() == 'thief' else False
+            # thief와 fighter는 strongUpperATK에서도 연계 가능
+            self.can_combo = True if self.get_character_type() in ['thief', 'fighter'] else False
             self.combo_reserved = False
             return  # 공격 시작 시 이동은 무시
         elif atk_input == 'strongLowerATK' and not self.is_attacking:

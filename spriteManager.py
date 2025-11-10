@@ -65,6 +65,8 @@ class SpriteManager:
             'fastMiddleATK3': [pico2d.load_image(str(base_path / 'fighter' / 'fastMiddleATK' / f'{i}.png')) for i in range(6, 8)],
             'strongMiddleATK': [pico2d.load_image(str(base_path / 'fighter' / 'strongMiddleATK' / f'{i}.png')) for i in range(3)],
             'strongLowerATK': [pico2d.load_image(str(base_path / 'fighter' / 'strongLowerATK' / f'{i}.png')) for i in range(5)],
+            'strongUpperATK': [pico2d.load_image(str(base_path / 'fighter' / 'strongUpperATK' / f'{i}.png')) for i in range(5)],
+            'strongUpperATK2': [pico2d.load_image(str(base_path / 'fighter' / 'strongUpperATK' / f'{i}.png')) for i in range(5, 9)],
             'fastLowerATK': [pico2d.load_image(str(base_path / 'fighter' / 'fastLowerATK' / f'{i}.png')) for i in range(4)],  # 0~3
             'fastUpperATK': [pico2d.load_image(str(base_path / 'fighter' / 'fastUpperATK' / f'{i}.png')) for i in range(6)]  # 0~5
         }
@@ -92,7 +94,7 @@ class SpriteManager:
             'fighter': {
                 'fastMiddleATK': 'fastMiddleATK2',
                 'fastMiddleATK2': 'fastMiddleATK3',
-                'strongMiddleATK': 'fastMiddleATK'
+                'strongUpperATK': 'strongUpperATK2'
             }
         }
 
@@ -154,7 +156,8 @@ class SpriteManager:
                 'strongMiddleATK': 3, 'strongUpperATK': 3
             },
             'fighter': {
-                'fastMiddleATK': 2, 'fastMiddleATK2': 2
+                'fastMiddleATK': 2, 'fastMiddleATK2': 2,
+                'strongUpperATK': 3
             }
         }
 
