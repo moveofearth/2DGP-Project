@@ -3,7 +3,7 @@ from .player import Player
 
 class PlayerLeft(Player):
     def __init__(self):
-        super().__init__(character_type='fighter')
+        super().__init__(x=600, y=300, character_type='fighter')
 
     def initialize(self):
         super().initialize()
@@ -35,6 +35,12 @@ class PlayerLeft(Player):
             return
         elif atk_input == 'fastLowerATK' and not self.is_attacking:
             self.state = 'fastLowerATK'
+            self.is_attacking = True
+            self.can_combo = False
+            self.combo_reserved = False
+            return
+        elif atk_input == 'fastUpperATK' and not self.is_attacking:
+            self.state = 'fastUpperATK'
             self.is_attacking = True
             self.can_combo = False
             self.combo_reserved = False

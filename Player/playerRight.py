@@ -39,6 +39,12 @@ class PlayerRight(Player):
             self.can_combo = False
             self.combo_reserved = False
             return
+        elif atk_input == 'fastUpperATK' and not self.is_attacking:
+            self.state = 'fastUpperATK'
+            self.is_attacking = True
+            self.can_combo = False
+            self.combo_reserved = False
+            return
         elif atk_input == 'strongMiddleATK' and not self.is_attacking:
             self.state = 'strongMiddleATK'
             self.is_attacking = True
