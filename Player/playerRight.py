@@ -4,7 +4,6 @@ from .player import Player
 class PlayerRight(Player):
     def __init__(self):
         super().__init__(x=600, y=300, character_type='priest')  # priest 캐릭터로 초기화
-        self.move_speed = 70.0  # 픽셀/초 단위 이동 속도
 
     def initialize(self):
         super().initialize()
@@ -55,13 +54,14 @@ class PlayerRight(Player):
             self.combo_reserved = False
             return
 
-        # 공격 중이 아닐 때만 이동 처리 - deltaTime 기반으로 이동 속도 조정
+        # 공격 중이 아닐 때만 이동 처리 - 캐릭터별 이동속도 적용
         if not self.is_attacking:
+            move_speed = self.get_move_speed()
             if move_input == 'left':
-                self.x -= self.move_speed * deltaTime
+                self.x -= move_speed * deltaTime
                 self.state = 'Walk'  # 왼쪽으로 갈 때 Walk
             elif move_input == 'right':
-                self.x += self.move_speed * 0.5 * deltaTime  # 오른쪽은 느리게
+                self.x += move_speed * 0.5 * deltaTime  # 오른쪽은 느리게
                 self.state = 'BackWalk'  # 오른쪽으로 갈 때 BackWalk
             else:
                 self.state = 'Idle'  # 입력이 없으면 Idle 상태

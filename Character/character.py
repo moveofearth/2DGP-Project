@@ -10,6 +10,13 @@ class Character:
         self.x, self.y = 400, 300
         self.state = 'Idle'
 
+        # 캐릭터별 이동속도 설정
+        self.move_speeds = {
+            'priest': 200.0,
+            'thief': 270.0,
+            'fighter': 270.0
+        }
+
     def initialize(self):
         # 캐릭터 타입에 따른 초기화
         if self.currentCharacter in ['priest', 'thief', 'fighter']:
@@ -42,3 +49,7 @@ class Character:
     def get_character_type(self):
         """현재 캐릭터 타입 반환"""
         return self.currentCharacter
+
+    def get_move_speed(self):
+        """현재 캐릭터의 이동속도 반환"""
+        return self.move_speeds.get(self.currentCharacter, 200.0)

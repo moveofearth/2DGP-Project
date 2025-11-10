@@ -19,6 +19,10 @@ class Player:
         attack_states = ['fastMiddleATK', 'fastMiddleATK2', 'fastMiddleATK3', 'strongMiddleATK', 'strongMiddleATK2', 'strongUpperATK', 'strongUpperATK2', 'strongLowerATK']
         return self.state in attack_states
 
+    def get_move_speed(self):
+        """현재 캐릭터의 이동속도 반환"""
+        return self.character.get_move_speed()
+
     def initialize(self):
         self.character.initialize()  # Character 초기화
 
@@ -69,11 +73,12 @@ class Player:
 
         # 공격 중이 아닐 때만 이동 처리
         if not self.is_attacking:
+            move_speed = self.get_move_speed()
             if move_input == 'left':
-                self.x -= 1
+                self.x -= move_speed * deltaTime
                 self.state = 'Walk'  # 기본은 Walk, 각 플레이어에서 오버라이드
             elif move_input == 'right':
-                self.x += 1
+                self.x += move_speed * deltaTime
                 self.state = 'Walk'  # 기본은 Walk, 각 플레이어에서 오버라이드
             else:
                 self.state = 'Idle'  # 입력이 없으면 Idle 상태
