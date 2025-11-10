@@ -55,6 +55,13 @@ class SpriteManager:
             'strongLowerATK': [pico2d.load_image(str(base_path / 'thief' / 'strongLowerATK' / f'{i}.png')) for i in range(4)]  # 0~3
         }
 
+        # fighter 캐릭터 스프라이트 로딩
+        self.shared_sprites['fighter'] = {
+            'Idle': [pico2d.load_image(str(base_path / 'fighter' / 'idle' / f'{i}.png')) for i in range(4)],
+            'Walk': [pico2d.load_image(str(base_path / 'fighter' / 'walk' / f'{i}.png')) for i in range(8)],
+            'BackWalk': [pico2d.load_image(str(base_path / 'fighter' / 'BackWalk' / f'{i}.png')) for i in range(8)],
+        }
+
     def get_character_sprites(self, character_type):
         """캐릭터 타입에 따른 스프라이트 반환"""
         return self.shared_sprites.get(character_type, self.shared_sprites.get('priest', {}))

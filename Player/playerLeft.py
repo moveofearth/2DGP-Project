@@ -3,7 +3,7 @@ from .player import Player
 
 class PlayerLeft(Player):
     def __init__(self):
-        super().__init__(character_type='thief')  # priest 캐릭터로 초기화
+        super().__init__(character_type='fighter')
 
     def initialize(self):
         super().initialize()
