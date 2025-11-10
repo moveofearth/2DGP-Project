@@ -4,6 +4,7 @@ from .player import Player
 class PlayerLeft(Player):
     def __init__(self):
         super().__init__(character_type='fighter')
+        self.move_speed = 200.0  # 픽셀/초 단위 이동 속도
 
     def initialize(self):
         super().initialize()
@@ -54,13 +55,13 @@ class PlayerLeft(Player):
             self.combo_reserved = False
             return
 
-        # 공격 중이 아닐 때만 이동 처리
+        # 공격 중이 아닐 때만 이동 처리 - deltaTime 기반으로 이동 속도 조정
         if not self.is_attacking:
             if move_input == 'left':
-                self.x -= 0.5
+                self.x -= self.move_speed * 0.5 * deltaTime  # 왼쪽은 느리게
                 self.state = 'BackWalk'  # 왼쪽으로 갈 때 BackWalk
             elif move_input == 'right':
-                self.x += 1
+                self.x += self.move_speed * deltaTime
                 self.state = 'Walk'  # 오른쪽으로 갈 때 Walk
             else:
                 self.state = 'Idle'  # 입력이 없으면 Idle 상태

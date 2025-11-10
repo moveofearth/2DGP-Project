@@ -19,6 +19,8 @@ class Game:
         self.ioManager = IOManager()
         self.spriteManager = SpriteManager()
         self.last_time = 0
+        self.target_fps = 70
+        self.frame_time = 1.0 / self.target_fps
 
     def initialize(self):
         pico2d.open_canvas(Config.windowWidth, Config.windowHeight)
@@ -70,8 +72,14 @@ class Game:
     def run(self):
         current_time = time.time()
         deltaTime = current_time - self.last_time
+
+        # 프레임 제한 - 너무 빠르면 대기
+        if deltaTime < self.frame_time:
+            time.sleep(self.frame_time - deltaTime)
+            current_time = time.time()
+            deltaTime = current_time - self.last_time
+
         self.last_time = current_time
 
         self.update(deltaTime)
-        pico2d.delay(0.01)
         self.render()

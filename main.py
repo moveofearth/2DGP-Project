@@ -6,9 +6,7 @@ game = game.Game()
 game.initialize()
 
 def main():
-
     while game.running:
-
         game.run()
 
     pico2d.close_canvas()

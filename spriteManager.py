@@ -8,7 +8,7 @@ class SpriteManager:
         self.player2_state = 'Idle'
         self.player1_frame = 0
         self.player2_frame = 0
-        self.frame_time = 0.1  # 프레임 전환 시간을 0.1초로 조정
+        self.frame_time = 0.083  # 프레임 전환 시간을 70fps 기준으로 조정 (약 12fps 애니메이션)
         self.frame_timer = 0.0  # 프레임 타이머
         self.player2_frame_timer = 0.0  # 플레이어2용 프레임 타이머
         self.player1_x = 400
