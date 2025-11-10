@@ -12,24 +12,22 @@ class Character:
 
     def initialize(self):
         # 캐릭터 타입에 따른 초기화
-        if self.currentCharacter == 'priest' or self.currentCharacter == 'thief':
-            # thief는 priest와 같은 초기화 로직 사용
-            self._initialize_priest()
+        if self.currentCharacter in ['priest', 'thief', 'fighter']:
+            self._initialize_character()
 
-    def _initialize_priest(self):
-        """Priest 캐릭터 초기화"""
-        # Priest 전용 초기화 로직
+    def _initialize_character(self):
+        """모든 캐릭터 공통 초기화"""
+        # 캐릭터 전용 초기화 로직
         pass
 
     def update(self, deltaTime):
         # 캐릭터 타입에 따른 업데이트
-        if self.currentCharacter == 'priest' or self.currentCharacter == 'thief':
-            # thief는 priest와 같은 업데이트 로직 사용
-            self._update_priest(deltaTime)
+        if self.currentCharacter in ['priest', 'thief', 'fighter']:
+            self._update_character(deltaTime)
 
-    def _update_priest(self, deltaTime):
-        """Priest 캐릭터 업데이트"""
-        # Priest 전용 업데이트 로직
+    def _update_character(self, deltaTime):
+        """모든 캐릭터 공통 업데이트"""
+        # 캐릭터 전용 업데이트 로직
         pass
 
     def render(self):
