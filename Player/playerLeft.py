@@ -30,41 +30,41 @@ class PlayerLeft(Player):
                 self.combo_reserved = True
                 return
 
-        # 공격 입력 처리 (이동 중에도 가능)
-        if atk_input == 'fastMiddleATK' and not self.is_attacking:
+        # 공격 입력 처리 (이동 중에도 가능) - 캐릭터별 공격 제한 적용
+        if atk_input == 'fastMiddleATK' and not self.is_attacking and self.can_use_attack('fastMiddleATK'):
             self.state = 'fastMiddleATK'
             self.is_attacking = True
             # thief와 fighter는 fastMiddleATK에서도 연계 가능
             self.can_combo = True if self.get_character_type() in ['thief', 'fighter'] else False
             self.combo_reserved = False
             return
-        elif atk_input == 'fastLowerATK' and not self.is_attacking:
+        elif atk_input == 'fastLowerATK' and not self.is_attacking and self.can_use_attack('fastLowerATK'):
             self.state = 'fastLowerATK'
             self.is_attacking = True
             self.can_combo = False
             self.combo_reserved = False
             return
-        elif atk_input == 'fastUpperATK' and not self.is_attacking:
+        elif atk_input == 'fastUpperATK' and not self.is_attacking and self.can_use_attack('fastUpperATK'):
             self.state = 'fastUpperATK'
             self.is_attacking = True
             self.can_combo = False
             self.combo_reserved = False
             return
-        elif atk_input == 'strongMiddleATK' and not self.is_attacking:
+        elif atk_input == 'strongMiddleATK' and not self.is_attacking and self.can_use_attack('strongMiddleATK'):
             self.state = 'strongMiddleATK'
             self.is_attacking = True
             # 모든 캐릭터가 strongMiddleATK에서 연계 가능
             self.can_combo = True
             self.combo_reserved = False
             return
-        elif atk_input == 'strongUpperATK' and not self.is_attacking:
+        elif atk_input == 'strongUpperATK' and not self.is_attacking and self.can_use_attack('strongUpperATK'):
             self.state = 'strongUpperATK'
             self.is_attacking = True
             # thief와 fighter는 strongUpperATK에서도 연계 가능
             self.can_combo = True if self.get_character_type() in ['thief', 'fighter'] else False
             self.combo_reserved = False
             return
-        elif atk_input == 'strongLowerATK' and not self.is_attacking:
+        elif atk_input == 'strongLowerATK' and not self.is_attacking and self.can_use_attack('strongLowerATK'):
             self.state = 'strongLowerATK'
             self.is_attacking = True
             self.can_combo = False
