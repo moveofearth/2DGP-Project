@@ -8,7 +8,9 @@ class SpriteManager:
         self.player2_state = 'Idle'
         self.player1_frame = 0
         self.player2_frame = 0
-        self.frame_time = 0.083  # 프레임 전환 시간을 70fps 기준으로 조정 (약 12fps 애니메이션)
+        self.default_frame_time = 0.083  # 기본 프레임 전환 시간 (약 12fps)
+        self.fast_attack_frame_time = 0.1  # fast 공격 프레임 시간
+        self.strong_attack_frame_time = 0.2  # strong 공격 프레임 시간
         self.frame_timer = 0.0  # 프레임 타이머
         self.player2_frame_timer = 0.0  # 플레이어2용 프레임 타이머
         self.player1_x = 400
@@ -166,6 +168,15 @@ class SpriteManager:
             frame >= combo_frames[character_type][state]):
             player_ref.can_combo = True
 
+    def _get_frame_time_for_state(self, state):
+        """상태에 따른 프레임 시간 반환"""
+        if 'fast' in state.lower():
+            return self.fast_attack_frame_time
+        elif 'strong' in state.lower():
+            return self.strong_attack_frame_time
+        else:
+            return self.default_frame_time
+
     def update_player1_state(self, new_state, deltaTime):
         # 상태가 변경되면 프레임을 0으로 리셋
         if self.player1_state != new_state:
@@ -173,9 +184,12 @@ class SpriteManager:
             self.player1_frame = 0
             self.frame_timer = 0.0
 
+        # 현재 상태에 맞는 프레임 시간 가져오기
+        current_frame_time = self._get_frame_time_for_state(self.player1_state)
+
         # 프레임 애니메이션 업데이트
         self.frame_timer += deltaTime
-        if self.frame_timer >= self.frame_time:
+        if self.frame_timer >= current_frame_time:
             self.frame_timer = 0.0
 
             character_type = self.player1_ref.get_character_type() if self.player1_ref else 'priest'
@@ -211,9 +225,12 @@ class SpriteManager:
             self.player2_frame = 0
             self.player2_frame_timer = 0.0
 
+        # 현재 상태에 맞는 프레임 시간 가져오기
+        current_frame_time = self._get_frame_time_for_state(self.player2_state)
+
         # 프레임 애니메이션 업데이트
         self.player2_frame_timer += deltaTime
-        if self.player2_frame_timer >= self.frame_time:
+        if self.player2_frame_timer >= current_frame_time:
             self.player2_frame_timer = 0.0
 
             character_type = self.player2_ref.get_character_type() if self.player2_ref else 'priest'
