@@ -33,6 +33,12 @@ class PlayerLeft(Player):
             self.can_combo = True if self.get_character_type() in ['thief', 'fighter'] else False
             self.combo_reserved = False
             return
+        elif atk_input == 'fastLowerATK' and not self.is_attacking:
+            self.state = 'fastLowerATK'
+            self.is_attacking = True
+            self.can_combo = False
+            self.combo_reserved = False
+            return
         elif atk_input == 'strongMiddleATK' and not self.is_attacking:
             self.state = 'strongMiddleATK'
             self.is_attacking = True

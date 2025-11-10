@@ -62,7 +62,11 @@ class IOManager:
 
         # 공격키 조합 확인
         if self.player1_keys['f']:
-            return 'fastMiddleATK'
+            # s키와 조합 확인 (fighter의 fastLowerATK)
+            if self.player1_keys['s']:
+                return 'fastLowerATK'
+            else:
+                return 'fastMiddleATK'
         elif self.player1_keys['g']:
             # up/down 키와 조합 확인
             if self.player1_keys['w']:
@@ -135,7 +139,11 @@ class IOManager:
 
         # 공격키 조합 확인
         if self.player2_keys['one']:
-            return 'fastMiddleATK'
+            # down키와 조합 확인 (fighter의 fastLowerATK)
+            if self.player2_keys['down']:
+                return 'fastLowerATK'
+            else:
+                return 'fastMiddleATK'
         elif self.player2_keys['two']:
             # up/down 키와 조합 확인
             if self.player2_keys['up']:
