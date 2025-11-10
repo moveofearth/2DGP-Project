@@ -10,7 +10,7 @@ class SpriteManager:
         self.player2_frame = 0
         self.default_frame_time = 0.083  # 기본 프레임 전환 시간 (약 12fps)
         self.fast_attack_frame_time = 0.1  # fast 공격 프레임 시간
-        self.strong_attack_frame_time = 0.2  # strong 공격 프레임 시간
+        self.strong_attack_frame_time = 0.15  # strong 공격 프레임 시간
         self.frame_timer = 0.0  # 프레임 타이머
         self.player2_frame_timer = 0.0  # 플레이어2용 프레임 타이머
         self.player1_x = 400

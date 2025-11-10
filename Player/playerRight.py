@@ -9,7 +9,7 @@ class PlayerRight(Player):
         super().initialize()
         self.dir = 1  # 왼쪽을 바라보도록 1로 설정
 
-    def update(self, deltaTime, move_input=None, atk_input=None, combo_input=False):
+    def update(self, deltaTime, move_input=None, atk_input=None, combo_input=False, char_change_input=None):
         # 캐릭터 위치 동기화
         self.character.x, self.character.y = self.x, self.y
         self.character.state = self.state

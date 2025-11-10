@@ -42,6 +42,7 @@ class Game:
         # 이동과 공격 입력을 분리해서 처리
         player1_move_input = self.ioManager.handleMoveInputPlayer1(events)
         player1_atk_input = self.ioManager.handleATKInputPlayer1(events)
+        player1_char_change = self.ioManager.handleCharacterChangePlayer1(events)
         player2_move_input = self.ioManager.handleMoveInputPlayer2(events)
         player2_atk_input = self.ioManager.handleATKInputPlayer2(events)
 
@@ -49,8 +50,8 @@ class Game:
         player1_combo = self.ioManager.check_player1_combo_input()
         player2_combo = self.ioManager.check_player2_combo_input()
 
-        # 플레이어 업데이트 시 이동, 공격, 연계 입력을 모두 전달
-        self.playerLeft.update(deltaTime, player1_move_input, player1_atk_input, player1_combo)
+        # 플레이어 업데이트 시 이동, 공격, 연계, 캐릭터 변경 입력을 모두 전달
+        self.playerLeft.update(deltaTime, player1_move_input, player1_atk_input, player1_combo, player1_char_change)
         self.playerRight.update(deltaTime, player2_move_input, player2_atk_input, player2_combo)
 
         # SpriteManager에 플레이어 상태 전달

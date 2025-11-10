@@ -8,6 +8,18 @@ class IOManager:
         self.player1_combo_input = False
         self.player2_combo_input = False
 
+    def handleCharacterChangePlayer1(self, events):
+        """Player1의 캐릭터 변경 입력 처리"""
+        for event in events:
+            if event.type == pico2d.SDL_KEYDOWN:
+                if event.key == pico2d.SDLK_1:
+                    return 'priest'
+                elif event.key == pico2d.SDLK_2:
+                    return 'thief'
+                elif event.key == pico2d.SDLK_3:
+                    return 'fighter'
+        return None
+
     def handleMoveInputPlayer1(self, events):
         # 이벤트로 키 상태 업데이트
         for event in events:

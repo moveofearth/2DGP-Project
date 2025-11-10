@@ -3,13 +3,18 @@ from .player import Player
 
 class PlayerLeft(Player):
     def __init__(self):
-        super().__init__(x=600, y=300, character_type='fighter')
+        super().__init__(x=600, y=300, character_type='thief')
 
     def initialize(self):
         super().initialize()
         self.dir = -1  # 오른쪽을 바라보도록 -1로 설정
 
-    def update(self, deltaTime, move_input=None, atk_input=None, combo_input=False):
+    def update(self, deltaTime, move_input=None, atk_input=None, combo_input=False, char_change_input=None):
+        # 캐릭터 변경 처리 (공격 중이 아닐 때만)
+        if char_change_input and not self.is_attacking:
+            self.set_character_type(char_change_input)
+            return
+
         # 캐릭터 위치 동기화
         self.character.x, self.character.y = self.x, self.y
         self.character.state = self.state

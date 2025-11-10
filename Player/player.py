@@ -26,7 +26,7 @@ class Player:
     def initialize(self):
         self.character.initialize()  # Character 초기화
 
-    def update(self, deltaTime, move_input=None, atk_input=None, combo_input=False):
+    def update(self, deltaTime, move_input=None, atk_input=None, combo_input=False, char_change_input=None):
         # 캐릭터 위치 동기화
         self.character.x, self.character.y = self.x, self.y
         self.character.state = self.state
