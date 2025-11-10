@@ -64,6 +64,7 @@ class SpriteManager:
             'fastMiddleATK2': [pico2d.load_image(str(base_path / 'fighter' / 'fastMiddleATK' / f'{i}.png')) for i in range(3, 6)],
             'fastMiddleATK3': [pico2d.load_image(str(base_path / 'fighter' / 'fastMiddleATK' / f'{i}.png')) for i in range(6, 8)],
             'strongMiddleATK': [pico2d.load_image(str(base_path / 'fighter' / 'strongMiddleATK' / f'{i}.png')) for i in range(3)],
+            'strongLowerATK': [pico2d.load_image(str(base_path / 'fighter' / 'strongLowerATK' / f'{i}.png')) for i in range(5)],
             'fastLowerATK': [pico2d.load_image(str(base_path / 'fighter' / 'fastLowerATK' / f'{i}.png')) for i in range(4)],  # 0~3
             'fastUpperATK': [pico2d.load_image(str(base_path / 'fighter' / 'fastUpperATK' / f'{i}.png')) for i in range(6)]  # 0~5
         }
@@ -117,7 +118,7 @@ class SpriteManager:
             # 마지막 연계이거나 단일 공격 완료
             if (state == 'fastMiddleATK' and character_type == 'priest') or \
                (state in ['strongUpperATK', 'strongLowerATK'] and character_type == 'priest') or \
-               (state in ['fastLowerATK', 'fastUpperATK', 'strongMiddleATK'] and character_type == 'fighter'):
+               (state in ['fastLowerATK', 'fastUpperATK', 'strongMiddleATK', 'strongLowerATK'] and character_type == 'fighter'):
                 # 단일 공격
                 self._end_attack(player_ref, is_player1)
                 return True
