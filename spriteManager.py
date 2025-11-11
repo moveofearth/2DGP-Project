@@ -62,13 +62,13 @@ class SpriteManager:
             'Idle': [pico2d.load_image(str(base_path / 'fighter' / 'idle' / f'{i}.png')) for i in range(4)],
             'Walk': [pico2d.load_image(str(base_path / 'fighter' / 'walk' / f'{i}.png')) for i in range(8)],
             'BackWalk': [pico2d.load_image(str(base_path / 'fighter' / 'BackWalk' / f'{i}.png')) for i in range(5)],
-            'fastMiddleATK': [pico2d.load_image(str(base_path / 'fighter' / 'fastMiddleATK' / f'{i}.png')) for i in range(3)],
-            'fastMiddleATK2': [pico2d.load_image(str(base_path / 'fighter' / 'fastMiddleATK' / f'{i}.png')) for i in range(3, 6)],
-            'fastMiddleATK3': [pico2d.load_image(str(base_path / 'fighter' / 'fastMiddleATK' / f'{i}.png')) for i in range(6, 8)],
-            'strongMiddleATK': [pico2d.load_image(str(base_path / 'fighter' / 'strongMiddleATK' / f'{i}.png')) for i in range(3)],
+            'fastMiddleATK': [pico2d.load_image(str(base_path / 'fighter' / 'fastMiddleATK' / f'{i}.png')) for i in range(4)],
+            'fastMiddleATK2': [pico2d.load_image(str(base_path / 'fighter' / 'fastMiddleATK' / f'{i}.png')) for i in range(4, 7)],
+            'fastMiddleATK3': [pico2d.load_image(str(base_path / 'fighter' / 'fastMiddleATK' / f'{i}.png')) for i in range(7, 10)],
+            'strongMiddleATK': [pico2d.load_image(str(base_path / 'fighter' / 'strongMiddleATK' / f'{i}.png')) for i in range(5)],
             'strongLowerATK': [pico2d.load_image(str(base_path / 'fighter' / 'strongLowerATK' / f'{i}.png')) for i in range(5)],
-            'strongUpperATK': [pico2d.load_image(str(base_path / 'fighter' / 'strongUpperATK' / f'{i}.png')) for i in range(5)],
-            'strongUpperATK2': [pico2d.load_image(str(base_path / 'fighter' / 'strongUpperATK' / f'{i}.png')) for i in range(5, 9)],
+            'strongUpperATK': [pico2d.load_image(str(base_path / 'fighter' / 'strongUpperATK' / f'{i}.png')) for i in range(4)],
+            'strongUpperATK2': [pico2d.load_image(str(base_path / 'fighter' / 'strongUpperATK' / f'{i}.png')) for i in range(4, 8)],
             'fastLowerATK': [pico2d.load_image(str(base_path / 'fighter' / 'fastLowerATK' / f'{i}.png')) for i in range(4)],  # 0~3
             'fastUpperATK': [pico2d.load_image(str(base_path / 'fighter' / 'fastUpperATK' / f'{i}.png')) for i in range(6)]  # 0~5
         }
