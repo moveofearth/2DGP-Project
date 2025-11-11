@@ -2,8 +2,8 @@ import pico2d
 
 class IOManager:
     def __init__(self):
-        self.player1_keys = {'w': False, 's': False, 'a': False, 'd': False, 'f': False, 'g': False}
-        self.player2_keys = {'up': False, 'down': False, 'left': False, 'right': False, 'one': False, 'two': False}
+        self.player1_keys = {'w': False, 's': False, 'a': False, 'd': False, 'f': False, 'g': False, 'h': False}
+        self.player2_keys = {'up': False, 'down': False, 'left': False, 'right': False, 'one': False, 'two': False, 'three': False}
         # 연계 공격을 위한 입력 버퍼
         self.player1_combo_input = False
         self.player2_combo_input = False
@@ -66,11 +66,19 @@ class IOManager:
                     self.player1_keys['g'] = True
                     # G키는 priest의 strongMiddleATK 연계만 처리
                     self.player1_combo_input = True
+                if event.key == pico2d.SDLK_h:
+                    self.player1_keys['h'] = True
             elif event.type == pico2d.SDL_KEYUP:
                 if event.key == pico2d.SDLK_f:
                     self.player1_keys['f'] = False
                 if event.key == pico2d.SDLK_g:
                     self.player1_keys['g'] = False
+                if event.key == pico2d.SDLK_h:
+                    self.player1_keys['h'] = False
+
+        # rage 스킬 체크 (가장 우선순위)
+        if self.player1_keys['h']:
+            return 'rageSkill'
 
         # 공격키 조합 확인
         if self.player1_keys['f']:
@@ -145,11 +153,19 @@ class IOManager:
                     self.player2_keys['two'] = True
                     # 2키는 priest의 strongMiddleATK 연계만 처리
                     self.player2_combo_input = True
+                if event.key == pico2d.SDLK_KP_3:
+                    self.player2_keys['three'] = True
             elif event.type == pico2d.SDL_KEYUP:
                 if event.key == pico2d.SDLK_KP_1:
                     self.player2_keys['one'] = False
                 if event.key == pico2d.SDLK_KP_2:
                     self.player2_keys['two'] = False
+                if event.key == pico2d.SDLK_KP_3:
+                    self.player2_keys['three'] = False
+
+        # rage 스킬 체크 (가장 우선순위)
+        if self.player2_keys['three']:
+            return 'rageSkill'
 
         # 공격키 조합 확인
         if self.player2_keys['one']:

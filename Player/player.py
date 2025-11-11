@@ -16,7 +16,7 @@ class Player:
 
         # 캐릭터별 사용 가능한 공격 정의
         self.available_attacks = {
-            'priest': ['fastMiddleATK', 'strongMiddleATK', 'strongUpperATK', 'strongLowerATK'],
+            'priest': ['fastMiddleATK', 'strongMiddleATK', 'strongUpperATK', 'strongLowerATK', 'rageSkill'],
             'thief': ['fastMiddleATK', 'strongMiddleATK', 'strongUpperATK', 'strongLowerATK'],
             'fighter': ['fastMiddleATK', 'fastLowerATK', 'fastUpperATK', 'strongMiddleATK', 'strongLowerATK', 'strongUpperATK']
         }
@@ -28,7 +28,7 @@ class Player:
 
     def is_attack_state(self):
         """현재 상태가 공격 상태인지 확인"""
-        attack_states = ['fastMiddleATK', 'fastMiddleATK2', 'fastMiddleATK3', 'strongMiddleATK', 'strongMiddleATK2', 'strongUpperATK', 'strongUpperATK2', 'strongLowerATK', 'fastLowerATK', 'fastUpperATK']
+        attack_states = ['fastMiddleATK', 'fastMiddleATK2', 'fastMiddleATK3', 'strongMiddleATK', 'strongMiddleATK2', 'strongUpperATK', 'strongUpperATK2', 'strongLowerATK', 'fastLowerATK', 'fastUpperATK', 'rageSkill']
         return self.state in attack_states
 
     def get_move_speed(self):
@@ -53,6 +53,14 @@ class Player:
                (self.get_character_type() == 'fighter' and self.state in ['fastMiddleATK', 'fastMiddleATK2', 'strongUpperATK']):
                 self.combo_reserved = True
                 return
+
+        # rage 스킬 입력 처리 (가장 높은 우선순위)
+        if atk_input == 'rageSkill' and not self.is_attacking and self.can_use_attack('rageSkill'):
+            self.state = 'rageSkill'
+            self.is_attacking = True
+            self.can_combo = False
+            self.combo_reserved = False
+            return
 
         # 공격 입력 처리 (이동 중에도 가능) - 캐릭터별 공격 제한 적용
         if atk_input == 'fastMiddleATK' and not self.is_attacking and self.can_use_attack('fastMiddleATK'):

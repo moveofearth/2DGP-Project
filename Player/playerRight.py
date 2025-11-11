@@ -25,6 +25,14 @@ class PlayerRight(Player):
                 self.combo_reserved = True
                 return
 
+        # rage 스킬 입력 처리 (가장 높은 우선순위)
+        if atk_input == 'rageSkill' and not self.is_attacking and self.can_use_attack('rageSkill'):
+            self.state = 'rageSkill'
+            self.is_attacking = True
+            self.can_combo = False
+            self.combo_reserved = False
+            return
+
         # 공격 입력 처리 (이동 중에도 가능) - 캐릭터별 공격 제한 적용
         if atk_input == 'fastMiddleATK' and not self.is_attacking and self.can_use_attack('fastMiddleATK'):
             self.state = 'fastMiddleATK'
