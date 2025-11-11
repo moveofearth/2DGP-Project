@@ -21,6 +21,7 @@ class SpriteManager:
         self.player2_dir = -1
         self.player1_ref = None  # Player1 참조
         self.player2_ref = None  # Player2 참조
+        self.rage_skill_frame_time = 1.0 / 18  # 1초 동안 18프레임 (0~17)
 
     def set_player_references(self, player1, player2):
         """플레이어 참조를 설정"""
@@ -39,7 +40,8 @@ class SpriteManager:
             'strongMiddleATK': [pico2d.load_image(str(base_path / 'priest' / 'strongMiddleATK' / f'{i}.png')) for i in range(6)],
             'strongMiddleATK2': [pico2d.load_image(str(base_path / 'priest' / 'strongMiddleATK' / f'{i}.png')) for i in range(6, 14)],
             'strongUpperATK': [pico2d.load_image(str(base_path / 'priest' / 'strongUpperATK' / f'{i}.png')) for i in range(12)],
-            'strongLowerATK': [pico2d.load_image(str(base_path / 'priest' / 'strongLowerATK' / f'{i}.png')) for i in range(9)]
+            'strongLowerATK': [pico2d.load_image(str(base_path / 'priest' / 'strongLowerATK' / f'{i}.png')) for i in range(9)],
+            'rageSkill': [pico2d.load_image(str(base_path / 'priest' / 'rageSkill' / f'{i}.png')) for i in range(18)]
         }
 
         # thief 캐릭터 스프라이트 로딩
@@ -82,6 +84,11 @@ class SpriteManager:
         if not player_ref:
             return False
 
+        # rage 스킬 완료 처리
+        if state == 'rageSkill':
+            self._end_attack(player_ref, is_player1)
+            return True
+
         # 연계 공격 처리
         combo_mapping = {
             'priest': {
@@ -118,11 +125,12 @@ class SpriteManager:
 
         # 연계가 없는 공격이나 마지막 연계 완료
         elif state in ['fastMiddleATK3', 'strongMiddleATK2', 'strongUpperATK2', 'strongLowerATK',
-                       'strongUpperATK', 'strongLowerATK', 'fastMiddleATK', 'fastLowerATK', 'fastUpperATK', 'strongMiddleATK']:
+                       'strongUpperATK', 'strongLowerATK', 'fastMiddleATK', 'fastLowerATK', 'fastUpperATK', 'strongMiddleATK', 'rageSkill']:
             # 마지막 연계이거나 단일 공격 완료
             if (state == 'fastMiddleATK' and character_type == 'priest') or \
                (state in ['strongUpperATK', 'strongLowerATK'] and character_type == 'priest') or \
-               (state in ['fastLowerATK', 'fastUpperATK', 'strongMiddleATK', 'strongLowerATK'] and character_type == 'fighter'):
+               (state in ['fastLowerATK', 'fastUpperATK', 'strongMiddleATK', 'strongLowerATK'] and character_type == 'fighter') or \
+               (state == 'rageSkill'):
                 # 단일 공격
                 self._end_attack(player_ref, is_player1)
                 return True
@@ -170,7 +178,9 @@ class SpriteManager:
 
     def _get_frame_time_for_state(self, state):
         """상태에 따른 프레임 시간 반환"""
-        if 'fast' in state.lower():
+        if state == 'rageSkill':
+            return self.rage_skill_frame_time
+        elif 'fast' in state.lower():
             return self.fast_attack_frame_time
         elif 'strong' in state.lower():
             return self.strong_attack_frame_time
