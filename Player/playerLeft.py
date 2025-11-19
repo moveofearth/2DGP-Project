@@ -15,7 +15,10 @@ class PlayerLeft(Player):
         self.y = config.GROUND_Y  # 그라운드에 위치
         self.is_grounded = True  # 지면에 있음
 
-    def update(self, deltaTime, move_input=None, atk_input=None, combo_input=False, char_change_input=None, other_player=None):
+    def update(self, deltaTime, move_input=None, atk_input=None, combo_input=False, char_change_input=None, other_player=None, position_state='Middle'):
+        # 위치 상태 업데이트
+        self.position_state = position_state
+
         # 캐릭터 변경 처리 (공격 중이 아닐 때만)
         if char_change_input and not self.is_attacking and char_change_input in self.available_attacks:
             current_type = self.get_character_type()

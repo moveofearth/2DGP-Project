@@ -91,16 +91,19 @@ class Game:
         player1_move_input = self.ioManager.handleMoveInputPlayer1(events)
         player1_atk_input = self.ioManager.handleATKInputPlayer1(events)
         player1_char_change = self.ioManager.handleCharacterChangePlayer1(events)
+        player1_position_state = self.ioManager.get_player1_position_state()
+
         player2_move_input = self.ioManager.handleMoveInputPlayer2(events)
         player2_atk_input = self.ioManager.handleATKInputPlayer2(events)
+        player2_position_state = self.ioManager.get_player2_position_state()
 
         # 연계 입력 확인
         player1_combo = self.ioManager.check_player1_combo_input()
         player2_combo = self.ioManager.check_player2_combo_input()
 
         # 플레이어 업데이트 시 서로의 참조를 전달하여 충돌 처리
-        self.playerLeft.update(deltaTime, player1_move_input, player1_atk_input, player1_combo, player1_char_change, self.playerRight)
-        self.playerRight.update(deltaTime, player2_move_input, player2_atk_input, player2_combo, None, self.playerLeft)
+        self.playerLeft.update(deltaTime, player1_move_input, player1_atk_input, player1_combo, player1_char_change, self.playerRight, player1_position_state)
+        self.playerRight.update(deltaTime, player2_move_input, player2_atk_input, player2_combo, None, self.playerLeft, player2_position_state)
 
         # 충돌 및 공격 판정
         self.check_collision()

@@ -79,3 +79,4 @@ class Character:
     def get_hp_percentage(self):
         """HP 퍼센테이지 반환 (0.0 ~ 1.0)"""
         return self.hp / self.max_hp if self.max_hp > 0 else 0.0
+

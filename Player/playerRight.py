@@ -15,7 +15,10 @@ class PlayerRight(Player):
         self.y = config.GROUND_Y  # 그라운드에 위치
         self.is_grounded = True  # 지면에 있음
 
-    def update(self, deltaTime, move_input=None, atk_input=None, combo_input=False, char_change_input=None, other_player=None):
+    def update(self, deltaTime, move_input=None, atk_input=None, combo_input=False, char_change_input=None, other_player=None, position_state='Middle'):
+        # 위치 상태 업데이트
+        self.position_state = position_state
+
         # 부모 클래스의 업데이트 로직 호출 (중력 포함)
         super().update(deltaTime, move_input, atk_input, combo_input, char_change_input, other_player)
 

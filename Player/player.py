@@ -23,6 +23,7 @@ class Player:
 
         self.dir = -1  # 항상 오른쪽을 바라보도록 -1로 고정
         self.state = 'Idle'  # Idle, Walk, BackWalk
+        self.position_state = 'Middle'  # High, Middle, Low 상태 추가
         self.is_attacking = False  # 공격 중인지 체크
         self.can_combo = False  # 연계 가능 상태
         self.combo_reserved = False  # 연계 공격 예약 상태

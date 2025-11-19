@@ -201,3 +201,21 @@ class IOManager:
             self.player2_combo_input = False
             return True
         return False
+
+    def get_player1_position_state(self):
+        """Player1의 위치 상태 반환 (High, Middle, Low)"""
+        if self.player1_keys['w']:
+            return 'High'
+        elif self.player1_keys['s']:
+            return 'Low'
+        else:
+            return 'Middle'
+
+    def get_player2_position_state(self):
+        """Player2의 위치 상태 반환 (High, Middle, Low)"""
+        if self.player2_keys['up']:
+            return 'High'
+        elif self.player2_keys['down']:
+            return 'Low'
+        else:
+            return 'Middle'
