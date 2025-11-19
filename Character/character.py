@@ -24,11 +24,11 @@ class Character:
         self.velocity_y = 0.0
         self.is_grounded = True
 
-        # 캐릭터별 이동속도 설정
+        # 캐릭터별 이동속도 설정 (더 느리게 조정)
         self.move_speeds = {
-            'priest': 250.0,
-            'thief': 300.0,
-            'fighter': 300.0
+            'priest': 180.0,  # 250 -> 180
+            'thief': 220.0,   # 300 -> 220
+            'fighter': 200.0  # 300 -> 200
         }
 
     def initialize(self):
@@ -67,7 +67,7 @@ class Character:
 
     def get_move_speed(self):
         """현재 캐릭터의 이동속도 반환"""
-        return self.move_speeds.get(self.currentCharacter, 200.0)
+        return self.move_speeds.get(self.currentCharacter, 150.0)  # 기본값도 낮춤
 
     def take_damage(self, damage, attack_type='fast'):
         """데미지를 받는 메서드 - 공격 타입 추가"""

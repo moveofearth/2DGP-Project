@@ -27,11 +27,14 @@ GROUND_Y = 300 * 1.5  # 그라운드 Y 좌표 (450픽셀) - 1.5배 스케일링 
 #   - fastMiddleATK: 6프레임, strongMiddleATK: 6+8프레임 (연계시)
 #   - strongUpperATK: 12프레임, strongLowerATK: 9프레임
 #   - rageSkill: 18프레임
+#   - guard: 2프레임 (0.45초 + 0.45초 = 0.9초 총 재생시간)
 # thief:
 #   - Idle: 6프레임, Walk: 6프레임, BackWalk: 7프레임
 #   - fastMiddleATK: 6+6+6프레임 (3단 연계), strongMiddleATK: 5+5프레임 (연계시)
 #   - strongUpperATK: 5+5프레임 (연계시), strongLowerATK: 4프레임
+#   - guard: 2프레임 (thief도 동일한 가드 시스템)
 # fighter:
 #   - Idle: 4프레임, Walk: 8프레임, BackWalk: 5프레임
 #   - fastMiddleATK: 4+3+3프레임 (3단 연계), fastLowerATK: 4프레임, fastUpperATK: 6프레임
 #   - strongMiddleATK: 5프레임, strongUpperATK: 4+4프레임 (연계시), strongLowerATK: 5프레임
+#   - guard: 2프레임 (fighter도 동일한 가드 시스템)

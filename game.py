@@ -19,9 +19,10 @@ class Game:
         self.ioManager = IOManager()
         self.spriteManager = SpriteManager()
         self.last_time = 0
-        self.target_fps = 70
+        self.target_fps = 60  # 60fps로 조정
         self.frame_time = 1.0 / self.target_fps
         self.game_over = False
+        self.max_delta_time = 1.0 / 30.0  # 최대 deltaTime 제한 (30fps 이하로 떨어지지 않도록)
 
     def initialize(self):
         pico2d.open_canvas(config.windowWidth, config.windowHeight)
@@ -39,7 +40,8 @@ class Game:
             hasattr(self.playerLeft, 'can_process_hit') and
             self.playerLeft.can_process_hit and
             self.playerLeft.can_hit_target() and
-            not self.playerRight.is_in_hit_state()):
+            not self.playerRight.is_in_hit_state() and
+            not self.playerRight.is_guarding):  # 상대방이 가드 중이 아닐 때 확인
 
             # Player1의 공격 범위에 Player2가 있는지 확인
             if self.playerLeft.is_in_attack_range(self.playerRight):
@@ -47,7 +49,7 @@ class Game:
                 if self.playerRight.can_guard_against_attack(self.playerLeft.state):
                     # 가드 성공 - 데미지 없음
                     self.playerRight.start_guard()
-                    print(f"Player2 guarded against {self.playerLeft.state}!")
+                    print(f"Player2 successfully guarded against {self.playerLeft.state}! Position: {self.playerRight.position_state}")
                 else:
                     # 가드 실패 - 데미지 적용
                     damage = self.calculate_damage(self.playerLeft.state)
@@ -63,7 +65,8 @@ class Game:
             hasattr(self.playerRight, 'can_process_hit') and
             self.playerRight.can_process_hit and
             self.playerRight.can_hit_target() and
-            not self.playerLeft.is_in_hit_state()):
+            not self.playerLeft.is_in_hit_state() and
+            not self.playerLeft.is_guarding):  # 상대방이 가드 중이 아닐 때 확인
 
             # Player2의 공격 범위에 Player1이 있는지 확인
             if self.playerRight.is_in_attack_range(self.playerLeft):
@@ -71,7 +74,7 @@ class Game:
                 if self.playerLeft.can_guard_against_attack(self.playerRight.state):
                     # 가드 성공 - 데미지 없음
                     self.playerLeft.start_guard()
-                    print(f"Player1 guarded against {self.playerRight.state}!")
+                    print(f"Player1 successfully guarded against {self.playerRight.state}! Position: {self.playerLeft.position_state}")
                 else:
                     # 가드 실패 - 데미지 적용
                     damage = self.calculate_damage(self.playerRight.state)
@@ -96,6 +99,9 @@ class Game:
         return damage_table.get(attack_state, 3)
 
     def update(self, deltaTime):
+        # deltaTime 제한 - 너무 큰 값이 들어오면 제한
+        deltaTime = min(deltaTime, self.max_delta_time)
+
         events = pico2d.get_events()
 
         # 종료 이벤트 처리
@@ -172,6 +178,10 @@ class Game:
     def run(self):
         current_time = time.time()
         deltaTime = current_time - self.last_time
+
+        # 첫 프레임에서 deltaTime이 너무 크지 않도록 제한
+        if self.last_time == 0:
+            deltaTime = self.frame_time
 
         # 프레임 제한 - 너무 빠르면 대기
         if deltaTime < self.frame_time:

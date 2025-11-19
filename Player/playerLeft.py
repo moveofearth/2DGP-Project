@@ -20,17 +20,17 @@ class PlayerLeft(Player):
         self.position_state = position_state
 
         # 캐릭터 변경 처리 (공격 중이 아닐 때만)
-        if char_change_input and not self.is_attacking and char_change_input in self.available_attacks:
+        if char_change_input and not self.is_attacking and not self.is_guarding and char_change_input in ['priest', 'thief', 'fighter']:
             current_type = self.get_character_type()
             if current_type != char_change_input:
                 self.set_character_type(char_change_input)
                 return
 
-        # 부모 클래스의 업데이트 로직 호출 (중력 포함)
-        super().update(deltaTime, move_input, atk_input, combo_input, char_change_input, other_player)
+        # 부모 클래스의 업데이트 로직 호출 (position_state 포함)
+        super().update(deltaTime, move_input, atk_input, combo_input, char_change_input, other_player, position_state)
 
-        # PlayerLeft 특화 이동 처리 (공격 중이 아닐 때만) - 충돌 처리 포함
-        if not self.is_attacking:
+        # PlayerLeft 특화 이동 처리 (공격 중이나 가드 중이 아닐 때만) - 충돌 처리 포함
+        if not self.is_attacking and not self.is_guarding and not self.is_hit:
             move_speed = self.get_move_speed()
             if move_input == 'left':
                 new_x = self.x - move_speed * 0.5 * deltaTime  # 왼쪽은 느리게

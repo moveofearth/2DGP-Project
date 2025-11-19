@@ -32,8 +32,7 @@ class Player:
 
         # 가드 상태 관련 속성 추가
         self.is_guarding = False  # 가드 중인지 체크
-        self.guard_timer = 0.0  # 가드 지속 시간
-        self.guard_duration = 0.05  # 가드 지속 시간 (0.05초)
+        # guard_timer와 guard_duration 제거 - 애니메이션으로 제어
 
         # 공격 타격 처리 관련 속성 추가
         self.attack_hit_processed = False  # 현재 공격의 타격 처리 완료 여부
@@ -44,10 +43,13 @@ class Player:
 
         # 캐릭터별 사용 가능한 공격 정의
         self.available_attacks = {
-            'priest': ['fastMiddleATK', 'strongMiddleATK', 'strongUpperATK', 'strongLowerATK', 'rageSkill'],
-            'thief': ['fastMiddleATK', 'strongMiddleATK', 'strongUpperATK', 'strongLowerATK'],
-            'fighter': ['fastMiddleATK', 'fastLowerATK', 'fastUpperATK', 'strongMiddleATK', 'strongLowerATK', 'strongUpperATK']
+            'priest': ['fastMiddleATK', 'strongMiddleATK', 'strongUpperATK', 'strongLowerATK', 'rageSkill', 'guard'],
+            'thief': ['fastMiddleATK', 'strongMiddleATK', 'strongUpperATK', 'strongLowerATK', 'guard'],
+            'fighter': ['fastMiddleATK', 'fastLowerATK', 'fastUpperATK', 'strongMiddleATK', 'strongLowerATK', 'strongUpperATK', 'guard']
         }
+
+        # 이동 속도 조정 (더 느리게)
+        self.move_speed_multiplier = 0.8  # 이동 속도 배율
 
     def _load_font(self):
         """폰트 로드 시도"""
@@ -78,8 +80,9 @@ class Player:
         return self.state in attack_states
 
     def get_move_speed(self):
-        """현재 캐릭터의 이동속도 반환"""
-        return self.character.get_move_speed()
+        """현재 캐릭터의 이동속도 반환 (조정된 속도)"""
+        base_speed = self.character.get_move_speed()
+        return base_speed * self.move_speed_multiplier
 
     def initialize(self):
         self.character.initialize()  # Character 초기화
@@ -154,21 +157,28 @@ class Player:
             self.resolve_collision_with_other_player(other_player)
 
     def start_guard(self):
-        """가드 상태 시작"""
-        self.is_guarding = True
-        self.guard_timer = self.guard_duration
-        self.state = 'guard'
-        print(f"Player guarding! Position: {self.position_state}")
+        """가드 상태 시작 - 피격 시 자동으로 발동"""
+        if not self.is_guarding:  # 이미 가드 중이 아닐 때만
+            self.is_guarding = True
+            self.state = 'guard'
+            # Character 상태도 즉시 동기화
+            self.character.state = 'guard'
+            print(f"Auto guard activated! Position: {self.position_state} - Starting guard animation")
 
     def update_guard(self, deltaTime):
-        """가드 상태 업데이트"""
+        """가드 상태 업데이트 - 애니메이션으로 제어됨"""
+        # 가드 상태는 spriteManager에서 애니메이션 완료 시 자동으로 해제됨
+        # 불필요한 상태 체크 제거
+        pass
+
+    def end_guard(self):
+        """가드 상태 종료"""
         if self.is_guarding:
-            self.guard_timer -= deltaTime
-            if self.guard_timer <= 0:
-                self.is_guarding = False
-                if not self.is_attacking and not self.is_hit:
-                    self.state = 'Idle'
-                print("Guard ended")
+            self.is_guarding = False
+            if not self.is_attacking and not self.is_hit:
+                self.state = 'Idle'
+                self.character.state = 'Idle'
+            print(f"Guard ended - transitioning to {self.state}")
 
     def can_guard_against_attack(self, attack_type):
         """공격 타입에 따른 가드 가능 여부 확인"""
@@ -250,11 +260,11 @@ class Player:
         # 위치 상태 업데이트
         self.position_state = position_state
 
-        # 가드 상태 업데이트
+        # 가드 상태 업데이트 (빈 함수)
         self.update_guard(deltaTime)
 
-        # 캐릭터 타입 변경 처리 (공격 중이 아닐 때만)
-        if char_change_input and not self.is_attacking and char_change_input in self.available_attacks:
+        # 캐릭터 타입 변경 처리 (공격 중이 아니고 가드 중이 아닐 때만)
+        if char_change_input and not self.is_attacking and not self.is_guarding and char_change_input in ['priest', 'thief', 'fighter']:
             current_type = self.get_character_type()
             if current_type != char_change_input:
                 self.set_character_type(char_change_input)
@@ -266,8 +276,13 @@ class Player:
         # hit 상태 동기화
         self.is_hit = self.character.is_hit
 
-        # 가드 중이면 다른 행동 불가
+        # 가드 중이면 다른 행동 불가 - 상태 강제 동기화
         if self.is_guarding:
+            # 가드 중에는 상태가 'guard'로 고정되어야 함
+            if self.state != 'guard':
+                self.state = 'guard'
+            if self.character.state != 'guard':
+                self.character.state = 'guard'
             return
 
         # hit 상태일 때 기상 입력 처리
@@ -318,7 +333,7 @@ class Player:
                 elif not move_input:
                     self.state = 'Idle'  # 입력이 없으면 Idle 상태
 
-        # 캐릭터 위치 및 상태 동기화
+        # 캐릭터 위치 및 상태 동기화 (가드 상태가 아닐 때만)
         self.character.x, self.character.y = self.x, self.y
         if not self.is_hit and not self.is_guarding:  # hit 상태나 가드 상태가 아닐 때만 상태 동기화
             self.character.state = self.state
@@ -362,10 +377,11 @@ class Player:
 
     def set_character_type(self, character_type):
         """캐릭터 타입 변경"""
-        if character_type in self.available_attacks:
+        if character_type in ['priest', 'thief', 'fighter']:
             self.character.set_character_type(character_type)
             # 공격 상태 초기화
             self.is_attacking = False
+            self.is_guarding = False  # 가드 상태도 초기화
             self.can_combo = False
             self.combo_reserved = False
             self.state = 'Idle'

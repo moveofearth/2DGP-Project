@@ -19,11 +19,11 @@ class PlayerRight(Player):
         # 위치 상태 업데이트
         self.position_state = position_state
 
-        # 부모 클래스의 업데이트 로직 호출 (중력 포함)
-        super().update(deltaTime, move_input, atk_input, combo_input, char_change_input, other_player)
+        # 부모 클래스의 업데이트 로직 호출 (position_state 포함)
+        super().update(deltaTime, move_input, atk_input, combo_input, char_change_input, other_player, position_state)
 
-        # PlayerRight 특화 이동 처리 (공격 중이 아닐 때만) - 충돌 처리 포함
-        if not self.is_attacking:
+        # PlayerRight 특화 이동 처리 (공격 중이나 가드 중이 아닐 때만) - 충돌 처리 포함
+        if not self.is_attacking and not self.is_guarding and not self.is_hit:
             move_speed = self.get_move_speed()
             if move_input == 'left':
                 new_x = self.x - move_speed * deltaTime

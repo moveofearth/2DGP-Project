@@ -9,9 +9,28 @@ class SpriteManager:
         self.player2_state = 'Idle'
         self.player1_frame = 0
         self.player2_frame = 0
-        self.default_frame_time = 0.083  # 기본 프레임 전환 시간 (약 12fps)
-        self.fast_attack_frame_time = 0.1  # fast 공격 프레임 시간
-        self.strong_attack_frame_time = 0.15  # strong 공격 프레임 시간
+
+        # 고정된 애니메이션 재생 시간 (초) - config.py 기준
+        self.animation_durations = {
+            'Idle': 1.0,           # 1초 동안 재생
+            'Walk': 0.8,           # 0.8초 동안 재생
+            'BackWalk': 0.8,       # 0.8초 동안 재생
+            'fastMiddleATK': 0.6,  # Fast 공격: 0.6초
+            'fastLowerATK': 0.4,   # Fast 공격: 0.4초
+            'fastUpperATK': 0.6,   # Fast 공격: 0.6초
+            'strongMiddleATK': 0.9, # Strong 공격: 0.9초
+            'strongUpperATK': 1.8,  # Strong 공격: 1.8초 (12프레임)
+            'strongLowerATK': 1.35, # Strong 공격: 1.35초 (9프레임)
+            'rageSkill': 1.0,      # Rage 스킬: 1초 (18프레임)
+            'hit': 0.3,            # 피격: 0.3초
+            'guard': 0.9,          # 가드: 0.9초 (2프레임을 천천히 재생)
+            # 연계 공격들
+            'fastMiddleATK2': 0.6,
+            'fastMiddleATK3': 0.6,
+            'strongMiddleATK2': 1.2,
+            'strongUpperATK2': 0.75,
+        }
+
         self.frame_timer = 0.0  # 프레임 타이머
         self.player2_frame_timer = 0.0  # 플레이어2용 프레임 타이머
         # 1280x720 -> 1920x1080 스케일링을 위한 배율
@@ -26,7 +45,6 @@ class SpriteManager:
         self.player2_dir = -1
         self.player1_ref = None  # Player1 참조
         self.player2_ref = None  # Player2 참조
-        self.rage_skill_frame_time = 1.0 / 18  # 1초 동안 18프레임 (0~17)
 
         # 캐릭터 타입 추적
         self.player1_character_type = 'thief'
@@ -81,7 +99,9 @@ class SpriteManager:
                 'strongMiddleATK2': [pico2d.load_image(str(base_path / 'thief' / 'strongMiddleATK' / f'{i}.png')) for i in range(5, 10)],
                 'strongUpperATK': [pico2d.load_image(str(base_path / 'thief' / 'strongUpperATK' / f'{i}.png')) for i in range(5)],
                 'strongUpperATK2': [pico2d.load_image(str(base_path / 'thief' / 'strongUpperATK' / f'{i}.png')) for i in range(5, 10)],
-                'strongLowerATK': [pico2d.load_image(str(base_path / 'thief' / 'strongLowerATK' / f'{i}.png')) for i in range(4)]
+                'strongLowerATK': [pico2d.load_image(str(base_path / 'thief' / 'strongLowerATK' / f'{i}.png')) for i in range(4)],
+                'hit': [pico2d.load_image(str(base_path / 'priest' / 'hit' / f'{i}.png')) for i in range(6)],  # priest 공유
+                'guard': [pico2d.load_image(str(base_path / 'priest' / 'guard' / f'{i}.png')) for i in range(2)]  # priest 공유
             }
 
             # fighter 캐릭터 스프라이트 로딩
@@ -97,7 +117,9 @@ class SpriteManager:
                 'strongUpperATK': [pico2d.load_image(str(base_path / 'fighter' / 'strongUpperATK' / f'{i}.png')) for i in range(4)],
                 'strongUpperATK2': [pico2d.load_image(str(base_path / 'fighter' / 'strongUpperATK' / f'{i}.png')) for i in range(4, 8)],
                 'fastLowerATK': [pico2d.load_image(str(base_path / 'fighter' / 'fastLowerATK' / f'{i}.png')) for i in range(4)],  # 0~3
-                'fastUpperATK': [pico2d.load_image(str(base_path / 'fighter' / 'fastUpperATK' / f'{i}.png')) for i in range(6)]  # 0~5
+                'fastUpperATK': [pico2d.load_image(str(base_path / 'fighter' / 'fastUpperATK' / f'{i}.png')) for i in range(6)],  # 0~5
+                'hit': [pico2d.load_image(str(base_path / 'priest' / 'hit' / f'{i}.png')) for i in range(6)],  # priest 공유
+                'guard': [pico2d.load_image(str(base_path / 'priest' / 'guard' / f'{i}.png')) for i in range(2)]  # priest 공유
             }
         except Exception as e:
             print(f"Warning: Sprite loading failed: {e}")
@@ -213,20 +235,14 @@ class SpriteManager:
                 player_ref.can_combo = True
                 print(f"Combo available for {character_type} at frame {frame}")
 
-    def _get_frame_time_for_state(self, state):
-        """상태에 따른 프레임 시간 반환"""
-        if state == 'hit':
-            return 0.1  # hit 애니메이션 속도
-        elif state == 'guard':
-            return 0.025  # guard 애니메이션 속도 (빠르게)
-        elif state == 'rageSkill':
-            return self.rage_skill_frame_time
-        elif 'fast' in state.lower():
-            return self.fast_attack_frame_time
-        elif 'strong' in state.lower():
-            return self.strong_attack_frame_time
+    def _get_frame_time_for_state(self, state, sprite_count):
+        """상태와 스프라이트 개수에 따른 프레임 시간 반환 (고정 재생 시간 기준)"""
+        total_duration = self.animation_durations.get(state, 1.0)  # 기본 1초
+
+        if sprite_count > 0:
+            return total_duration / sprite_count
         else:
-            return self.default_frame_time
+            return 0.1  # 기본값
 
     def update_player1_state(self, new_state, deltaTime):
         # 캐릭터 타입 변경 감지
@@ -248,19 +264,18 @@ class SpriteManager:
             if self.player1_ref and 'ATK' in new_state:
                 self.player1_ref.reset_attack_hit_flag()
 
-        # 현재 상태에 맞는 프레임 시간 가져오기
-        current_frame_time = self._get_frame_time_for_state(self.player1_state)
+        character_type = self.player1_character_type
+        sprites = self.get_character_sprites(character_type)
 
-        # 프레임 애니메이션 업데이트
-        self.frame_timer += deltaTime
-        if self.frame_timer >= current_frame_time:
-            self.frame_timer = 0.0
+        if sprites and self.player1_state in sprites:
+            sprite_count = len(sprites[self.player1_state])
+            # 스프라이트 개수에 따라 프레임 시간 계산
+            current_frame_time = self._get_frame_time_for_state(self.player1_state, sprite_count)
 
-            character_type = self.player1_character_type
-            sprites = self.get_character_sprites(character_type)
-
-            if sprites and self.player1_state in sprites:
-                sprite_count = len(sprites[self.player1_state])
+            # 프레임 애니메이션 업데이트
+            self.frame_timer += deltaTime
+            if self.frame_timer >= current_frame_time:
+                self.frame_timer = 0.0
 
                 # 공격 애니메이션 절반 지점에서 타격 처리 활성화
                 if self.player1_ref and 'ATK' in self.player1_state:
@@ -287,10 +302,29 @@ class SpriteManager:
 
                 next_frame = (self.player1_frame + 1) % sprite_count
 
-                # 일반 상태는 단순 순환
-                if self.player1_state in ['Idle', 'Walk', 'BackWalk', 'guard']:
+                # 일반 상태는 단순 순환, 단 guard는 한 번만 재생
+                if self.player1_state in ['Idle', 'Walk', 'BackWalk']:
                     self.player1_frame = next_frame
                     return
+                elif self.player1_state == 'guard':
+                    # guard는 2프레임을 순차적으로 재생하고 마지막 프레임에서 완료 처리
+                    if self.player1_frame < sprite_count - 1:
+                        # 아직 마지막 프레임이 아니면 다음 프레임으로
+                        self.player1_frame = next_frame
+                        return
+                    else:
+                        # 마지막 프레임에서 완료 처리
+                        if self.player1_ref and self.player1_ref.is_guarding:
+                            # guard 완료 처리
+                            self.player1_ref.is_guarding = False
+                            # 상태를 확실히 Idle로 전환
+                            self.player1_ref.state = 'Idle'
+                            self.player1_ref.character.state = 'Idle'
+                            self.player1_state = 'Idle'
+                            self.player1_frame = 0
+                            self.frame_timer = 0.0  # 타이머 리셋
+                            print("Player1 guard animation completed - transitioning to Idle")
+                        return
 
                 # 공격 상태에서 애니메이션 완료 시 처리
                 if next_frame == 0:  # 애니메이션 한 사이클 완료
@@ -325,19 +359,18 @@ class SpriteManager:
             if self.player2_ref and 'ATK' in new_state:
                 self.player2_ref.reset_attack_hit_flag()
 
-        # 현재 상태에 맞는 프레임 시간 가져오기
-        current_frame_time = self._get_frame_time_for_state(self.player2_state)
+        character_type = self.player2_character_type
+        sprites = self.get_character_sprites(character_type)
 
-        # 프레임 애니메이션 업데이트
-        self.player2_frame_timer += deltaTime
-        if self.player2_frame_timer >= current_frame_time:
-            self.player2_frame_timer = 0.0
+        if sprites and self.player2_state in sprites:
+            sprite_count = len(sprites[self.player2_state])
+            # 스프라이트 개수에 따라 프레임 시간 계산
+            current_frame_time = self._get_frame_time_for_state(self.player2_state, sprite_count)
 
-            character_type = self.player2_character_type
-            sprites = self.get_character_sprites(character_type)
-
-            if sprites and self.player2_state in sprites:
-                sprite_count = len(sprites[self.player2_state])
+            # 프레임 애니메이션 업데이트
+            self.player2_frame_timer += deltaTime
+            if self.player2_frame_timer >= current_frame_time:
+                self.player2_frame_timer = 0.0
 
                 # 공격 애니메이션 절반 지점에서 타격 처리 활성화
                 if self.player2_ref and 'ATK' in self.player2_state:
@@ -364,10 +397,29 @@ class SpriteManager:
 
                 next_frame = (self.player2_frame + 1) % sprite_count
 
-                # 일반 상태는 단순 순환
-                if self.player2_state in ['Idle', 'Walk', 'BackWalk', 'guard']:
+                # 일반 상태는 단순 순환, 단 guard는 한 번만 재생
+                if self.player2_state in ['Idle', 'Walk', 'BackWalk']:
                     self.player2_frame = next_frame
                     return
+                elif self.player2_state == 'guard':
+                    # guard는 2프레임을 순차적으로 재생하고 마지막 프레임에서 완료 처리
+                    if self.player2_frame < sprite_count - 1:
+                        # 아직 마지막 프레임이 아니면 다음 프레임으로
+                        self.player2_frame = next_frame
+                        return
+                    else:
+                        # 마지막 프레임에서 완료 처리
+                        if self.player2_ref and self.player2_ref.is_guarding:
+                            # guard 완료 처리
+                            self.player2_ref.is_guarding = False
+                            # 상태를 확실히 Idle로 전환
+                            self.player2_ref.state = 'Idle'
+                            self.player2_ref.character.state = 'Idle'
+                            self.player2_state = 'Idle'
+                            self.player2_frame = 0
+                            self.player2_frame_timer = 0.0  # 타이머 리셋
+                            print("Player2 guard animation completed - transitioning to Idle")
+                        return
 
                 # 공격 상태에서 애니메이션 완료 시 처리
                 if next_frame == 0:  # 애니메이션 한 사이클 완료
