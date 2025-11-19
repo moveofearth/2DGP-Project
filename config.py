@@ -3,13 +3,13 @@ import pathlib
 global windowWidth
 global windowHeight
 
-windowWidth = 1280
-windowHeight = 720
+windowWidth = 1920
+windowHeight = 1080
 
 # 캐릭터별 이동속도 (픽셀/초)
-# priest: 200.0 픽셀/초
-# thief: 270.0 픽셀/초
-# fighter: 270.0 픽셀/초
+# priest: 220.0 픽셀/초
+# thief: 290.0 픽셀/초
+# fighter: 290.0 픽셀/초
 
 # 동작별 스프라이트 프레임/초 (fps)
 # 기본 동작 (Idle, Walk, BackWalk): 12 fps (0.083초 간격)

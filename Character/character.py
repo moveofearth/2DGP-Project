@@ -12,9 +12,9 @@ class Character:
 
         # 캐릭터별 이동속도 설정
         self.move_speeds = {
-            'priest': 200.0,
-            'thief': 270.0,
-            'fighter': 270.0
+            'priest': 250.0,
+            'thief': 300.0,
+            'fighter': 300.0
         }
 
     def initialize(self):

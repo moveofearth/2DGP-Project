@@ -13,15 +13,26 @@ class SpriteManager:
         self.strong_attack_frame_time = 0.15  # strong 공격 프레임 시간
         self.frame_timer = 0.0  # 프레임 타이머
         self.player2_frame_timer = 0.0  # 플레이어2용 프레임 타이머
-        self.player1_x = 400
-        self.player1_y = 300
+        # 1280x720 -> 1920x1080 스케일링을 위한 배율
+        self.scale_factor = 1.5
+
+        # 플레이어 초기 위치도 스케일링 (기존 400, 300 -> 600, 450)
+        self.player1_x = 400 * self.scale_factor  # 600
+        self.player1_y = 300 * self.scale_factor  # 450
         self.player1_dir = -1  # 방향 (1: 왼쪽, -1: 오른쪽)
-        self.player2_x = 600  # 플레이어2 초기 위치
-        self.player2_y = 300
+        self.player2_x = 533 * self.scale_factor  # 약 800
+        self.player2_y = 300 * self.scale_factor  # 450
         self.player2_dir = -1
         self.player1_ref = None  # Player1 참조
         self.player2_ref = None  # Player2 참조
         self.rage_skill_frame_time = 1.0 / 18  # 1초 동안 18프레임 (0~17)
+
+        # 캐릭터별 y 위치 오프셋도 스케일링
+        self.character_y_offsets = {
+            'priest': 0,
+            'thief': -20 * self.scale_factor,    # -30
+            'fighter': -30 * self.scale_factor   # -45
+        }
 
     def set_player_references(self, player1, player2):
         """플레이어 참조를 설정"""
@@ -289,20 +300,33 @@ class SpriteManager:
             character_type = self.player1_ref.get_character_type()
             sprites = self.get_character_sprites(character_type)
 
+            # 캐릭터별 y 오프셋 적용
+            y_offset = self.character_y_offsets.get(character_type, 0)
+            adjusted_y1 = self.player1_y + y_offset
+
             if sprites and self.player1_state in sprites:
                 sprite_list = sprites[self.player1_state]
                 if sprite_list:
                     frame = self.player1_frame % len(sprite_list)
-                    sprite_list[frame].draw(self.player1_x, self.player1_y)
+                    # 1.5배 스케일링하여 렌더링
+                    sprite_list[frame].draw(self.player1_x, adjusted_y1,
+                                          sprite_list[frame].w * self.scale_factor,
+                                          sprite_list[frame].h * self.scale_factor)
 
         # 플레이어2 렌더링 (왼쪽을 바라봄)
         if self.player2_ref:
             character_type = self.player2_ref.get_character_type()
             sprites = self.get_character_sprites(character_type)
 
+            # 캐릭터별 y 오프셋 적용
+            y_offset = self.character_y_offsets.get(character_type, 0)
+            adjusted_y2 = self.player2_y + y_offset
+
             if sprites and self.player2_state in sprites:
                 sprite_list = sprites[self.player2_state]
                 if sprite_list:
                     frame = self.player2_frame % len(sprite_list)
-                    # 왼쪽을 바라보도록 좌우 반전
-                    sprite_list[frame].composite_draw(0, 'h', self.player2_x, self.player2_y)
+                    # 왼쪽을 바라보도록 좌우 반전하면서 1.5배 스케일링
+                    sprite_list[frame].composite_draw(0, 'h', self.player2_x, adjusted_y2,
+                                                    sprite_list[frame].w * self.scale_factor,
+                                                    sprite_list[frame].h * self.scale_factor)

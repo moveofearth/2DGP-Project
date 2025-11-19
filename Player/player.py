@@ -4,7 +4,7 @@ import pico2d
 
 class Player:
 
-    def __init__(self, x=400, y=300, character_type='priest'):
+    def __init__(self, x=600, y=450, character_type='priest'):  # 이미 스케일링된 위치
         self.x, self.y = x, y
         self.character = Character(character_type)  # Character 인스턴스 추가
         self.character.x, self.character.y = x, y  # 캐릭터 위치 동기화
@@ -122,9 +122,9 @@ class Player:
 
     def get_bb(self):
         """바운딩 박스 좌표 반환 (x1, y1, x2, y2)"""
-        # 캐릭터 크기에 맞게 조정 - 대략적인 캐릭터 크기 고려
-        bb_width = 40  # 바운딩 박스 폭의 절반
-        bb_height = 50  # 바운딩 박스 높이의 절반
+        # 바운딩 박스도 1.5배 스케일링
+        bb_width = 40 * 1.5  # 60
+        bb_height = 50 * 1.5  # 75
         return self.x - bb_width, self.y - bb_height, self.x + bb_width, self.y + bb_height
 
     def set_character_type(self, character_type):

@@ -96,8 +96,9 @@ class PlayerLeft(Player):
 
     def get_bb(self):
         """바운딩 박스 좌표 반환 - PlayerLeft용 (왼쪽으로 50, 아래로 50 이동)"""
-        bb_width = 40  # 바운딩 박스 폭의 절반
-        bb_height = 50  # 바운딩 박스 높이의 절반
-        adjusted_x = self.x - 50  # 왼쪽으로 50 이동
-        adjusted_y = self.y - 40  # 아래로 50 이동
+        # 1.5배 스케일링 적용
+        bb_width = 40 * 1.5  # 60
+        bb_height = 50 * 1.5  # 75
+        adjusted_x = self.x - (30 * 1.5)
+        adjusted_y = self.y - (50 * 1.5)
         return adjusted_x - bb_width, adjusted_y - bb_height, adjusted_x + bb_width, adjusted_y + bb_height
