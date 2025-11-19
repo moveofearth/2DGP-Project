@@ -6,6 +6,10 @@ global windowHeight
 windowWidth = 1920
 windowHeight = 1080
 
+# 물리 상수
+GRAVITY = 9.8 * 100  # 중력 가속도 (픽셀/초²) - 화면 크기에 맞게 조정
+GROUND_Y = 300 * 1.5  # 그라운드 Y 좌표 (450픽셀) - 1.5배 스케일링 적용
+
 # 캐릭터별 이동속도 (픽셀/초)
 # priest: 220.0 픽셀/초
 # thief: 290.0 픽셀/초

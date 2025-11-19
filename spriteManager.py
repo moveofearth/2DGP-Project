@@ -1,5 +1,6 @@
 import pico2d
 import pathlib
+import config
 
 class SpriteManager:
     def __init__(self):
@@ -16,12 +17,12 @@ class SpriteManager:
         # 1280x720 -> 1920x1080 스케일링을 위한 배율
         self.scale_factor = 1.5
 
-        # 플레이어 초기 위치도 스케일링 (기존 400, 300 -> 600, 450)
+        # 플레이어 초기 위치도 스케일링 - 그라운드에 위치, 충돌하지 않도록 간격 조정
         self.player1_x = 400 * self.scale_factor  # 600
-        self.player1_y = 300 * self.scale_factor  # 450
+        self.player1_y = config.GROUND_Y  # 그라운드에 위치
         self.player1_dir = -1  # 방향 (1: 왼쪽, -1: 오른쪽)
-        self.player2_x = 533 * self.scale_factor  # 약 800
-        self.player2_y = 300 * self.scale_factor  # 450
+        self.player2_x = 600 * self.scale_factor  # 900 (더 넓은 간격)
+        self.player2_y = config.GROUND_Y  # 그라운드에 위치
         self.player2_dir = -1
         self.player1_ref = None  # Player1 참조
         self.player2_ref = None  # Player2 참조

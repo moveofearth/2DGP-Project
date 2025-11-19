@@ -1,16 +1,25 @@
 from Character.character import Character
 import pico2d
 import pathlib
+import config
 
 
 class Player:
 
     def __init__(self, x=600, y=450, character_type='priest'):  # 이미 스케일링된 위치
-        self.x, self.y = x, y
+        self.x, self.y = x, config.GROUND_Y  # y를 그라운드로 설정
         self.character = Character(character_type)  # Character 인스턴스 추가
-        self.character.x, self.character.y = x, y  # 캐릭터 위치 동기화
+        self.character.x, self.character.y = self.x, self.y  # 캐릭터 위치 동기화
         self.hp = 100  # HP 추가
         self.max_hp = 100  # 최대 HP
+
+        # 물리 변수 추가
+        self.velocity_y = 0.0  # Y방향 속도
+        self.is_grounded = True  # 지면에 있는지 체크
+        self.gravity = config.GRAVITY  # 중력 가속도
+
+        # 이전 위치 저장 (충돌 시 되돌리기 위해)
+        self.prev_x = x
 
         self.dir = -1  # 항상 오른쪽을 바라보도록 -1로 고정
         self.state = 'Idle'  # Idle, Walk, BackWalk
@@ -69,13 +78,80 @@ class Player:
         if not self.font:
             self._load_font()
 
-    def update(self, deltaTime, move_input=None, atk_input=None, combo_input=False, char_change_input=None):
+    def apply_gravity(self, deltaTime):
+        """중력 적용"""
+        if not self.is_grounded:
+            # 중력으로 인한 Y방향 속도 증가
+            self.velocity_y -= self.gravity * deltaTime
+            # 위치 업데이트
+            self.y += self.velocity_y * deltaTime
+
+            # 그라운드 체크
+            if self.y <= config.GROUND_Y:
+                self.y = config.GROUND_Y
+                self.velocity_y = 0.0
+                self.is_grounded = True
+        elif self.y > config.GROUND_Y:
+            # 그라운드보다 높은 위치에 있으면 떨어지기 시작
+            self.is_grounded = False
+            self.velocity_y = 0.0
+
+    def jump(self, jump_force=500.0):
+        """점프 (필요시 사용)"""
+        if self.is_grounded:
+            self.velocity_y = jump_force
+            self.is_grounded = False
+
+    def check_collision_with_other_player(self, other_player):
+        """다른 플레이어와의 충돌 검사"""
+        if not other_player:
+            return False
+
+        my_bb = self.get_bb()
+        other_bb = other_player.get_bb()
+
+        # AABB 충돌 검사
+        return (my_bb[0] < other_bb[2] and my_bb[2] > other_bb[0] and
+                my_bb[1] < other_bb[3] and my_bb[3] > other_bb[1])
+
+    def resolve_collision_with_other_player(self, other_player):
+        """다른 플레이어와의 충돌 해결"""
+        if not other_player:
+            return
+
+        if self.check_collision_with_other_player(other_player):
+            # 충돌 시 이전 위치로 되돌리기
+            self.x = self.prev_x
+
+    def update_position(self, new_x, other_player=None):
+        """위치 업데이트 (충돌 검사 포함)"""
+        # 이전 위치 저장
+        self.prev_x = self.x
+
+        # 새 위치로 이동
+        self.x = new_x
+
+        # 화면 경계 체크
+        screen_margin = 60  # 바운딩 박스 반폭 + 여유
+        if self.x < screen_margin:
+            self.x = screen_margin
+        elif self.x > config.windowWidth - screen_margin:
+            self.x = config.windowWidth - screen_margin
+
+        # 다른 플레이어와의 충돌 체크 및 해결
+        if other_player:
+            self.resolve_collision_with_other_player(other_player)
+
+    def update(self, deltaTime, move_input=None, atk_input=None, combo_input=False, char_change_input=None, other_player=None):
         # 캐릭터 타입 변경 처리 (공격 중이 아닐 때만)
         if char_change_input and not self.is_attacking and char_change_input in self.available_attacks:
             current_type = self.get_character_type()
             if current_type != char_change_input:
                 self.set_character_type(char_change_input)
                 return
+
+        # 중력 적용 (항상)
+        self.apply_gravity(deltaTime)
 
         # 캐릭터 위치 및 HP 동기화
         self.character.x, self.character.y = self.x, self.y
@@ -146,10 +222,12 @@ class Player:
         if not self.is_attacking:
             move_speed = self.get_move_speed()
             if move_input == 'left':
-                self.x -= move_speed * deltaTime
+                new_x = self.x - move_speed * deltaTime
+                self.update_position(new_x, other_player)
                 self.state = 'Walk'  # 기본은 Walk, 각 플레이어에서 오버라이드
             elif move_input == 'right':
-                self.x += move_speed * deltaTime
+                new_x = self.x + move_speed * deltaTime
+                self.update_position(new_x, other_player)
                 self.state = 'Walk'  # 기본은 Walk, 각 플레이어에서 오버라이드
             else:
                 self.state = 'Idle'  # 입력이 없으면 Idle 상태

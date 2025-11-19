@@ -1,5 +1,6 @@
 import pico2d
 import pathlib
+import config
 
 
 class Character:
@@ -7,10 +8,14 @@ class Character:
         self.currentCharacter = character_type  # 현재 캐릭터 타입
         self.image = None
         self.frame = 0
-        self.x, self.y = 400, 300
+        self.x, self.y = 400, config.GROUND_Y  # 그라운드에 위치
         self.state = 'Idle'
         self.hp = 100  # HP 추가
         self.max_hp = 100  # 최대 HP 추가
+
+        # 물리 변수 추가
+        self.velocity_y = 0.0
+        self.is_grounded = True
 
         # 캐릭터별 이동속도 설정
         self.move_speeds = {

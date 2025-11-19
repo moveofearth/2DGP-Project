@@ -38,7 +38,7 @@ class Game:
         p1_bb = self.playerLeft.get_bb()
         p2_bb = self.playerRight.get_bb()
 
-        # 바운딩 박스 충돌 검사
+        # 바운딩 박스 충돌 검사 (공격 판정용)
         if (p1_bb[0] < p2_bb[2] and p1_bb[2] > p2_bb[0] and
             p1_bb[1] < p2_bb[3] and p1_bb[3] > p2_bb[1]):
 
@@ -98,9 +98,9 @@ class Game:
         player1_combo = self.ioManager.check_player1_combo_input()
         player2_combo = self.ioManager.check_player2_combo_input()
 
-        # 플레이어 업데이트 시 이동, 공격, 연계, 캐릭터 변경 입력을 모두 전달
-        self.playerLeft.update(deltaTime, player1_move_input, player1_atk_input, player1_combo, player1_char_change)
-        self.playerRight.update(deltaTime, player2_move_input, player2_atk_input, player2_combo)
+        # 플레이어 업데이트 시 서로의 참조를 전달하여 충돌 처리
+        self.playerLeft.update(deltaTime, player1_move_input, player1_atk_input, player1_combo, player1_char_change, self.playerRight)
+        self.playerRight.update(deltaTime, player2_move_input, player2_atk_input, player2_combo, None, self.playerLeft)
 
         # 충돌 및 공격 판정
         self.check_collision()
