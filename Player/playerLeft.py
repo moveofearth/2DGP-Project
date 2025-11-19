@@ -15,7 +15,7 @@ class PlayerLeft(Player):
         self.y = config.GROUND_Y  # 그라운드에 위치
         self.is_grounded = True  # 지면에 있음
 
-    def update(self, deltaTime, move_input=None, atk_input=None, combo_input=False, char_change_input=None, other_player=None, position_state='Middle'):
+    def update(self, deltaTime, move_input=None, atk_input=None, combo_input=False, char_change_input=None, other_player=None, position_state='Middle', getup_input=False):
         # 위치 상태 업데이트
         self.position_state = position_state
 
@@ -26,8 +26,8 @@ class PlayerLeft(Player):
                 self.set_character_type(char_change_input)
                 return
 
-        # 부모 클래스의 업데이트 로직 호출 (position_state 포함)
-        super().update(deltaTime, move_input, atk_input, combo_input, char_change_input, other_player, position_state)
+        # 부모 클래스의 업데이트 로직 호출 (getup_input 포함)
+        super().update(deltaTime, move_input, atk_input, combo_input, char_change_input, other_player, position_state, getup_input)
 
         # PlayerLeft 특화 이동 처리 (공격 중이나 가드 중이 아닐 때만) - 충돌 처리 포함
         if not self.is_attacking and not self.is_guarding and not self.is_hit:

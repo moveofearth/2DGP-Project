@@ -137,11 +137,20 @@ class SpriteManager:
         if not player_ref:
             return False
 
-        # hit 상태 처리
+        # hit 상태 처리 - 완전한 상태 초기화
         if state == 'hit':
-            # hit 애니메이션이 완료되면 hit 상태 초기화
-            player_ref.character.reset_hit_state()
-            self._end_attack(player_ref, is_player1)
+            # hit 애니메이션이 완료되면 hit 상태 완전 초기화
+            player_ref.reset_hit_state()
+            # SpriteManager 상태도 Idle로 변경
+            if is_player1:
+                self.player1_state = 'Idle'
+                self.player1_frame = 0
+                self.frame_timer = 0.0
+            else:
+                self.player2_state = 'Idle'
+                self.player2_frame = 0
+                self.player2_frame_timer = 0.0
+            print(f"Player {'1' if is_player1 else '2'} hit animation completed - reset to Idle")
             return True
 
         # rage 스킬 완료 처리
@@ -177,9 +186,11 @@ class SpriteManager:
                 if is_player1:
                     self.player1_state = next_state
                     self.player1_frame = 0
+                    self.frame_timer = 0.0
                 else:
                     self.player2_state = next_state
                     self.player2_frame = 0
+                    self.player2_frame_timer = 0.0
 
                 player_ref.state = next_state
                 player_ref.combo_reserved = False
@@ -254,6 +265,13 @@ class SpriteManager:
                 self.frame_timer = 0.0
                 print(f"Player1 character changed to: {current_character_type}")
 
+        # 가드 애니메이션 리셋 체크 (상태 변경과 별도로)
+        if (self.player1_ref and self.player1_state == 'guard' and
+            new_state == 'guard' and self.player1_ref.should_reset_guard_animation()):
+            print("Player1 guard animation reset - extending guard")
+            self.player1_frame = 0
+            self.frame_timer = 0.0
+
         # 상태가 변경되면 프레임을 0으로 리셋
         if self.player1_state != new_state:
             print(f"Player1 state changed: {self.player1_state} -> {new_state}")
@@ -283,21 +301,53 @@ class SpriteManager:
                     if self.player1_frame == hit_frame:
                         self.player1_ref.can_process_hit = True
 
-                # hit 상태 특별 처리
+                # hit 상태 특별 처리 - airborne과 down 타입 추가
                 if self.player1_state == 'hit' and self.player1_ref:
                     if self.player1_ref.character.hit_type == 'fast':
-                        max_frame = 1
+                        # fast 공격: 프레임 0->1 후 바로 완료
+                        if self.player1_frame < 1:
+                            self.player1_frame += 1
+                        else:
+                            # fast hit 애니메이션 완료
+                            self._handle_animation_completion(self.player1_ref, 'hit', character_type, True)
                     elif self.player1_ref.character.hit_type == 'strong':
-                        max_frame = 4
-                    else:
-                        max_frame = sprite_count - 1
-
-                    if self.player1_frame < max_frame:
-                        self.player1_frame += 1
-                    elif self.player1_frame == 4 and self.player1_ref.character.hit_type == 'strong':
-                        if self.player1_ref.hit_recovery_input:
-                            self.player1_frame = 5
-                            self.player1_ref.hit_recovery_input = False
+                        # strong 공격: 프레임 0->1->2->3->4 후 기상 대기
+                        if self.player1_frame < 4:
+                            self.player1_frame += 1
+                            # 4번째 프레임에 도달하면 기상 가능 상태로 설정
+                            if self.player1_frame == 4:
+                                self.player1_ref.character.can_get_up = True
+                                print("Player1 can now get up (frame 4)")
+                        elif self.player1_frame == 4:
+                            # 기상 입력 체크 - 프레임 4에서 대기
+                            if self.player1_ref.hit_recovery_input:
+                                self.player1_frame = 5  # 기상 프레임
+                                self.player1_ref.hit_recovery_input = False
+                                print("Player1 getting up!")
+                            # 프레임 4에서 대기 (기상 입력 대기)
+                        elif self.player1_frame == 5:
+                            # 기상 애니메이션 완료
+                            self._handle_animation_completion(self.player1_ref, 'hit', character_type, True)
+                    elif self.player1_ref.character.hit_type == 'airborne':
+                        # 공중에 뜬 상태 - 프레임 0에서 고정, 착지할 때까지 대기
+                        self.player1_frame = 0  # 공중에서는 첫 번째 프레임 유지
+                        if self.player1_ref.is_grounded and self.player1_ref.character.hit_type == 'down':
+                            # 착지 후 down 상태가 되면 프레임 4로 변경
+                            self.player1_frame = 4
+                            print("Player1 landed - now in down state")
+                    elif self.player1_ref.character.hit_type == 'down':
+                        # down 상태: 바닥에 떨어진 후 기상 대기
+                        if self.player1_frame < 4:
+                            self.player1_frame = 4  # down 프레임으로 즉시 이동
+                        elif self.player1_frame == 4:
+                            # 기상 입력 체크
+                            if self.player1_ref.hit_recovery_input:
+                                self.player1_frame = 5  # 기상 프레임
+                                self.player1_ref.hit_recovery_input = False
+                                print("Player1 getting up from down state!")
+                        elif self.player1_frame == 5:
+                            # 기상 애니메이션 완료
+                            self._handle_animation_completion(self.player1_ref, 'hit', character_type, True)
                     return
 
                 next_frame = (self.player1_frame + 1) % sprite_count
@@ -313,17 +363,26 @@ class SpriteManager:
                         self.player1_frame = next_frame
                         return
                     else:
-                        # 마지막 프레임에서 완료 처리
+                        # 마지막 프레임에서 완료 처리 (단, 가드가 연장되지 않았을 때만)
                         if self.player1_ref and self.player1_ref.is_guarding:
-                            # guard 완료 처리
-                            self.player1_ref.is_guarding = False
-                            # 상태를 확실히 Idle로 전환
-                            self.player1_ref.state = 'Idle'
-                            self.player1_ref.character.state = 'Idle'
-                            self.player1_state = 'Idle'
-                            self.player1_frame = 0
-                            self.frame_timer = 0.0  # 타이머 리셋
-                            print("Player1 guard animation completed - transitioning to Idle")
+                            # 추가 공격이 들어와서 가드가 연장되는지 체크
+                            if hasattr(self.player1_ref, 'guard_animation_reset') and self.player1_ref.guard_animation_reset:
+                                # 가드 연장 - 애니메이션을 처음부터 다시 시작
+                                print("Player1 guard extended - restarting animation")
+                                self.player1_frame = 0
+                                self.frame_timer = 0.0
+                                self.player1_ref.guard_animation_reset = False
+                                return
+                            else:
+                                # 정상적인 가드 완료
+                                self.player1_ref.is_guarding = False
+                                # 상태를 확실히 Idle로 전환
+                                self.player1_ref.state = 'Idle'
+                                self.player1_ref.character.state = 'Idle'
+                                self.player1_state = 'Idle'
+                                self.player1_frame = 0
+                                self.frame_timer = 0.0  # 타이머 리셋
+                                print("Player1 guard animation completed - transitioning to Idle")
                         return
 
                 # 공격 상태에서 애니메이션 완료 시 처리
@@ -348,6 +407,13 @@ class SpriteManager:
                 self.player2_frame = 0
                 self.player2_frame_timer = 0.0
                 print(f"Player2 character changed to: {current_character_type}")
+
+        # 가드 애니메이션 리셋 체크 (상태 변경과 별도로)
+        if (self.player2_ref and self.player2_state == 'guard' and
+            new_state == 'guard' and self.player2_ref.should_reset_guard_animation()):
+            print("Player2 guard animation reset - extending guard")
+            self.player2_frame = 0
+            self.player2_frame_timer = 0.0
 
         # 상태가 변경되면 프레임을 0으로 리셋
         if self.player2_state != new_state:
@@ -378,21 +444,53 @@ class SpriteManager:
                     if self.player2_frame == hit_frame:
                         self.player2_ref.can_process_hit = True
 
-                # hit 상태 특별 처리
+                # hit 상태 특별 처리 - airborne과 down 타입 추가
                 if self.player2_state == 'hit' and self.player2_ref:
                     if self.player2_ref.character.hit_type == 'fast':
-                        max_frame = 1
+                        # fast 공격: 프레임 0->1 후 바로 완료
+                        if self.player2_frame < 1:
+                            self.player2_frame += 1
+                        else:
+                            # fast hit 애니메이션 완료
+                            self._handle_animation_completion(self.player2_ref, 'hit', character_type, False)
                     elif self.player2_ref.character.hit_type == 'strong':
-                        max_frame = 4
-                    else:
-                        max_frame = sprite_count - 1
-
-                    if self.player2_frame < max_frame:
-                        self.player2_frame += 1
-                    elif self.player2_frame == 4 and self.player2_ref.character.hit_type == 'strong':
-                        if self.player2_ref.hit_recovery_input:
-                            self.player2_frame = 5
-                            self.player2_ref.hit_recovery_input = False
+                        # strong 공격: 프레임 0->1->2->3->4 후 기상 대기
+                        if self.player2_frame < 4:
+                            self.player2_frame += 1
+                            # 4번째 프레임에 도달하면 기상 가능 상태로 설정
+                            if self.player2_frame == 4:
+                                self.player2_ref.character.can_get_up = True
+                                print("Player2 can now get up (frame 4)")
+                        elif self.player2_frame == 4:
+                            # 기상 입력 체크 - 프레임 4에서 대기
+                            if self.player2_ref.hit_recovery_input:
+                                self.player2_frame = 5  # 기상 프레임
+                                self.player2_ref.hit_recovery_input = False
+                                print("Player2 getting up!")
+                            # 프레임 4에서 대기 (기상 입력 대기)
+                        elif self.player2_frame == 5:
+                            # 기상 애니메이션 완료
+                            self._handle_animation_completion(self.player2_ref, 'hit', character_type, False)
+                    elif self.player2_ref.character.hit_type == 'airborne':
+                        # 공중에 뜬 상태 - 프레임 0에서 고정, 착지할 때까지 대기
+                        self.player2_frame = 0  # 공중에서는 첫 번째 프레임 유지
+                        if self.player2_ref.is_grounded and self.player2_ref.character.hit_type == 'down':
+                            # 착지 후 down 상태가 되면 프레임 4로 변경
+                            self.player2_frame = 4
+                            print("Player2 landed - now in down state")
+                    elif self.player2_ref.character.hit_type == 'down':
+                        # down 상태: 바닥에 떨어진 후 기상 대기
+                        if self.player2_frame < 4:
+                            self.player2_frame = 4  # down 프레임으로 즉시 이동
+                        elif self.player2_frame == 4:
+                            # 기상 입력 체크
+                            if self.player2_ref.hit_recovery_input:
+                                self.player2_frame = 5  # 기상 프레임
+                                self.player2_ref.hit_recovery_input = False
+                                print("Player2 getting up from down state!")
+                        elif self.player2_frame == 5:
+                            # 기상 애니메이션 완료
+                            self._handle_animation_completion(self.player2_ref, 'hit', character_type, False)
                     return
 
                 next_frame = (self.player2_frame + 1) % sprite_count
@@ -408,17 +506,26 @@ class SpriteManager:
                         self.player2_frame = next_frame
                         return
                     else:
-                        # 마지막 프레임에서 완료 처리
+                        # 마지막 프레임에서 완료 처리 (단, 가드가 연장되지 않았을 때만)
                         if self.player2_ref and self.player2_ref.is_guarding:
-                            # guard 완료 처리
-                            self.player2_ref.is_guarding = False
-                            # 상태를 확실히 Idle로 전환
-                            self.player2_ref.state = 'Idle'
-                            self.player2_ref.character.state = 'Idle'
-                            self.player2_state = 'Idle'
-                            self.player2_frame = 0
-                            self.player2_frame_timer = 0.0  # 타이머 리셋
-                            print("Player2 guard animation completed - transitioning to Idle")
+                            # 추가 공격이 들어와서 가드가 연장되는지 체크
+                            if hasattr(self.player2_ref, 'guard_animation_reset') and self.player2_ref.guard_animation_reset:
+                                # 가드 연장 - 애니메이션을 처음부터 다시 시작
+                                print("Player2 guard extended - restarting animation")
+                                self.player2_frame = 0
+                                self.player2_frame_timer = 0.0
+                                self.player2_ref.guard_animation_reset = False
+                                return
+                            else:
+                                # 정상적인 가드 완료
+                                self.player2_ref.is_guarding = False
+                                # 상태를 확실히 Idle로 전환
+                                self.player2_ref.state = 'Idle'
+                                self.player2_ref.character.state = 'Idle'
+                                self.player2_state = 'Idle'
+                                self.player2_frame = 0
+                                self.player2_frame_timer = 0.0  # 타이머 리셋
+                                print("Player2 guard animation completed - transitioning to Idle")
                         return
 
                 # 공격 상태에서 애니메이션 완료 시 처리

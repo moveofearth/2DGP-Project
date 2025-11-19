@@ -40,21 +40,20 @@ class Game:
             hasattr(self.playerLeft, 'can_process_hit') and
             self.playerLeft.can_process_hit and
             self.playerLeft.can_hit_target() and
-            not self.playerRight.is_in_hit_state() and
-            not self.playerRight.is_guarding):  # 상대방이 가드 중이 아닐 때 확인
+            not self.playerRight.is_in_hit_state()):  # 피격 중이 아닐 때만
 
             # Player1의 공격 범위에 Player2가 있는지 확인
             if self.playerLeft.is_in_attack_range(self.playerRight):
                 # 가드 판정 먼저 확인
                 if self.playerRight.can_guard_against_attack(self.playerLeft.state):
-                    # 가드 성공 - 데미지 없음
+                    # 가드 성공 - 데미지 없음, 가드 지속 또는 시작
                     self.playerRight.start_guard()
                     print(f"Player2 successfully guarded against {self.playerLeft.state}! Position: {self.playerRight.position_state}")
                 else:
                     # 가드 실패 - 데미지 적용
                     damage = self.calculate_damage(self.playerLeft.state)
                     self.playerRight.take_damage(damage, self.playerLeft.state)
-                    print(f"Player2 took {damage} damage! HP: {self.playerRight.get_hp()}")
+                    print(f"Player2 took {damage} damage! HP: {self.playerRight.get_hp()}, State: hit")
 
                 # 타격 처리 완료 마킹
                 self.playerLeft.mark_attack_hit_processed()
@@ -65,21 +64,20 @@ class Game:
             hasattr(self.playerRight, 'can_process_hit') and
             self.playerRight.can_process_hit and
             self.playerRight.can_hit_target() and
-            not self.playerLeft.is_in_hit_state() and
-            not self.playerLeft.is_guarding):  # 상대방이 가드 중이 아닐 때 확인
+            not self.playerLeft.is_in_hit_state()):  # 피격 중이 아닐 때만
 
             # Player2의 공격 범위에 Player1이 있는지 확인
             if self.playerRight.is_in_attack_range(self.playerLeft):
                 # 가드 판정 먼저 확인
                 if self.playerLeft.can_guard_against_attack(self.playerRight.state):
-                    # 가드 성공 - 데미지 없음
+                    # 가드 성공 - 데미지 없음, 가드 지속 또는 시작
                     self.playerLeft.start_guard()
                     print(f"Player1 successfully guarded against {self.playerRight.state}! Position: {self.playerLeft.position_state}")
                 else:
                     # 가드 실패 - 데미지 적용
                     damage = self.calculate_damage(self.playerRight.state)
                     self.playerLeft.take_damage(damage, self.playerRight.state)
-                    print(f"Player1 took {damage} damage! HP: {self.playerLeft.get_hp()}")
+                    print(f"Player1 took {damage} damage! HP: {self.playerLeft.get_hp()}, State: hit")
 
                 # 타격 처리 완료 마킹
                 self.playerRight.mark_attack_hit_processed()
@@ -87,16 +85,18 @@ class Game:
 
     def calculate_damage(self, attack_state):
         """공격 상태에 따른 데미지 계산"""
-        damage_table = {
-            'fastMiddleATK': 5,
-            'fastLowerATK': 5,
-            'fastUpperATK': 5,
-            'strongMiddleATK': 10,
-            'strongUpperATK': 12,
-            'strongLowerATK': 10,
-            'rageSkill': 20
-        }
-        return damage_table.get(attack_state, 3)
+        # fast 공격들은 모두 10데미지
+        if 'fast' in attack_state.lower():
+            return 10
+        # strong 공격들은 모두 20데미지
+        elif 'strong' in attack_state.lower():
+            return 20
+        # rage 스킬은 특별히 30데미지
+        elif 'rage' in attack_state.lower():
+            return 30
+        else:
+            # 기본 데미지 (혹시 모를 다른 공격들)
+            return 5
 
     def update(self, deltaTime):
         # deltaTime 제한 - 너무 큰 값이 들어오면 제한
@@ -124,18 +124,20 @@ class Game:
         player1_atk_input = self.ioManager.handleATKInputPlayer1(events)
         player1_char_change = self.ioManager.handleCharacterChangePlayer1(events)
         player1_position_state = self.ioManager.get_player1_position_state()
+        player1_getup_input = self.ioManager.check_player1_getup_input()  # 기상 입력 추가
 
         player2_move_input = self.ioManager.handleMoveInputPlayer2(events)
         player2_atk_input = self.ioManager.handleATKInputPlayer2(events)
         player2_position_state = self.ioManager.get_player2_position_state()
+        player2_getup_input = self.ioManager.check_player2_getup_input()  # 기상 입력 추가
 
         # 연계 입력 확인
         player1_combo = self.ioManager.check_player1_combo_input()
         player2_combo = self.ioManager.check_player2_combo_input()
 
-        # 플레이어 업데이트
-        self.playerLeft.update(deltaTime, player1_move_input, player1_atk_input, player1_combo, player1_char_change, self.playerRight, player1_position_state)
-        self.playerRight.update(deltaTime, player2_move_input, player2_atk_input, player2_combo, None, self.playerLeft, player2_position_state)
+        # 플레이어 업데이트 (기상 입력 포함)
+        self.playerLeft.update(deltaTime, player1_move_input, player1_atk_input, player1_combo, player1_char_change, self.playerRight, player1_position_state, player1_getup_input)
+        self.playerRight.update(deltaTime, player2_move_input, player2_atk_input, player2_combo, None, self.playerLeft, player2_position_state, player2_getup_input)
 
         # 충돌 및 공격 판정
         self.check_collision()

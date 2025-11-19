@@ -219,3 +219,13 @@ class IOManager:
             return 'Low'
         else:
             return 'Middle'
+
+    def check_player1_getup_input(self):
+        """Player1의 기상 입력 확인 (방향키 중 아무거나)"""
+        return (self.player1_keys['w'] or self.player1_keys['a'] or
+                self.player1_keys['s'] or self.player1_keys['d'])
+
+    def check_player2_getup_input(self):
+        """Player2의 기상 입력 확인 (방향키 중 아무거나)"""
+        return (self.player2_keys['up'] or self.player2_keys['down'] or
+                self.player2_keys['left'] or self.player2_keys['right'])

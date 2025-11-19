@@ -93,11 +93,12 @@ class Player:
             self._load_font()
 
     def apply_gravity(self, deltaTime):
-        """중력 적용"""
+        """중력 적용 - airborne 상태 처리 추가"""
         if not self.is_grounded:
-            # 중력으로 인한 Y방향 속도 증가
+            # 중력으로 인한 Y방향 속도 감소
             self.velocity_y -= self.gravity * deltaTime
             # 위치 업데이트
+            old_y = self.y
             self.y += self.velocity_y * deltaTime
 
             # 그라운드 체크
@@ -105,10 +106,21 @@ class Player:
                 self.y = config.GROUND_Y
                 self.velocity_y = 0.0
                 self.is_grounded = True
+
+                # 공중에서 떨어진 후 착지했을 때 특별 처리
+                if (self.is_hit and hasattr(self.character, 'hit_type') and
+                    self.character.hit_type == 'airborne' and old_y > config.GROUND_Y):
+                    # airborne에서 착지 - down 상태로 전환하고 기상 가능하게 설정
+                    self.character.hit_type = 'down'  # down 상태로 변경
+                    self.character.can_get_up = True
+                    self.character.frame = 4  # down 프레임으로 설정
+                    print("Player landed and is now down - can get up")
+
         elif self.y > config.GROUND_Y:
             # 그라운드보다 높은 위치에 있으면 떨어지기 시작
             self.is_grounded = False
-            self.velocity_y = 0.0
+            if self.velocity_y == 0:
+                self.velocity_y = 0.0
 
     def jump(self, jump_force=500.0):
         """점프 (필요시 사용)"""
@@ -158,12 +170,26 @@ class Player:
 
     def start_guard(self):
         """가드 상태 시작 - 피격 시 자동으로 발동"""
-        if not self.is_guarding:  # 이미 가드 중이 아닐 때만
+        # 이미 가드 중이라면 가드를 연장 (애니메이션 리셋)
+        if self.is_guarding:
+            print(f"Guard extended! Position: {self.position_state} - Resetting guard animation")
+            # spriteManager에서 가드 애니메이션을 처음부터 다시 시작하도록 신호
+            self.guard_animation_reset = True
+        else:
             self.is_guarding = True
-            self.state = 'guard'
-            # Character 상태도 즉시 동기화
-            self.character.state = 'guard'
+            self.guard_animation_reset = False
             print(f"Auto guard activated! Position: {self.position_state} - Starting guard animation")
+
+        self.state = 'guard'
+        # Character 상태도 즉시 동기화
+        self.character.state = 'guard'
+
+    def should_reset_guard_animation(self):
+        """가드 애니메이션 리셋이 필요한지 확인"""
+        if hasattr(self, 'guard_animation_reset') and self.guard_animation_reset:
+            self.guard_animation_reset = False  # 플래그 리셋
+            return True
+        return False
 
     def update_guard(self, deltaTime):
         """가드 상태 업데이트 - 애니메이션으로 제어됨"""
@@ -200,9 +226,9 @@ class Player:
         """공격 범위의 바운딩 박스 반환 (PlayerLeft 기준)"""
         my_bb = self.get_bb()
 
-        # fast 공격 범위: 바운딩 박스 오른쪽 끝에서 +20
+        # fast 공격 범위: 바운딩 박스 오른쪽 끝에서 +40 (기존 20에서 20 증가)
         if 'fast' in self.state:
-            attack_range = 20
+            attack_range = 40  # 20 -> 40
             range_x1 = my_bb[2]  # 바운딩 박스 오른쪽 끝
             range_x2 = range_x1 + attack_range
             range_y1 = my_bb[1]
@@ -211,7 +237,7 @@ class Player:
 
         # strong 공격 범위는 필요에 따라 추가
         elif 'strong' in self.state:
-            attack_range = 30  # strong 공격은 범위가 더 넓다고 가정
+            attack_range = 50  # 30 -> 50 (20 증가)
             range_x1 = my_bb[2]
             range_x2 = range_x1 + attack_range
             range_y1 = my_bb[1]
@@ -220,7 +246,7 @@ class Player:
 
         # rage 스킬 범위
         elif 'rage' in self.state:
-            attack_range = 50  # rage 스킬은 범위가 가장 넓다고 가정
+            attack_range = 70  # 50 -> 70 (20 증가)
             range_x1 = my_bb[2]
             range_x2 = range_x1 + attack_range
             range_y1 = my_bb[1]
@@ -256,25 +282,77 @@ class Player:
         """타격 처리 완료 마킹"""
         self.attack_hit_processed = True
 
-    def update(self, deltaTime, move_input=None, atk_input=None, combo_input=False, char_change_input=None, other_player=None, position_state='Middle'):
+    def is_in_hit_state(self):
+        """피격 상태인지 확인"""
+        return self.is_hit
+
+    def take_damage(self, damage, attack_state='fastMiddleATK'):
+        """데미지를 받는 메서드 - 공격 상태에 따른 hit 타입 결정"""
+        # 공격 상태에 따른 hit 타입 결정
+        if 'strongLowerATK' in attack_state:
+            # strongLowerATK는 특별한 airborne 타입
+            attack_type = 'airborne'
+        elif 'strong' in attack_state or 'rage' in attack_state:
+            attack_type = 'strong'
+        else:
+            attack_type = 'fast'
+
+        # Character의 take_damage 호출
+        self.character.take_damage(damage, attack_type)
+
+        # Player HP 및 상태 동기화
+        self.hp = self.character.hp
+        self.is_hit = self.character.is_hit
+        self.state = 'hit'  # Player 상태도 hit로 설정
+
+        # strongLowerATK에 맞았을 때 공중으로 띄우기
+        if attack_type == 'airborne':
+            self.velocity_y = 600.0  # 위로 띄우는 초기 속도 (400.0 -> 600.0, 약 50% 증가)
+            self.is_grounded = False
+            self.y += 5  # 살짝 위로 올려서 확실히 공중 상태로 만들기
+            print(f"Player launched into air by strongLowerATK! Initial velocity: {self.velocity_y}")
+
+        # 공격 및 가드 상태 초기화 (피격 시 모든 행동 중단)
+        self.is_attacking = False
+        self.is_guarding = False
+        self.can_combo = False
+        self.combo_reserved = False
+
+        print(f"Player took {damage} damage, HP: {self.hp}, hit_type: {attack_type}")
+        return self.hp
+
+    def reset_hit_state(self):
+        """hit 상태 완전 초기화"""
+        self.is_hit = False
+        self.character.reset_hit_state()
+        if self.state == 'hit':
+            self.state = 'Idle'
+        print("Player hit state reset to normal")
+
+    def update(self, deltaTime, move_input=None, atk_input=None, combo_input=False, char_change_input=None, other_player=None, position_state='Middle', getup_input=False):
         # 위치 상태 업데이트
         self.position_state = position_state
 
         # 가드 상태 업데이트 (빈 함수)
         self.update_guard(deltaTime)
 
-        # 캐릭터 타입 변경 처리 (공격 중이 아니고 가드 중이 아닐 때만)
-        if char_change_input and not self.is_attacking and not self.is_guarding and char_change_input in ['priest', 'thief', 'fighter']:
+        # 캐릭터 타입 변경 처리 (공격 중이 아니고 가드 중이 아니고 피격 중이 아닐 때만)
+        if char_change_input and not self.is_attacking and not self.is_guarding and not self.is_hit and char_change_input in ['priest', 'thief', 'fighter']:
             current_type = self.get_character_type()
             if current_type != char_change_input:
                 self.set_character_type(char_change_input)
                 return
 
-        # 중력 적용 (항상)
+        # 중력 적용 (항상) - airborne 상태 처리 포함
         self.apply_gravity(deltaTime)
 
-        # hit 상태 동기화
-        self.is_hit = self.character.is_hit
+        # hit 상태 동기화 - Character와 Player 상태 일치 확인
+        if self.character.is_hit != self.is_hit:
+            self.is_hit = self.character.is_hit
+            if self.is_hit and self.state != 'hit':
+                self.state = 'hit'
+            elif not self.is_hit and self.state == 'hit':
+                self.state = 'Idle'
 
         # 가드 중이면 다른 행동 불가 - 상태 강제 동기화
         if self.is_guarding:
@@ -285,13 +363,26 @@ class Player:
                 self.character.state = 'guard'
             return
 
-        # hit 상태일 때 기상 입력 처리
+        # hit 상태일 때 기상 입력 처리 - airborne과 down 상태 구분
         if self.is_hit and self.character.can_get_up:
-            # 아무 키 입력이 있으면 기상 시도
-            if move_input or atk_input or combo_input:
-                if self.character.try_get_up():
-                    self.hit_recovery_input = True
-                    return
+            # down 상태 (바닥에 떨어진 후)에서만 기상 가능
+            if (hasattr(self.character, 'hit_type') and
+                self.character.hit_type == 'down' and self.is_grounded):
+                # 방향키 입력이 있으면 기상 시도
+                if getup_input:
+                    if self.character.try_get_up():
+                        self.hit_recovery_input = True
+                        print(f"Player attempting to get up from down state!")
+                        return
+            # strong 공격의 일반적인 기상 처리
+            elif (hasattr(self.character, 'hit_type') and
+                  self.character.hit_type == 'strong'):
+                # 방향키 입력이 있으면 기상 시도
+                if getup_input:
+                    if self.character.try_get_up():
+                        self.hit_recovery_input = True
+                        print(f"Player attempting to get up! Current frame: {self.character.frame}")
+                        return
 
         # hit 상태가 아닐 때만 일반 행동 처리
         if not self.is_hit:
@@ -319,8 +410,8 @@ class Player:
                     print(f"Starting attack: {atk_input}")
                     return
 
-            # 공격 중이 아닐 때만 이동 처리
-            if not self.is_attacking:
+            # 공격 중이 아닐 때만 이동 처리 (지상에 있을 때만)
+            if not self.is_attacking and self.is_grounded:
                 move_speed = self.get_move_speed()
                 if move_input == 'left':
                     new_x = self.x - move_speed * deltaTime
@@ -333,58 +424,31 @@ class Player:
                 elif not move_input:
                     self.state = 'Idle'  # 입력이 없으면 Idle 상태
 
-        # 캐릭터 위치 및 상태 동기화 (가드 상태가 아닐 때만)
+        # 캐릭터 위치 및 상태 동기화
         self.character.x, self.character.y = self.x, self.y
         if not self.is_hit and not self.is_guarding:  # hit 상태나 가드 상태가 아닐 때만 상태 동기화
             self.character.state = self.state
+        elif self.is_hit:  # hit 상태일 때는 강제로 hit 상태 유지
+            self.character.state = 'hit'
         self.character.hp = self.hp
 
         # Character 업데이트
         self.character.update(deltaTime)
 
-    def take_damage(self, damage, attack_state='fastMiddleATK'):
-        """데미지를 받는 메서드 - 공격 상태에 따른 hit 타입 결정"""
-        # 공격 상태에 따른 hit 타입 결정
-        attack_type = 'strong' if 'strong' in attack_state or 'rage' in attack_state else 'fast'
-
-        # Character의 take_damage 호출
-        self.character.take_damage(damage, attack_type)
-
-        # Player HP 동기화
-        self.hp = self.character.hp
-
-        # 공격 상태 초기화 (피격 시 공격 중단)
-        self.is_attacking = False
-        self.can_combo = False
-        self.combo_reserved = False
-
-        return self.hp
-
-    def is_in_hit_state(self):
-        """현재 피격 상태인지 확인"""
-        return self.is_hit
-
-    def can_act(self):
-        """행동 가능 상태인지 확인 (공격이나 이동 가능)"""
-        return not self.is_attacking and not self.is_hit
-
-    def get_bb(self):
-        """바운딩 박스 좌표 반환 (x1, y1, x2, y2)"""
-        # 바운딩 박스도 1.5배 스케일링
-        bb_width = 40 * 1.5  # 60
-        bb_height = 50 * 1.5  # 75
-        return self.x - bb_width, self.y - bb_height, self.x + bb_width, self.y + bb_height
-
     def set_character_type(self, character_type):
         """캐릭터 타입 변경"""
         if character_type in ['priest', 'thief', 'fighter']:
             self.character.set_character_type(character_type)
-            # 공격 상태 초기화
+            # 모든 상태 초기화
             self.is_attacking = False
-            self.is_guarding = False  # 가드 상태도 초기화
+            self.is_guarding = False
+            self.is_hit = False  # hit 상태도 초기화
             self.can_combo = False
             self.combo_reserved = False
             self.state = 'Idle'
+            # Character 상태도 동기화
+            self.character.state = 'Idle'
+            self.character.is_hit = False
 
     def heal(self, amount):
         """체력을 회복하는 메서드"""

@@ -46,11 +46,6 @@ class Character:
         if self.currentCharacter in ['priest', 'thief', 'fighter']:
             self._update_character(deltaTime)
 
-    def _update_character(self, deltaTime):
-        """모든 캐릭터 공통 업데이트"""
-        # 캐릭터 전용 업데이트 로직
-        pass
-
     def render(self):
         if self.image:  # 이미지 None 체크 추가
             self.image.draw(self.x, self.y)
@@ -70,7 +65,7 @@ class Character:
         return self.move_speeds.get(self.currentCharacter, 150.0)  # 기본값도 낮춤
 
     def take_damage(self, damage, attack_type='fast'):
-        """데미지를 받는 메서드 - 공격 타입 추가"""
+        """데미지를 받는 메서드 - airborne 타입 추가"""
         self.hp = max(0, self.hp - damage)
 
         # hit 상태 설정
@@ -81,24 +76,36 @@ class Character:
         # 공격 타입에 따른 hit 프레임 범위 설정
         if attack_type == 'fast':
             self.hit_frame_range = (0, 1)
+            self.can_get_up = False
         elif attack_type == 'strong':
             self.hit_frame_range = (0, 4)
+            self.can_get_up = True
+        elif attack_type == 'airborne':
+            # 공중에 뜨는 상태 - 프레임은 공중에서 계속 0번 유지
+            self.hit_frame_range = (0, 0)
+            self.can_get_up = False  # 공중에서는 기상 불가
 
         self.hit_frame_start = self.hit_frame_range[0]
         self.frame = self.hit_frame_start
 
-        # strong 공격으로 4번째 프레임(누워있는 상태)까지 갔을 때 기상 가능
-        if attack_type == 'strong':
-            self.can_get_up = True
-
+        print(f"Character hit! Type: {attack_type}, HP: {self.hp}")
         return self.hp
 
     def try_get_up(self):
-        """기상 시도 - 누워있는 상태에서만 가능"""
-        if self.can_get_up and self.is_hit and self.frame == 4:
-            self.frame = 5  # 기상 모션
-            self.can_get_up = False
-            return True
+        """기상 시도 - down 상태 처리 추가"""
+        if self.can_get_up and self.is_hit:
+            # strong 공격으로 다운된 상태에서 기상
+            if self.hit_type == 'strong' and self.frame >= 4:
+                self.frame = 5  # 기상 모션으로 전환
+                self.can_get_up = False
+                print(f"Character getting up from strong hit at frame {self.frame}")
+                return True
+            # down 상태 (strongLowerATK로 공중에서 떨어진 후)에서 기상
+            elif self.hit_type == 'down' and self.frame >= 4:
+                self.frame = 5  # 기상 모션으로 전환
+                self.can_get_up = False
+                print(f"Character getting up from down state at frame {self.frame}")
+                return True
         return False
 
     def reset_hit_state(self):
@@ -106,9 +113,20 @@ class Character:
         self.is_hit = False
         self.hit_type = None
         self.can_get_up = False
+        self.frame = 0
         if self.state == 'hit':
             self.state = 'Idle'
-            self.frame = 0
+        print("Character hit state reset")
+
+    def _update_character(self, deltaTime):
+        """모든 캐릭터 공통 업데이트"""
+        # hit 상태에서 자동 회복 로직 (fast 공격의 경우)
+        if self.is_hit and self.hit_type == 'fast':
+            # fast 공격은 짧은 시간 후 자동으로 회복
+            pass  # SpriteManager에서 처리
+
+        # 캐릭터 전용 업데이트 로직
+        pass
 
     def heal(self, amount):
         """체력을 회복하는 메서드"""
