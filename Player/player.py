@@ -1,4 +1,5 @@
 from Character.character import Character
+import pico2d
 
 
 class Player:
@@ -116,7 +117,15 @@ class Player:
                 self.state = 'Idle'  # 입력이 없으면 Idle 상태
 
     def render(self):
-        self.character.render()  # Character 렌더링
+        # SpriteManager에서 캐릭터 이미지를 렌더링하므로 여기서는 바운딩 박스만 그리기
+        pico2d.draw_rectangle(*self.get_bb())  # 바운딩 박스 그리기
+
+    def get_bb(self):
+        """바운딩 박스 좌표 반환 (x1, y1, x2, y2)"""
+        # 캐릭터 크기에 맞게 조정 - 대략적인 캐릭터 크기 고려
+        bb_width = 40  # 바운딩 박스 폭의 절반
+        bb_height = 50  # 바운딩 박스 높이의 절반
+        return self.x - bb_width, self.y - bb_height, self.x + bb_width, self.y + bb_height
 
     def set_character_type(self, character_type):
         """캐릭터 타입 변경"""

@@ -56,3 +56,4 @@ class PlayScene:
                     860 + i * (count_width + 10), 580,  # 우측 배치
                     count_width, count_height  # 원본 크기
                 )
+

@@ -78,6 +78,9 @@ class Game:
         # 플레이 씬에서만 플레이어 렌더링
         if not self.sceneManager.is_title_scene():
             self.spriteManager.render()
+            # 바운딩 박스 렌더링을 위해 플레이어 render 호출
+            self.playerLeft.render()
+            self.playerRight.render()
 
         pico2d.update_canvas()
 

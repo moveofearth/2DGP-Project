@@ -87,4 +87,12 @@ class PlayerRight(Player):
                 self.state = 'Idle'  # 입력이 없으면 Idle 상태
 
     def render(self):
-        super().render()  # Character 렌더링
+        super().render()  # 부모의 바운딩 박스 그리기만 호출
+
+    def get_bb(self):
+        """바운딩 박스 좌표 반환 - PlayerRight용 (오른쪽으로 50, 아래로 50 이동)"""
+        bb_width = 40  # 바운딩 박스 폭의 절반
+        bb_height = 50  # 바운딩 박스 높이의 절반
+        adjusted_x = self.x + 30  # 오른쪽으로 50 이동
+        adjusted_y = self.y - 40  # 아래로 50 이동
+        return adjusted_x - bb_width, adjusted_y - bb_height, adjusted_x + bb_width, adjusted_y + bb_height
