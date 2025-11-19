@@ -65,7 +65,8 @@ class SpriteManager:
                 'strongUpperATK': [pico2d.load_image(str(base_path / 'priest' / 'strongUpperATK' / f'{i}.png')) for i in range(12)],
                 'strongLowerATK': [pico2d.load_image(str(base_path / 'priest' / 'strongLowerATK' / f'{i}.png')) for i in range(9)],
                 'rageSkill': [pico2d.load_image(str(base_path / 'priest' / 'rageSkill' / f'{i}.png')) for i in range(18)],
-                'hit': [pico2d.load_image(str(base_path / 'priest' / 'hit' / f'{i}.png')) for i in range(6)]  # hit 스프라이트 추가 (0~5)
+                'hit': [pico2d.load_image(str(base_path / 'priest' / 'hit' / f'{i}.png')) for i in range(6)],
+                'guard': [pico2d.load_image(str(base_path / 'priest' / 'guard' / f'{i}.png')) for i in range(2)]  # Guard 스프라이트 추가 (0~1)
             }
 
             # thief 캐릭터 스프라이트 로딩
@@ -216,6 +217,8 @@ class SpriteManager:
         """상태에 따른 프레임 시간 반환"""
         if state == 'hit':
             return 0.1  # hit 애니메이션 속도
+        elif state == 'guard':
+            return 0.025  # guard 애니메이션 속도 (빠르게)
         elif state == 'rageSkill':
             return self.rage_skill_frame_time
         elif 'fast' in state.lower():
@@ -241,6 +244,9 @@ class SpriteManager:
             self.player1_state = new_state
             self.player1_frame = 0
             self.frame_timer = 0.0
+            # 새로운 공격 시작 시 타격 플래그 리셋
+            if self.player1_ref and 'ATK' in new_state:
+                self.player1_ref.reset_attack_hit_flag()
 
         # 현재 상태에 맞는 프레임 시간 가져오기
         current_frame_time = self._get_frame_time_for_state(self.player1_state)
@@ -255,6 +261,12 @@ class SpriteManager:
 
             if sprites and self.player1_state in sprites:
                 sprite_count = len(sprites[self.player1_state])
+
+                # 공격 애니메이션 절반 지점에서 타격 처리 활성화
+                if self.player1_ref and 'ATK' in self.player1_state:
+                    hit_frame = sprite_count // 2  # 애니메이션 절반 지점
+                    if self.player1_frame == hit_frame:
+                        self.player1_ref.can_process_hit = True
 
                 # hit 상태 특별 처리
                 if self.player1_state == 'hit' and self.player1_ref:
@@ -276,7 +288,7 @@ class SpriteManager:
                 next_frame = (self.player1_frame + 1) % sprite_count
 
                 # 일반 상태는 단순 순환
-                if self.player1_state in ['Idle', 'Walk', 'BackWalk']:
+                if self.player1_state in ['Idle', 'Walk', 'BackWalk', 'guard']:
                     self.player1_frame = next_frame
                     return
 
@@ -309,6 +321,9 @@ class SpriteManager:
             self.player2_state = new_state
             self.player2_frame = 0
             self.player2_frame_timer = 0.0
+            # 새로운 공격 시작 시 타격 플래그 리셋
+            if self.player2_ref and 'ATK' in new_state:
+                self.player2_ref.reset_attack_hit_flag()
 
         # 현재 상태에 맞는 프레임 시간 가져오기
         current_frame_time = self._get_frame_time_for_state(self.player2_state)
@@ -323,6 +338,12 @@ class SpriteManager:
 
             if sprites and self.player2_state in sprites:
                 sprite_count = len(sprites[self.player2_state])
+
+                # 공격 애니메이션 절반 지점에서 타격 처리 활성화
+                if self.player2_ref and 'ATK' in self.player2_state:
+                    hit_frame = sprite_count // 2  # 애니메이션 절반 지점
+                    if self.player2_frame == hit_frame:
+                        self.player2_ref.can_process_hit = True
 
                 # hit 상태 특별 처리
                 if self.player2_state == 'hit' and self.player2_ref:
@@ -344,7 +365,7 @@ class SpriteManager:
                 next_frame = (self.player2_frame + 1) % sprite_count
 
                 # 일반 상태는 단순 순환
-                if self.player2_state in ['Idle', 'Walk', 'BackWalk']:
+                if self.player2_state in ['Idle', 'Walk', 'BackWalk', 'guard']:
                     self.player2_frame = next_frame
                     return
 

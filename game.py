@@ -33,27 +33,54 @@ class Game:
         self.last_time = time.time()
 
     def check_collision(self):
-        """플레이어 간 충돌 및 공격 판정"""
-        # 두 플레이어의 바운딩 박스 가져오기
-        p1_bb = self.playerLeft.get_bb()
-        p2_bb = self.playerRight.get_bb()
+        """플레이어 간 충돌 및 공격 판정 - 공격 범위 기반"""
+        # Player1이 공격 중이고 타격 처리 가능한 상태인지 확인
+        if (self.playerLeft.is_attacking and
+            hasattr(self.playerLeft, 'can_process_hit') and
+            self.playerLeft.can_process_hit and
+            self.playerLeft.can_hit_target() and
+            not self.playerRight.is_in_hit_state()):
 
-        # 바운딩 박스 충돌 검사 (공격 판정용)
-        if (p1_bb[0] < p2_bb[2] and p1_bb[2] > p2_bb[0] and
-            p1_bb[1] < p2_bb[3] and p1_bb[3] > p2_bb[1]):
+            # Player1의 공격 범위에 Player2가 있는지 확인
+            if self.playerLeft.is_in_attack_range(self.playerRight):
+                # 가드 판정 먼저 확인
+                if self.playerRight.can_guard_against_attack(self.playerLeft.state):
+                    # 가드 성공 - 데미지 없음
+                    self.playerRight.start_guard()
+                    print(f"Player2 guarded against {self.playerLeft.state}!")
+                else:
+                    # 가드 실패 - 데미지 적용
+                    damage = self.calculate_damage(self.playerLeft.state)
+                    self.playerRight.take_damage(damage, self.playerLeft.state)
+                    print(f"Player2 took {damage} damage! HP: {self.playerRight.get_hp()}")
 
-            # 공격 중인 플레이어가 있는지 확인 (피격 상태가 아닐 때만)
-            if self.playerLeft.is_attacking and not self.playerRight.is_attacking and not self.playerRight.is_in_hit_state():
-                # Player1이 공격 중이면 Player2가 데미지 받음
-                damage = self.calculate_damage(self.playerLeft.state)
-                self.playerRight.take_damage(damage, self.playerLeft.state)
-                print(f"Player2 took {damage} damage! HP: {self.playerRight.get_hp()}")
+                # 타격 처리 완료 마킹
+                self.playerLeft.mark_attack_hit_processed()
+                self.playerLeft.can_process_hit = False
 
-            elif self.playerRight.is_attacking and not self.playerLeft.is_attacking and not self.playerLeft.is_in_hit_state():
-                # Player2가 공격 중이면 Player1이 데미지 받음
-                damage = self.calculate_damage(self.playerRight.state)
-                self.playerLeft.take_damage(damage, self.playerRight.state)
-                print(f"Player1 took {damage} damage! HP: {self.playerLeft.get_hp()}")
+        # Player2가 공격 중이고 타격 처리 가능한 상태인지 확인
+        if (self.playerRight.is_attacking and
+            hasattr(self.playerRight, 'can_process_hit') and
+            self.playerRight.can_process_hit and
+            self.playerRight.can_hit_target() and
+            not self.playerLeft.is_in_hit_state()):
+
+            # Player2의 공격 범위에 Player1이 있는지 확인
+            if self.playerRight.is_in_attack_range(self.playerLeft):
+                # 가드 판정 먼저 확인
+                if self.playerLeft.can_guard_against_attack(self.playerRight.state):
+                    # 가드 성공 - 데미지 없음
+                    self.playerLeft.start_guard()
+                    print(f"Player1 guarded against {self.playerRight.state}!")
+                else:
+                    # 가드 실패 - 데미지 적용
+                    damage = self.calculate_damage(self.playerRight.state)
+                    self.playerLeft.take_damage(damage, self.playerRight.state)
+                    print(f"Player1 took {damage} damage! HP: {self.playerLeft.get_hp()}")
+
+                # 타격 처리 완료 마킹
+                self.playerRight.mark_attack_hit_processed()
+                self.playerRight.can_process_hit = False
 
     def calculate_damage(self, attack_state):
         """공격 상태에 따른 데미지 계산"""

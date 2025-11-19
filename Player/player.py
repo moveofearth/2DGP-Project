@@ -30,6 +30,14 @@ class Player:
         self.can_combo = False  # 연계 가능 상태
         self.combo_reserved = False  # 연계 공격 예약 상태
 
+        # 가드 상태 관련 속성 추가
+        self.is_guarding = False  # 가드 중인지 체크
+        self.guard_timer = 0.0  # 가드 지속 시간
+        self.guard_duration = 0.05  # 가드 지속 시간 (0.05초)
+
+        # 공격 타격 처리 관련 속성 추가
+        self.attack_hit_processed = False  # 현재 공격의 타격 처리 완료 여부
+
         # pico2d 폰트 로드 - 개선된 예외 처리
         self.font = None
         self._load_font()
@@ -145,7 +153,106 @@ class Player:
         if other_player:
             self.resolve_collision_with_other_player(other_player)
 
-    def update(self, deltaTime, move_input=None, atk_input=None, combo_input=False, char_change_input=None, other_player=None):
+    def start_guard(self):
+        """가드 상태 시작"""
+        self.is_guarding = True
+        self.guard_timer = self.guard_duration
+        self.state = 'guard'
+        print(f"Player guarding! Position: {self.position_state}")
+
+    def update_guard(self, deltaTime):
+        """가드 상태 업데이트"""
+        if self.is_guarding:
+            self.guard_timer -= deltaTime
+            if self.guard_timer <= 0:
+                self.is_guarding = False
+                if not self.is_attacking and not self.is_hit:
+                    self.state = 'Idle'
+                print("Guard ended")
+
+    def can_guard_against_attack(self, attack_type):
+        """공격 타입에 따른 가드 가능 여부 확인"""
+        guard_mapping = {
+            'fastUpperATK': 'High',
+            'strongUpperATK': 'High',
+            'fastMiddleATK': 'Middle',
+            'strongMiddleATK': 'Middle',
+            'fastLowerATK': 'Low',
+            'strongLowerATK': 'Low'
+        }
+
+        required_position = guard_mapping.get(attack_type)
+        if required_position and self.position_state == required_position:
+            return True
+        return False
+
+    def get_attack_range_bb(self):
+        """공격 범위의 바운딩 박스 반환 (PlayerLeft 기준)"""
+        my_bb = self.get_bb()
+
+        # fast 공격 범위: 바운딩 박스 오른쪽 끝에서 +20
+        if 'fast' in self.state:
+            attack_range = 20
+            range_x1 = my_bb[2]  # 바운딩 박스 오른쪽 끝
+            range_x2 = range_x1 + attack_range
+            range_y1 = my_bb[1]
+            range_y2 = my_bb[3]
+            return range_x1, range_y1, range_x2, range_y2
+
+        # strong 공격 범위는 필요에 따라 추가
+        elif 'strong' in self.state:
+            attack_range = 30  # strong 공격은 범위가 더 넓다고 가정
+            range_x1 = my_bb[2]
+            range_x2 = range_x1 + attack_range
+            range_y1 = my_bb[1]
+            range_y2 = my_bb[3]
+            return range_x1, range_y1, range_x2, range_y2
+
+        # rage 스킬 범위
+        elif 'rage' in self.state:
+            attack_range = 50  # rage 스킬은 범위가 가장 넓다고 가정
+            range_x1 = my_bb[2]
+            range_x2 = range_x1 + attack_range
+            range_y1 = my_bb[1]
+            range_y2 = my_bb[3]
+            return range_x1, range_y1, range_x2, range_y2
+
+        return None
+
+    def is_in_attack_range(self, other_player):
+        """다른 플레이어가 공격 범위 내에 있는지 확인"""
+        if not other_player or not self.is_attacking:
+            return False
+
+        attack_bb = self.get_attack_range_bb()
+        if not attack_bb:
+            return False
+
+        other_bb = other_player.get_bb()
+
+        # AABB 충돌 검사
+        return (attack_bb[0] < other_bb[2] and attack_bb[2] > other_bb[0] and
+                attack_bb[1] < other_bb[3] and attack_bb[3] > other_bb[1])
+
+    def reset_attack_hit_flag(self):
+        """새로운 공격 시작 시 타격 플래그 리셋"""
+        self.attack_hit_processed = False
+
+    def can_hit_target(self):
+        """타격 처리 가능 여부 확인 (한 공격당 한 번만)"""
+        return self.is_attacking and not self.attack_hit_processed
+
+    def mark_attack_hit_processed(self):
+        """타격 처리 완료 마킹"""
+        self.attack_hit_processed = True
+
+    def update(self, deltaTime, move_input=None, atk_input=None, combo_input=False, char_change_input=None, other_player=None, position_state='Middle'):
+        # 위치 상태 업데이트
+        self.position_state = position_state
+
+        # 가드 상태 업데이트
+        self.update_guard(deltaTime)
+
         # 캐릭터 타입 변경 처리 (공격 중이 아닐 때만)
         if char_change_input and not self.is_attacking and char_change_input in self.available_attacks:
             current_type = self.get_character_type()
@@ -158,6 +265,10 @@ class Player:
 
         # hit 상태 동기화
         self.is_hit = self.character.is_hit
+
+        # 가드 중이면 다른 행동 불가
+        if self.is_guarding:
+            return
 
         # hit 상태일 때 기상 입력 처리
         if self.is_hit and self.character.can_get_up:
@@ -181,6 +292,7 @@ class Player:
                 if self.can_use_attack(atk_input):
                     self.state = atk_input
                     self.is_attacking = True
+                    self.reset_attack_hit_flag()  # 새 공격 시작 시 타격 플래그 리셋
 
                     # 연계 가능한 공격 설정
                     if atk_input in ['fastMiddleATK', 'strongMiddleATK', 'strongUpperATK']:
@@ -208,7 +320,7 @@ class Player:
 
         # 캐릭터 위치 및 상태 동기화
         self.character.x, self.character.y = self.x, self.y
-        if not self.is_hit:  # hit 상태가 아닐 때만 상태 동기화
+        if not self.is_hit and not self.is_guarding:  # hit 상태나 가드 상태가 아닐 때만 상태 동기화
             self.character.state = self.state
         self.character.hp = self.hp
 
