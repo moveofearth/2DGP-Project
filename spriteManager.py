@@ -64,7 +64,8 @@ class SpriteManager:
                 'strongMiddleATK2': [pico2d.load_image(str(base_path / 'priest' / 'strongMiddleATK' / f'{i}.png')) for i in range(6, 14)],
                 'strongUpperATK': [pico2d.load_image(str(base_path / 'priest' / 'strongUpperATK' / f'{i}.png')) for i in range(12)],
                 'strongLowerATK': [pico2d.load_image(str(base_path / 'priest' / 'strongLowerATK' / f'{i}.png')) for i in range(9)],
-                'rageSkill': [pico2d.load_image(str(base_path / 'priest' / 'rageSkill' / f'{i}.png')) for i in range(18)]
+                'rageSkill': [pico2d.load_image(str(base_path / 'priest' / 'rageSkill' / f'{i}.png')) for i in range(18)],
+                'hit': [pico2d.load_image(str(base_path / 'priest' / 'hit' / f'{i}.png')) for i in range(6)]  # hit 스프라이트 추가 (0~5)
             }
 
             # thief 캐릭터 스프라이트 로딩
@@ -113,6 +114,13 @@ class SpriteManager:
         if not player_ref:
             return False
 
+        # hit 상태 처리
+        if state == 'hit':
+            # hit 애니메이션이 완료되면 hit 상태 초기화
+            player_ref.character.reset_hit_state()
+            self._end_attack(player_ref, is_player1)
+            return True
+
         # rage 스킬 완료 처리
         if state == 'rageSkill':
             self._end_attack(player_ref, is_player1)
@@ -143,38 +151,33 @@ class SpriteManager:
             if player_ref.combo_reserved:
                 # 연계 실행
                 next_state = combo_mapping[character_type][state]
+                if is_player1:
+                    self.player1_state = next_state
+                    self.player1_frame = 0
+                else:
+                    self.player2_state = next_state
+                    self.player2_frame = 0
+
                 player_ref.state = next_state
                 player_ref.combo_reserved = False
                 player_ref.can_combo = False
+                print(f"Combo executed: {state} -> {next_state}")
                 return True
             else:
                 # 연계 입력이 없으면 공격 종료
                 self._end_attack(player_ref, is_player1)
                 return True
 
-        # 연계가 없는 공격이나 마지막 연계 완료
-        elif state in ['fastMiddleATK3', 'strongMiddleATK2', 'strongUpperATK2', 'strongLowerATK',
-                       'strongUpperATK', 'strongLowerATK', 'fastMiddleATK', 'fastLowerATK', 'fastUpperATK', 'strongMiddleATK', 'rageSkill']:
-            # 마지막 연계이거나 단일 공격 완료
-            if (state == 'fastMiddleATK' and character_type == 'priest') or \
-               (state in ['strongUpperATK', 'strongLowerATK'] and character_type == 'priest') or \
-               (state in ['fastLowerATK', 'fastUpperATK', 'strongMiddleATK', 'strongLowerATK'] and character_type == 'fighter') or \
-               (state == 'rageSkill'):
-                # 단일 공격
-                self._end_attack(player_ref, is_player1)
-                return True
-            elif state in ['fastMiddleATK3', 'strongMiddleATK2', 'strongUpperATK2', 'strongLowerATK']:
-                # 연계의 마지막 단계
-                self._end_attack(player_ref, is_player1)
-                return True
-
-        return False
+        # 연계가 없는 공격이나 마지막 연계 완료 - 모든 공격 상태 포함
+        self._end_attack(player_ref, is_player1)
+        return True
 
     def _end_attack(self, player_ref, is_player1):
         """공격 종료 처리"""
         player_ref.is_attacking = False
         player_ref.state = 'Idle'
         player_ref.can_combo = False
+        player_ref.combo_reserved = False
 
         if is_player1:
             self.player1_state = 'Idle'
@@ -182,6 +185,8 @@ class SpriteManager:
         else:
             self.player2_state = 'Idle'
             self.player2_frame = 0
+
+        print(f"Attack ended for player {'1' if is_player1 else '2'}")
 
     def _update_combo_availability(self, player_ref, state, character_type, frame):
         """연계 가능 시점 체크"""
@@ -203,11 +208,15 @@ class SpriteManager:
         if (character_type in combo_frames and
             state in combo_frames[character_type] and
             frame >= combo_frames[character_type][state]):
-            player_ref.can_combo = True
+            if not player_ref.can_combo:
+                player_ref.can_combo = True
+                print(f"Combo available for {character_type} at frame {frame}")
 
     def _get_frame_time_for_state(self, state):
         """상태에 따른 프레임 시간 반환"""
-        if state == 'rageSkill':
+        if state == 'hit':
+            return 0.1  # hit 애니메이션 속도
+        elif state == 'rageSkill':
             return self.rage_skill_frame_time
         elif 'fast' in state.lower():
             return self.fast_attack_frame_time
@@ -224,9 +233,11 @@ class SpriteManager:
                 self.player1_character_type = current_character_type
                 self.player1_frame = 0
                 self.frame_timer = 0.0
+                print(f"Player1 character changed to: {current_character_type}")
 
         # 상태가 변경되면 프레임을 0으로 리셋
         if self.player1_state != new_state:
+            print(f"Player1 state changed: {self.player1_state} -> {new_state}")
             self.player1_state = new_state
             self.player1_frame = 0
             self.frame_timer = 0.0
@@ -244,6 +255,24 @@ class SpriteManager:
 
             if sprites and self.player1_state in sprites:
                 sprite_count = len(sprites[self.player1_state])
+
+                # hit 상태 특별 처리
+                if self.player1_state == 'hit' and self.player1_ref:
+                    if self.player1_ref.character.hit_type == 'fast':
+                        max_frame = 1
+                    elif self.player1_ref.character.hit_type == 'strong':
+                        max_frame = 4
+                    else:
+                        max_frame = sprite_count - 1
+
+                    if self.player1_frame < max_frame:
+                        self.player1_frame += 1
+                    elif self.player1_frame == 4 and self.player1_ref.character.hit_type == 'strong':
+                        if self.player1_ref.hit_recovery_input:
+                            self.player1_frame = 5
+                            self.player1_ref.hit_recovery_input = False
+                    return
+
                 next_frame = (self.player1_frame + 1) % sprite_count
 
                 # 일반 상태는 단순 순환
@@ -260,7 +289,7 @@ class SpriteManager:
                 self.player1_frame = next_frame
 
         # 연계 가능 시점 체크
-        if self.player1_ref:
+        if self.player1_ref and self.player1_ref.is_attacking:
             self._update_combo_availability(
                 self.player1_ref, self.player1_state, self.player1_character_type, self.player1_frame)
 
@@ -272,9 +301,11 @@ class SpriteManager:
                 self.player2_character_type = current_character_type
                 self.player2_frame = 0
                 self.player2_frame_timer = 0.0
+                print(f"Player2 character changed to: {current_character_type}")
 
         # 상태가 변경되면 프레임을 0으로 리셋
         if self.player2_state != new_state:
+            print(f"Player2 state changed: {self.player2_state} -> {new_state}")
             self.player2_state = new_state
             self.player2_frame = 0
             self.player2_frame_timer = 0.0
@@ -292,6 +323,24 @@ class SpriteManager:
 
             if sprites and self.player2_state in sprites:
                 sprite_count = len(sprites[self.player2_state])
+
+                # hit 상태 특별 처리
+                if self.player2_state == 'hit' and self.player2_ref:
+                    if self.player2_ref.character.hit_type == 'fast':
+                        max_frame = 1
+                    elif self.player2_ref.character.hit_type == 'strong':
+                        max_frame = 4
+                    else:
+                        max_frame = sprite_count - 1
+
+                    if self.player2_frame < max_frame:
+                        self.player2_frame += 1
+                    elif self.player2_frame == 4 and self.player2_ref.character.hit_type == 'strong':
+                        if self.player2_ref.hit_recovery_input:
+                            self.player2_frame = 5
+                            self.player2_ref.hit_recovery_input = False
+                    return
+
                 next_frame = (self.player2_frame + 1) % sprite_count
 
                 # 일반 상태는 단순 순환
@@ -308,7 +357,7 @@ class SpriteManager:
                 self.player2_frame = next_frame
 
         # 연계 가능 시점 체크
-        if self.player2_ref:
+        if self.player2_ref and self.player2_ref.is_attacking:
             self._update_combo_availability(
                 self.player2_ref, self.player2_state, self.player2_character_type, self.player2_frame)
 

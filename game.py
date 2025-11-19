@@ -42,17 +42,17 @@ class Game:
         if (p1_bb[0] < p2_bb[2] and p1_bb[2] > p2_bb[0] and
             p1_bb[1] < p2_bb[3] and p1_bb[3] > p2_bb[1]):
 
-            # 공격 중인 플레이어가 있는지 확인
-            if self.playerLeft.is_attacking and not self.playerRight.is_attacking:
+            # 공격 중인 플레이어가 있는지 확인 (피격 상태가 아닐 때만)
+            if self.playerLeft.is_attacking and not self.playerRight.is_attacking and not self.playerRight.is_in_hit_state():
                 # Player1이 공격 중이면 Player2가 데미지 받음
                 damage = self.calculate_damage(self.playerLeft.state)
-                self.playerRight.take_damage(damage)
+                self.playerRight.take_damage(damage, self.playerLeft.state)
                 print(f"Player2 took {damage} damage! HP: {self.playerRight.get_hp()}")
 
-            elif self.playerRight.is_attacking and not self.playerLeft.is_attacking:
+            elif self.playerRight.is_attacking and not self.playerLeft.is_attacking and not self.playerLeft.is_in_hit_state():
                 # Player2가 공격 중이면 Player1이 데미지 받음
                 damage = self.calculate_damage(self.playerRight.state)
-                self.playerLeft.take_damage(damage)
+                self.playerLeft.take_damage(damage, self.playerRight.state)
                 print(f"Player1 took {damage} damage! HP: {self.playerLeft.get_hp()}")
 
     def calculate_damage(self, attack_state):
@@ -86,8 +86,7 @@ class Game:
         if self.game_over:
             return
 
-        # 플레이 씬에서만 플레이어 입력 처리
-        # 이동과 공격 입력을 분리해서 처리
+        # 플레이어 입력 처리
         player1_move_input = self.ioManager.handleMoveInputPlayer1(events)
         player1_atk_input = self.ioManager.handleATKInputPlayer1(events)
         player1_char_change = self.ioManager.handleCharacterChangePlayer1(events)
@@ -101,7 +100,7 @@ class Game:
         player1_combo = self.ioManager.check_player1_combo_input()
         player2_combo = self.ioManager.check_player2_combo_input()
 
-        # 플레이어 업데이트 시 서로의 참조를 전달하여 충돌 처리
+        # 플레이어 업데이트
         self.playerLeft.update(deltaTime, player1_move_input, player1_atk_input, player1_combo, player1_char_change, self.playerRight, player1_position_state)
         self.playerRight.update(deltaTime, player2_move_input, player2_atk_input, player2_combo, None, self.playerLeft, player2_position_state)
 
@@ -111,15 +110,14 @@ class Game:
         # 게임 오버 체크
         if not self.playerLeft.is_alive() or not self.playerRight.is_alive():
             self.game_over = True
-            winner = "Player2" if self.playerLeft.is_alive() else "Player1"
+            winner = "Player2" if not self.playerLeft.is_alive() else "Player1"
             print(f"Game Over! {winner} wins!")
 
-        # SpriteManager에 플레이어 상태 전달
+        # SpriteManager에 플레이어 상태 전달 - 플레이어 업데이트 후에 실행
         self.spriteManager.update_player1_state(self.playerLeft.state, deltaTime)
         self.spriteManager.update_player1_position(self.playerLeft.x, self.playerLeft.y)
         self.spriteManager.update_player1_direction(self.playerLeft.dir)
 
-        # 플레이어2 상태 전달
         self.spriteManager.update_player2_state(self.playerRight.state, deltaTime)
         self.spriteManager.update_player2_position(self.playerRight.x, self.playerRight.y)
         self.spriteManager.update_player2_direction(self.playerRight.dir)

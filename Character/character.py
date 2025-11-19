@@ -13,6 +13,13 @@ class Character:
         self.hp = 100  # HP 추가
         self.max_hp = 100  # 최대 HP 추가
 
+        # hit 상태 관련 속성 추가
+        self.is_hit = False
+        self.hit_type = None  # 'fast' 또는 'strong'
+        self.hit_frame_range = (0, 1)  # hit 프레임 범위
+        self.hit_frame_start = 0  # hit 시작 프레임
+        self.can_get_up = False  # 기상 가능 상태
+
         # 물리 변수 추가
         self.velocity_y = 0.0
         self.is_grounded = True
@@ -62,10 +69,46 @@ class Character:
         """현재 캐릭터의 이동속도 반환"""
         return self.move_speeds.get(self.currentCharacter, 200.0)
 
-    def take_damage(self, damage):
-        """데미지를 받는 메서드"""
+    def take_damage(self, damage, attack_type='fast'):
+        """데미지를 받는 메서드 - 공격 타입 추가"""
         self.hp = max(0, self.hp - damage)
+
+        # hit 상태 설정
+        self.is_hit = True
+        self.hit_type = attack_type
+        self.state = 'hit'
+
+        # 공격 타입에 따른 hit 프레임 범위 설정
+        if attack_type == 'fast':
+            self.hit_frame_range = (0, 1)
+        elif attack_type == 'strong':
+            self.hit_frame_range = (0, 4)
+
+        self.hit_frame_start = self.hit_frame_range[0]
+        self.frame = self.hit_frame_start
+
+        # strong 공격으로 4번째 프레임(누워있는 상태)까지 갔을 때 기상 가능
+        if attack_type == 'strong':
+            self.can_get_up = True
+
         return self.hp
+
+    def try_get_up(self):
+        """기상 시도 - 누워있는 상태에서만 가능"""
+        if self.can_get_up and self.is_hit and self.frame == 4:
+            self.frame = 5  # 기상 모션
+            self.can_get_up = False
+            return True
+        return False
+
+    def reset_hit_state(self):
+        """hit 상태 초기화"""
+        self.is_hit = False
+        self.hit_type = None
+        self.can_get_up = False
+        if self.state == 'hit':
+            self.state = 'Idle'
+            self.frame = 0
 
     def heal(self, amount):
         """체력을 회복하는 메서드"""
@@ -79,4 +122,3 @@ class Character:
     def get_hp_percentage(self):
         """HP 퍼센테이지 반환 (0.0 ~ 1.0)"""
         return self.hp / self.max_hp if self.max_hp > 0 else 0.0
-
