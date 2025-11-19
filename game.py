@@ -21,6 +21,7 @@ class Game:
         self.last_time = 0
         self.target_fps = 70
         self.frame_time = 1.0 / self.target_fps
+        self.game_over = False
 
     def initialize(self):
         pico2d.open_canvas(config.windowWidth, config.windowHeight)
@@ -30,6 +31,42 @@ class Game:
         self.spriteManager.load_sprites()
         self.spriteManager.set_player_references(self.playerLeft, self.playerRight)
         self.last_time = time.time()
+
+    def check_collision(self):
+        """플레이어 간 충돌 및 공격 판정"""
+        # 두 플레이어의 바운딩 박스 가져오기
+        p1_bb = self.playerLeft.get_bb()
+        p2_bb = self.playerRight.get_bb()
+
+        # 바운딩 박스 충돌 검사
+        if (p1_bb[0] < p2_bb[2] and p1_bb[2] > p2_bb[0] and
+            p1_bb[1] < p2_bb[3] and p1_bb[3] > p2_bb[1]):
+
+            # 공격 중인 플레이어가 있는지 확인
+            if self.playerLeft.is_attacking and not self.playerRight.is_attacking:
+                # Player1이 공격 중이면 Player2가 데미지 받음
+                damage = self.calculate_damage(self.playerLeft.state)
+                self.playerRight.take_damage(damage)
+                print(f"Player2 took {damage} damage! HP: {self.playerRight.get_hp()}")
+
+            elif self.playerRight.is_attacking and not self.playerLeft.is_attacking:
+                # Player2가 공격 중이면 Player1이 데미지 받음
+                damage = self.calculate_damage(self.playerRight.state)
+                self.playerLeft.take_damage(damage)
+                print(f"Player1 took {damage} damage! HP: {self.playerLeft.get_hp()}")
+
+    def calculate_damage(self, attack_state):
+        """공격 상태에 따른 데미지 계산"""
+        damage_table = {
+            'fastMiddleATK': 5,
+            'fastLowerATK': 5,
+            'fastUpperATK': 5,
+            'strongMiddleATK': 10,
+            'strongUpperATK': 12,
+            'strongLowerATK': 10,
+            'rageSkill': 20
+        }
+        return damage_table.get(attack_state, 3)
 
     def update(self, deltaTime):
         events = pico2d.get_events()
@@ -43,6 +80,10 @@ class Game:
         if self.sceneManager.is_title_scene():
             if self.ioManager.handleSpaceInput(events):
                 self.sceneManager.change_to_play_scene()
+            return
+
+        # 게임 오버 상태면 업데이트 중지
+        if self.game_over:
             return
 
         # 플레이 씬에서만 플레이어 입력 처리
@@ -61,6 +102,15 @@ class Game:
         self.playerLeft.update(deltaTime, player1_move_input, player1_atk_input, player1_combo, player1_char_change)
         self.playerRight.update(deltaTime, player2_move_input, player2_atk_input, player2_combo)
 
+        # 충돌 및 공격 판정
+        self.check_collision()
+
+        # 게임 오버 체크
+        if not self.playerLeft.is_alive() or not self.playerRight.is_alive():
+            self.game_over = True
+            winner = "Player2" if self.playerLeft.is_alive() else "Player1"
+            print(f"Game Over! {winner} wins!")
+
         # SpriteManager에 플레이어 상태 전달
         self.spriteManager.update_player1_state(self.playerLeft.state, deltaTime)
         self.spriteManager.update_player1_position(self.playerLeft.x, self.playerLeft.y)
@@ -78,9 +128,16 @@ class Game:
         # 플레이 씬에서만 플레이어 렌더링
         if not self.sceneManager.is_title_scene():
             self.spriteManager.render()
-            # 바운딩 박스 렌더링을 위해 플레이어 render 호출
+            # 바운딩 박스 및 HP 렌더링을 위해 플레이어 render 호출
             self.playerLeft.render()
             self.playerRight.render()
+
+            # 게임 오버 메시지 렌더링
+            if self.game_over:
+                # 간단한 게임 오버 표시 (폰트가 있는 경우)
+                if hasattr(self.playerLeft, 'font') and self.playerLeft.font:
+                    winner = "Player2" if self.playerLeft.is_alive() else "Player1"
+                    self.playerLeft.font.draw(960, 540, f"Game Over! {winner} wins!", (255, 255, 255))
 
         pico2d.update_canvas()
 

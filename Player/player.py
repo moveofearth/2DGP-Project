@@ -1,5 +1,6 @@
 from Character.character import Character
 import pico2d
+import pathlib
 
 
 class Player:
@@ -8,6 +9,8 @@ class Player:
         self.x, self.y = x, y
         self.character = Character(character_type)  # Character 인스턴스 추가
         self.character.x, self.character.y = x, y  # 캐릭터 위치 동기화
+        self.hp = 100  # HP 추가
+        self.max_hp = 100  # 최대 HP
 
         self.dir = -1  # 항상 오른쪽을 바라보도록 -1로 고정
         self.state = 'Idle'  # Idle, Walk, BackWalk
@@ -15,12 +18,34 @@ class Player:
         self.can_combo = False  # 연계 가능 상태
         self.combo_reserved = False  # 연계 공격 예약 상태
 
+        # pico2d 폰트 로드 - 개선된 예외 처리
+        self.font = None
+        self._load_font()
+
         # 캐릭터별 사용 가능한 공격 정의
         self.available_attacks = {
             'priest': ['fastMiddleATK', 'strongMiddleATK', 'strongUpperATK', 'strongLowerATK', 'rageSkill'],
             'thief': ['fastMiddleATK', 'strongMiddleATK', 'strongUpperATK', 'strongLowerATK'],
             'fighter': ['fastMiddleATK', 'fastLowerATK', 'fastUpperATK', 'strongMiddleATK', 'strongLowerATK', 'strongUpperATK']
         }
+
+    def _load_font(self):
+        """폰트 로드 시도"""
+        try:
+            # 프로젝트 루트의 폰트 파일 시도
+            self.font = pico2d.load_font('ENCR10B.TTF', 16)
+        except:
+            try:
+                # 기본 폰트 시도 (None을 전달하면 시스템 기본 폰트)
+                self.font = pico2d.load_font(None, 16)
+            except:
+                # 폰트 로드 완전 실패
+                self.font = None
+                print("Warning: Font loading failed. HP text will not be displayed.")
+
+    def get_character_type(self):
+        """현재 캐릭터 타입 반환"""
+        return self.character.get_character_type()
 
     def can_use_attack(self, attack_type):
         """현재 캐릭터가 해당 공격을 사용할 수 있는지 확인"""
@@ -38,11 +63,24 @@ class Player:
 
     def initialize(self):
         self.character.initialize()  # Character 초기화
+        # Character의 HP와 동기화
+        self.character.hp = self.hp
+        # 폰트 재로드 시도 (initialize 시점에서)
+        if not self.font:
+            self._load_font()
 
     def update(self, deltaTime, move_input=None, atk_input=None, combo_input=False, char_change_input=None):
-        # 캐릭터 위치 동기화
+        # 캐릭터 타입 변경 처리 (공격 중이 아닐 때만)
+        if char_change_input and not self.is_attacking and char_change_input in self.available_attacks:
+            current_type = self.get_character_type()
+            if current_type != char_change_input:
+                self.set_character_type(char_change_input)
+                return
+
+        # 캐릭터 위치 및 HP 동기화
         self.character.x, self.character.y = self.x, self.y
         self.character.state = self.state
+        self.character.hp = self.hp
 
         # Character 업데이트
         self.character.update(deltaTime)
@@ -117,8 +155,36 @@ class Player:
                 self.state = 'Idle'  # 입력이 없으면 Idle 상태
 
     def render(self):
-        # SpriteManager에서 캐릭터 이미지를 렌더링하므로 여기서는 바운딩 박스만 그리기
+        # SpriteManager에서 캐릭터 이미지를 렌더링하므로 여기서는 바운딩 박스와 HP만 그리기
         pico2d.draw_rectangle(*self.get_bb())  # 바운딩 박스 그리기
+
+        # HP 텍스트 렌더링 (바운딩 박스 아래쪽)
+        self._render_hp_text()
+
+    def _render_hp_text(self):
+        """HP 텍스트 렌더링 메서드"""
+        if not self.font:
+            return
+
+        bb_x1, bb_y1, bb_x2, bb_y2 = self.get_bb()
+        text_x = (bb_x1 + bb_x2) // 2  # 바운딩 박스 중앙
+        text_y = bb_y1 - 30  # 바운딩 박스 아래 30픽셀
+
+        # HP 텍스트 색상 결정
+        hp_percentage = self.hp / self.max_hp
+        if hp_percentage > 0.6:
+            text_color = (0, 255, 0)  # 초록색
+        elif hp_percentage > 0.3:
+            text_color = (255, 255, 0)  # 노란색
+        else:
+            text_color = (255, 0, 0)  # 빨간색
+
+        # HP 텍스트 출력
+        try:
+            self.font.draw(text_x - 15, text_y, f"HP: {self.hp}", text_color)
+        except:
+            # 폰트 오류 시 무시
+            pass
 
     def get_bb(self):
         """바운딩 박스 좌표 반환 (x1, y1, x2, y2)"""
@@ -129,8 +195,34 @@ class Player:
 
     def set_character_type(self, character_type):
         """캐릭터 타입 변경"""
-        self.character.set_character_type(character_type)
+        if character_type in self.available_attacks:
+            self.character.set_character_type(character_type)
+            # 공격 상태 초기화
+            self.is_attacking = False
+            self.can_combo = False
+            self.combo_reserved = False
+            self.state = 'Idle'
 
-    def get_character_type(self):
-        """현재 캐릭터 타입 반환"""
-        return self.character.get_character_type()
+    def take_damage(self, damage):
+        """데미지를 받는 메서드"""
+        self.hp = max(0, self.hp - damage)
+        self.character.hp = self.hp
+        return self.hp
+
+    def heal(self, amount):
+        """체력을 회복하는 메서드"""
+        self.hp = min(self.max_hp, self.hp + amount)
+        self.character.hp = self.hp
+        return self.hp
+
+    def is_alive(self):
+        """생존 여부 확인"""
+        return self.hp > 0
+
+    def get_hp(self):
+        """현재 HP 반환"""
+        return self.hp
+
+    def get_hp_percentage(self):
+        """HP 퍼센테이지 반환 (0.0 ~ 1.0)"""
+        return self.hp / self.max_hp
