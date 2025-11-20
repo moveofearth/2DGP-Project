@@ -15,6 +15,7 @@ class Player:
 
         # 물리 변수 추가
         self.velocity_y = 0.0  # Y방향 속도
+        self.velocity_x = 0.0  # X방향 속도 (포물선 운동용)
         self.is_grounded = True  # 지면에 있는지 체크
         self.gravity = config.GRAVITY  # 중력 가속도
 
@@ -97,14 +98,21 @@ class Player:
         if not self.is_grounded:
             # 중력으로 인한 Y방향 속도 감소
             self.velocity_y -= self.gravity * deltaTime
-            # 위치 업데이트
+            # 위치 업데이트 (포물선: x, y 둘다)
             old_y = self.y
+            self.x += self.velocity_x * deltaTime
+            # 공중 수평 감속(간단한 댐핑) - 초당 약 6의 감속계수로 자연스럽게 줄어듦
+            damping_factor = 6.0
+            self.velocity_x *= max(0.0, 1.0 - damping_factor * deltaTime)
+
             self.y += self.velocity_y * deltaTime
 
             # 그라운드 체크
             if self.y <= config.GROUND_Y:
                 self.y = config.GROUND_Y
                 self.velocity_y = 0.0
+                # 착지하면 수평 속도도 정지
+                self.velocity_x = 0.0
                 self.is_grounded = True
 
                 # 공중에서 떨어진 후 착지했을 때 특별 처리
@@ -286,11 +294,11 @@ class Player:
         """피격 상태인지 확인"""
         return self.is_hit
 
-    def take_damage(self, damage, attack_state='fastMiddleATK'):
+    def take_damage(self, damage, attack_state='fastMiddleATK', attacker=None):
         """데미지를 받는 메서드 - 공격 상태에 따른 hit 타입 결정"""
         # 공격 상태에 따른 hit 타입 결정
-        if 'strongLowerATK' in attack_state:
-            # strongLowerATK는 특별한 airborne 타입
+        # Lower 계열은 포물선으로 띄우기 위해 airborne 취급
+        if 'lower' in attack_state.lower():
             attack_type = 'airborne'
         elif 'strong' in attack_state or 'rage' in attack_state:
             attack_type = 'strong'
@@ -305,12 +313,34 @@ class Player:
         self.is_hit = self.character.is_hit
         self.state = 'hit'  # Player 상태도 hit로 설정
 
-        # strongLowerATK에 맞았을 때 공중으로 띄우기
-        if attack_type == 'airborne':
-            self.velocity_y = 600.0  # 위로 띄우는 초기 속도 (400.0 -> 600.0, 약 50% 증가)
+        # Lower 계열 공격에 맞았을 때 포물선으로 띄우기 (수평 + 수직)
+        if 'lower' in attack_state.lower():
+            # 세기 결정 (strong이면 더 세게)
+            if 'strong' in attack_state.lower():
+                vy = 640.0
+                vx_mag = 300.0
+            else:
+                vy = 480.0
+                vx_mag = 200.0
+
+            # x 가속도를 70% 감소시킴 -> 초기 vx는 기존의 30%로 설정
+            vx_mag = vx_mag * 0.3
+
+            # 공격자 위치를 참고해 밀려나는 방향 결정 (공격자 기준 밖으로)
+            if attacker and hasattr(attacker, 'x'):
+                if attacker.x < self.x:
+                    self.velocity_x = vx_mag
+                else:
+                    self.velocity_x = -vx_mag
+            else:
+                # 공격자 정보 없으면 기본으로 오른쪽으로 밀려나게 설정
+                self.velocity_x = vx_mag if self.x < config.windowWidth / 2 else -vx_mag
+
+            self.velocity_y = vy
             self.is_grounded = False
-            self.y += 5  # 살짝 위로 올려서 확실히 공중 상태로 만들기
-            print(f"Player launched into air by strongLowerATK! Initial velocity: {self.velocity_y}")
+            # 살짝 띄워 충돌/착지 로직을 명확히
+            self.y += 5
+            print(f"Player launched into parabola by {attack_state}! vx:{self.velocity_x}, vy:{self.velocity_y}")
 
         # 공격 및 가드 상태 초기화 (피격 시 모든 행동 중단)
         self.is_attacking = False

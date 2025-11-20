@@ -59,7 +59,8 @@ class Game:
                     else:
                         # 가드 실패 - 데미지 적용
                         damage = self.calculate_damage(self.playerLeft.state)
-                        self.playerRight.take_damage(damage, self.playerLeft.state)
+                        # 공격자 참조 전달 (포물선 방향 계산용)
+                        self.playerRight.take_damage(damage, self.playerLeft.state, attacker=self.playerLeft)
                         print(f"Player2 took {damage} damage! HP: {self.playerRight.get_hp()}, State: hit")
 
                     # 타격 처리 완료 마킹
@@ -90,7 +91,8 @@ class Game:
                     else:
                         # 가드 실패 - 데미지 적용
                         damage = self.calculate_damage(self.playerRight.state)
-                        self.playerLeft.take_damage(damage, self.playerRight.state)
+                        # 공격자 참조 전달 (포물선 방향 계산용)
+                        self.playerLeft.take_damage(damage, self.playerRight.state, attacker=self.playerRight)
                         print(f"Player1 took {damage} damage! HP: {self.playerLeft.get_hp()}, State: hit")
 
                     # 타격 처리 완료 마킹
