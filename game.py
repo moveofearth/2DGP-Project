@@ -39,49 +39,63 @@ class Game:
         if (self.playerLeft.is_attacking and
             hasattr(self.playerLeft, 'can_process_hit') and
             self.playerLeft.can_process_hit and
-            self.playerLeft.can_hit_target() and
-            not self.playerRight.is_in_hit_state()):  # 피격 중이 아닐 때만
+            self.playerLeft.can_hit_target()):
 
-            # Player1의 공격 범위에 Player2가 있는지 확인
-            if self.playerLeft.is_in_attack_range(self.playerRight):
-                # 가드 판정 먼저 확인
-                if self.playerRight.can_guard_against_attack(self.playerLeft.state):
-                    # 가드 성공 - 데미지 없음, 가드 지속 또는 시작
-                    self.playerRight.start_guard()
-                    print(f"Player2 successfully guarded against {self.playerLeft.state}! Position: {self.playerRight.position_state}")
-                else:
-                    # 가드 실패 - 데미지 적용
-                    damage = self.calculate_damage(self.playerLeft.state)
-                    self.playerRight.take_damage(damage, self.playerLeft.state)
-                    print(f"Player2 took {damage} damage! HP: {self.playerRight.get_hp()}, State: hit")
+            # PlayerRight가 down 상태일 때 Lower 계열 공격은 히트 가능하도록 허용
+            attacker_state = self.playerLeft.state or ''
+            target = self.playerRight
+            target_is_down = (hasattr(target, 'character') and getattr(target.character, 'hit_type', None) == 'down')
+            allow_hit_on_down = ('lower' in attacker_state.lower()) and target_is_down
 
-                # 타격 처리 완료 마킹
-                self.playerLeft.mark_attack_hit_processed()
-                self.playerLeft.can_process_hit = False
+            if not target.is_in_hit_state() or allow_hit_on_down:
+
+                # Player1의 공격 범위에 Player2가 있는지 확인
+                if self.playerLeft.is_in_attack_range(self.playerRight):
+                    # 가드 판정 먼저 확인
+                    if self.playerRight.can_guard_against_attack(self.playerLeft.state):
+                        # 가드 성공 - 데미지 없음, 가드 지속 또는 시작
+                        self.playerRight.start_guard()
+                        print(f"Player2 successfully guarded against {self.playerLeft.state}! Position: {self.playerRight.position_state}")
+                    else:
+                        # 가드 실패 - 데미지 적용
+                        damage = self.calculate_damage(self.playerLeft.state)
+                        self.playerRight.take_damage(damage, self.playerLeft.state)
+                        print(f"Player2 took {damage} damage! HP: {self.playerRight.get_hp()}, State: hit")
+
+                    # 타격 처리 완료 마킹
+                    self.playerLeft.mark_attack_hit_processed()
+                    self.playerLeft.can_process_hit = False
 
         # Player2가 공격 중이고 타격 처리 가능한 상태인지 확인
         if (self.playerRight.is_attacking and
             hasattr(self.playerRight, 'can_process_hit') and
             self.playerRight.can_process_hit and
-            self.playerRight.can_hit_target() and
-            not self.playerLeft.is_in_hit_state()):  # 피격 중이 아닐 때만
+            self.playerRight.can_hit_target()):
 
-            # Player2의 공격 범위에 Player1이 있는지 확인
-            if self.playerRight.is_in_attack_range(self.playerLeft):
-                # 가드 판정 먼저 확인
-                if self.playerLeft.can_guard_against_attack(self.playerRight.state):
-                    # 가드 성공 - 데미지 없음, 가드 지속 또는 시작
-                    self.playerLeft.start_guard()
-                    print(f"Player1 successfully guarded against {self.playerRight.state}! Position: {self.playerLeft.position_state}")
-                else:
-                    # 가드 실패 - 데미지 적용
-                    damage = self.calculate_damage(self.playerRight.state)
-                    self.playerLeft.take_damage(damage, self.playerRight.state)
-                    print(f"Player1 took {damage} damage! HP: {self.playerLeft.get_hp()}, State: hit")
+            # PlayerLeft가 down 상태일 때 Lower 계열 공격은 히트 가능하도록 허용
+            attacker_state = self.playerRight.state or ''
+            target = self.playerLeft
+            target_is_down = (hasattr(target, 'character') and getattr(target.character, 'hit_type', None) == 'down')
+            allow_hit_on_down = ('lower' in attacker_state.lower()) and target_is_down
 
-                # 타격 처리 완료 마킹
-                self.playerRight.mark_attack_hit_processed()
-                self.playerRight.can_process_hit = False
+            if not target.is_in_hit_state() or allow_hit_on_down:
+
+                # Player2의 공격 범위에 Player1이 있는지 확인
+                if self.playerRight.is_in_attack_range(self.playerLeft):
+                    # 가드 판정 먼저 확인
+                    if self.playerLeft.can_guard_against_attack(self.playerRight.state):
+                        # 가드 성공 - 데미지 없음, 가드 지속 또는 시작
+                        self.playerLeft.start_guard()
+                        print(f"Player1 successfully guarded against {self.playerRight.state}! Position: {self.playerLeft.position_state}")
+                    else:
+                        # 가드 실패 - 데미지 적용
+                        damage = self.calculate_damage(self.playerRight.state)
+                        self.playerLeft.take_damage(damage, self.playerRight.state)
+                        print(f"Player1 took {damage} damage! HP: {self.playerLeft.get_hp()}, State: hit")
+
+                    # 타격 처리 완료 마킹
+                    self.playerRight.mark_attack_hit_processed()
+                    self.playerRight.can_process_hit = False
 
     def calculate_damage(self, attack_state):
         """공격 상태에 따른 데미지 계산"""
