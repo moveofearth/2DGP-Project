@@ -63,6 +63,8 @@ class Game:
                         # 가드 성공 - 데미지 없음, 가드 지속 또는 시작
                         self.playerRight.start_guard()
                         print(f"Player2 successfully guarded against {self.playerLeft.state}! Position: {self.playerRight.position_state}")
+                        # 가드 성공 직후, 현재 입력으로 즉시 반격 가능한지 체크
+                        self._try_trigger_counterattack_from_input(self.playerRight, is_player2=True)
                     else:
                         # 가드 실패 - 데미지 적용
                         damage = self.calculate_damage(self.playerLeft.state)
@@ -98,6 +100,8 @@ class Game:
                         # 가드 성공 - 데미지 없음, 가드 지속 또는 시작
                         self.playerLeft.start_guard()
                         print(f"Player1 successfully guarded against {self.playerRight.state}! Position: {self.playerLeft.position_state}")
+                        # 가드 성공 직후, 현재 입력으로 즉시 반격 가능한지 체크
+                        self._try_trigger_counterattack_from_input(self.playerLeft, is_player2=False)
                     else:
                         # 가드 실패 - 데미지 적용
                         damage = self.calculate_damage(self.playerRight.state)
@@ -226,3 +230,68 @@ class Game:
 
         self.update(deltaTime)
         self.render()
+
+    def _try_trigger_counterattack_from_input(self, target_player, is_player2=False):
+        """가드 성공 직후 현재 입력으로 즉시 반격 시작 시도
+        - target_player: 가드를 성공한 플레이어 객체
+        - is_player2: True면 player2 키맵 사용, False면 player1 키맵 사용
+        """
+        # 입력 키 상태 참조
+        if is_player2:
+            keys = self.ioManager.player2_keys
+        else:
+            keys = self.ioManager.player1_keys
+
+        # 우선순위: rageSkill, fast(1/one), strong(2/two)
+        candidate_attack = None
+
+        # rage 체크
+        if (is_player2 and keys.get('three')) or (not is_player2 and keys.get('h')):
+            candidate_attack = 'rageSkill'
+        else:
+            # fast / strong 분기
+            if (is_player2 and keys.get('one')) or (not is_player2 and keys.get('f')):
+                # up/down 조합 확인
+                if (is_player2 and keys.get('up')) or (not is_player2 and keys.get('w')):
+                    candidate_attack = 'fastUpperATK'
+                elif (is_player2 and keys.get('down')) or (not is_player2 and keys.get('s')):
+                    candidate_attack = 'fastLowerATK'
+                else:
+                    candidate_attack = 'fastMiddleATK'
+            elif (is_player2 and keys.get('two')) or (not is_player2 and keys.get('g')):
+                if (is_player2 and keys.get('up')) or (not is_player2 and keys.get('w')):
+                    candidate_attack = 'strongUpperATK'
+                elif (is_player2 and keys.get('down')) or (not is_player2 and keys.get('s')):
+                    candidate_attack = 'strongLowerATK'
+                else:
+                    candidate_attack = 'strongMiddleATK'
+
+        # 후보 공격이 있고 사용 가능한 공격이면 즉시 발동
+        if candidate_attack and hasattr(target_player, 'can_use_attack') and target_player.can_use_attack(candidate_attack):
+            # 현재 공격 중이 아니어야 함
+            if not target_player.is_attacking:
+                # 가드 상태 해제 및 공격 시작
+                target_player.is_guarding = False
+                if hasattr(target_player, 'can_attack_after_guard'):
+                    target_player.can_attack_after_guard = False
+                if hasattr(target_player, 'guard_counter_timer'):
+                    target_player.guard_counter_timer = 0.0
+
+                target_player.state = candidate_attack
+                target_player.is_attacking = True
+                if hasattr(target_player, 'reset_attack_hit_flag'):
+                    target_player.reset_attack_hit_flag()
+
+                # 연계 가능 설정 (기존 로직과 동일)
+                if candidate_attack in ['fastMiddleATK', 'strongMiddleATK', 'strongUpperATK']:
+                    target_player.can_combo = True
+                else:
+                    target_player.can_combo = False
+
+                target_player.combo_reserved = False
+
+                print(f"Counterattack triggered immediately after guard: {candidate_attack} (Player {'2' if is_player2 else '1'})")
+                # SpriteManager는 이후 Game.update에서 상태를 전파하므로 여기서는 추가 처리가 필요 없음
+                return True
+
+        return False

@@ -52,6 +52,11 @@ class Player:
         # 이동 속도 조정 (더 느리게)
         self.move_speed_multiplier = 0.8  # 이동 속도 배율
 
+        # 가드 후 즉시 공격 가능 창 (초단위)
+        self.guard_counter_window = 0.25  # 가드 후 0.25초 동안 반격 가능
+        self.guard_counter_timer = 0.0
+        self.can_attack_after_guard = False
+
     def _load_font(self):
         """폰트 로드 시도"""
         try:
@@ -181,7 +186,6 @@ class Player:
         # 이미 가드 중이라면 가드를 연장 (애니메이션 리셋)
         if self.is_guarding:
             print(f"Guard extended! Position: {self.position_state} - Resetting guard animation")
-            # spriteManager에서 가드 애니메이션을 처음부터 다시 시작하도록 신호
             self.guard_animation_reset = True
         else:
             self.is_guarding = True
@@ -191,6 +195,11 @@ class Player:
         self.state = 'guard'
         # Character 상태도 즉시 동기화
         self.character.state = 'guard'
+
+        # 가드 성공 시 짧은 반격 창 부여
+        self.guard_counter_timer = self.guard_counter_window
+        self.can_attack_after_guard = True
+        print(f"Guard counter window opened for {self.guard_counter_window} seconds")
 
     def should_reset_guard_animation(self):
         """가드 애니메이션 리셋이 필요한지 확인"""
@@ -364,6 +373,13 @@ class Player:
         # 위치 상태 업데이트
         self.position_state = position_state
 
+        # 가드 반격 창 타이머 감소
+        if self.guard_counter_timer > 0.0:
+            self.guard_counter_timer = max(0.0, self.guard_counter_timer - deltaTime)
+            if self.guard_counter_timer == 0.0:
+                self.can_attack_after_guard = False
+                print("Guard counter window closed")
+
         # 가드 상태 업데이트 (빈 함수)
         self.update_guard(deltaTime)
 
@@ -386,13 +402,21 @@ class Player:
                 self.state = 'Idle'
 
         # 가드 중이면 다른 행동 불가 - 상태 강제 동기화
-        if self.is_guarding:
+        # 가드 중이고 반격 창이 없을 때만 완전히 행동을 봉쇄
+        if self.is_guarding and not self.can_attack_after_guard:
             # 가드 중에는 상태가 'guard'로 고정되어야 함
             if self.state != 'guard':
                 self.state = 'guard'
             if self.character.state != 'guard':
                 self.character.state = 'guard'
             return
+        elif self.is_guarding and self.can_attack_after_guard:
+            # 반격 창 동안은 공격 입력만 허용하도록 상태를 유지하되, 이동 등은 제한
+            if self.state != 'guard':
+                self.state = 'guard'
+            if self.character.state != 'guard':
+                self.character.state = 'guard'
+            # 이동 처리나 다른 행동은 제한되지만 공격 입력은 허용된다. (아래 공격 처리로 진행)
 
         # hit 상태일 때 기상 입력 처리 - airborne과 down 상태 구분
         if self.is_hit and self.character.can_get_up:
@@ -427,6 +451,13 @@ class Player:
             if not self.is_attacking and atk_input:
                 # 캐릭터별 공격 제한 확인
                 if self.can_use_attack(atk_input):
+                    # 반격 창 동안 가드 중이면 가드 해제하고 즉시 공격 허용
+                    if self.is_guarding and self.can_attack_after_guard:
+                        self.is_guarding = False
+                        self.can_attack_after_guard = False
+                        self.guard_counter_timer = 0.0
+                        print("Guard canceled to perform immediate attack")
+
                     self.state = atk_input
                     self.is_attacking = True
                     self.reset_attack_hit_flag()  # 새 공격 시작 시 타격 플래그 리셋
