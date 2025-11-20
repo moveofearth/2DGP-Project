@@ -44,10 +44,17 @@ class Game:
             # PlayerRight가 down 상태일 때 Lower 계열 공격은 히트 가능하도록 허용
             attacker_state = self.playerLeft.state or ''
             target = self.playerRight
-            target_is_down = (hasattr(target, 'character') and getattr(target.character, 'hit_type', None) == 'down')
+            # 대상의 현재 hit_type 확인 (down 또는 airborne일 때 특별 처리 허용)
+            target_hit_type = getattr(target.character, 'hit_type', None) if hasattr(target, 'character') else None
+            target_is_down = (target_hit_type == 'down')
+            target_is_airborne = (target_hit_type == 'airborne')
+            # lower 계열 공격은 down 상태에 대한 히트 허용, 그리고 공중(airborne) 상태도 추가 허용
             allow_hit_on_down = ('lower' in attacker_state.lower()) and target_is_down
+            allow_hit_on_airborne = target_is_airborne
 
-            if not target.is_in_hit_state() or allow_hit_on_down:
+            # 기본적으로는 피격 상태가 아니어야 히트되지만,
+            # down(낙하 후) 또는 airborne(공중) 상태인 경우엔 추가 히트 허용
+            if (not target.is_in_hit_state()) or allow_hit_on_down or allow_hit_on_airborne:
 
                 # Player1의 공격 범위에 Player2가 있는지 확인
                 if self.playerLeft.is_in_attack_range(self.playerRight):
@@ -76,10 +83,13 @@ class Game:
             # PlayerLeft가 down 상태일 때 Lower 계열 공격은 히트 가능하도록 허용
             attacker_state = self.playerRight.state or ''
             target = self.playerLeft
-            target_is_down = (hasattr(target, 'character') and getattr(target.character, 'hit_type', None) == 'down')
+            target_hit_type = getattr(target.character, 'hit_type', None) if hasattr(target, 'character') else None
+            target_is_down = (target_hit_type == 'down')
+            target_is_airborne = (target_hit_type == 'airborne')
             allow_hit_on_down = ('lower' in attacker_state.lower()) and target_is_down
+            allow_hit_on_airborne = target_is_airborne
 
-            if not target.is_in_hit_state() or allow_hit_on_down:
+            if (not target.is_in_hit_state()) or allow_hit_on_down or allow_hit_on_airborne:
 
                 # Player2의 공격 범위에 Player1이 있는지 확인
                 if self.playerRight.is_in_attack_range(self.playerLeft):
@@ -119,6 +129,11 @@ class Game:
         deltaTime = min(deltaTime, self.max_delta_time)
 
         events = pico2d.get_events()
+
+        # ESC 키로 종료 처리
+        if self.ioManager.checkEscape(events):
+            self.running = False
+            return
 
         # 종료 이벤트 처리
         for event in events:

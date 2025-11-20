@@ -229,3 +229,11 @@ class IOManager:
         """Player2의 기상 입력 확인 (방향키 중 아무거나)"""
         return (self.player2_keys['up'] or self.player2_keys['down'] or
                 self.player2_keys['left'] or self.player2_keys['right'])
+
+    def checkEscape(self, events):
+        """ESC 키로 종료 요청 감지"""
+        for event in events:
+            if event.type == pico2d.SDL_KEYDOWN:
+                if event.key == pico2d.SDLK_ESCAPE:
+                    return True
+        return False
