@@ -22,7 +22,8 @@ class SpriteManager:
             'strongUpperATK': 1.8,  # Strong 공격: 1.8초 (12프레임)
             'strongLowerATK': 1.35, # Strong 공격: 1.35초 (9프레임)
             'rageSkill': 1.0,      # Rage 스킬: 1초 (18프레임)
-            'hit': 0.3,            # 피격: 0.3초
+            # 'hit'는 이후 guard와 동일하게 맞추기 위해 임시값 제거
+            'hit': 0.3,
             'guard': 0.9,          # 가드: 0.9초 (2프레임을 천천히 재생)
             # 연계 공격들
             'fastMiddleATK2': 0.6,
@@ -30,6 +31,8 @@ class SpriteManager:
             'strongMiddleATK2': 1.2,
             'strongUpperATK2': 0.75,
         }
+        # hit 재생시간을 guard와 동일하게 강제 (guard 시간 변경 시 자동 동기화)
+        self.animation_durations['hit'] = self.animation_durations.get('guard', self.animation_durations.get('hit', 0.3))
 
         self.frame_timer = 0.0  # 프레임 타이머
         self.player2_frame_timer = 0.0  # 플레이어2용 프레임 타이머
@@ -192,7 +195,14 @@ class SpriteManager:
                     self.player2_frame = 0
                     self.player2_frame_timer = 0.0
 
+                # 연계로 새로운 공격이 시작되므로 타격 플래그 초기화
                 player_ref.state = next_state
+                # 한 공격당 한 번만 타격 처리되도록 리셋
+                if hasattr(player_ref, 'reset_attack_hit_flag'):
+                    player_ref.reset_attack_hit_flag()
+                # 중앙 프레임 기반 히트 판정을 위해 처리 플래그 초기화
+                if hasattr(player_ref, 'can_process_hit'):
+                    player_ref.can_process_hit = False
                 player_ref.combo_reserved = False
                 player_ref.can_combo = False
                 print(f"Combo executed: {state} -> {next_state}")
@@ -290,7 +300,12 @@ class SpriteManager:
         if sprites and self.player1_state in sprites:
             sprite_count = len(sprites[self.player1_state])
             # 스프라이트 개수에 따라 프레임 시간 계산
+            # 기본 프레임 시간 계산
             current_frame_time = self._get_frame_time_for_state(self.player1_state, sprite_count)
+            # hit 상태는 guard와 같은 전체 재생시간으로 고정
+            if self.player1_state == 'hit':
+                total_hit_duration = self.animation_durations.get('guard', self.animation_durations.get('hit', 0.3))
+                current_frame_time = (total_hit_duration / sprite_count) if sprite_count > 0 else current_frame_time
 
             # 프레임 애니메이션 업데이트
             self.frame_timer += deltaTime
@@ -436,7 +451,12 @@ class SpriteManager:
         if sprites and self.player2_state in sprites:
             sprite_count = len(sprites[self.player2_state])
             # 스프라이트 개수에 따라 프레임 시간 계산
+            # 기본 프레임 시간 계산
             current_frame_time = self._get_frame_time_for_state(self.player2_state, sprite_count)
+            # hit 상태는 guard와 같은 전체 재생시간으로 고정
+            if self.player2_state == 'hit':
+                total_hit_duration = self.animation_durations.get('guard', self.animation_durations.get('hit', 0.3))
+                current_frame_time = (total_hit_duration / sprite_count) if sprite_count > 0 else current_frame_time
 
             # 프레임 애니메이션 업데이트
             self.player2_frame_timer += deltaTime
