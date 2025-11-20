@@ -36,6 +36,8 @@ class Player:
 
         # 공격 타격 처리 관련 속성 추가
         self.attack_hit_processed = False  # 현재 공격의 타격 처리 완료 여부
+        # SpriteManager와 연동되는 타격 허용 플래그 초기화 (프레임 기반 히트 판정)
+        self.can_process_hit = False
 
         # pico2d 폰트 로드 - 개선된 예외 처리
         self.font = None
@@ -182,6 +184,10 @@ class Player:
 
     def start_guard(self):
         """가드 상태 시작 - 피격 시 자동으로 발동"""
+        # 공격 중이면 가드 불가 (공격 도중 들어오는 공격은 방어하지 않음)
+        if getattr(self, 'is_attacking', False):
+            print("Cannot start guard while attacking")
+            return
         # 이미 가드 중이라면 가드를 연장 (애니메이션 리셋)
         if self.is_guarding:
             print(f"Guard extended! Position: {self.position_state} - Resetting guard animation")
@@ -224,6 +230,10 @@ class Player:
 
     def can_guard_against_attack(self, attack_type):
         """공격 타입에 따른 가드 가능 여부 확인"""
+        # 공격 중이면 가드 불가 (공격이 들어왔을 때 공격 중이면 방어하지 않음)
+        if getattr(self, 'is_attacking', False):
+            return False
+
         guard_mapping = {
             'fastUpperATK': 'High',
             'strongUpperATK': 'High',
@@ -305,7 +315,7 @@ class Player:
     def take_damage(self, damage, attack_state='fastMiddleATK', attacker=None):
         """데미지를 받는 메서드 - 공격 상태에 따른 hit 타입 결정"""
         # 공격 상태에 따른 hit 타입 결정
-        # Lower 계열은 포물선으로 띄우기 위해 airborne 취급
+        # Lower 계열은 포물선로 띄우기 위해 airborne 취급
         if 'lower' in attack_state.lower():
             attack_type = 'airborne'
         elif 'strong' in attack_state or 'rage' in attack_state:
@@ -352,7 +362,13 @@ class Player:
             print(f"Player launched into parabola by {attack_state}! vx:{self.velocity_x}, vy:{self.velocity_y}")
 
         # 공격 및 가드 상태 초기화 (피격 시 모든 행동 중단)
+        # 공격을 받은 순간 현재 진행중인 공격을 취소하고,
+        # 해당 공격은 더 이상 타격 판정을 발생시키지 않도록 모든 관련 플래그를 초기화한다.
         self.is_attacking = False
+        # 이미 현재 공격에 대한 타격 처리가 끝난 것으로 마킹하여 이후 판정에서 제외
+        self.attack_hit_processed = True
+        # SpriteManager가 설정하는 타격 허용 플래그도 즉시 비활성화
+        self.can_process_hit = False
         self.is_guarding = False
         self.can_combo = False
         self.combo_reserved = False
@@ -362,11 +378,18 @@ class Player:
 
     def reset_hit_state(self):
         """hit 상태 완전 초기화"""
+        # hit 상태 및 공격 관련 플래그 안전 초기화
         self.is_hit = False
         self.character.reset_hit_state()
+        # 공격 관련 플래그도 확실히 비활성화
+        self.is_attacking = False
+        self.can_process_hit = False
+        self.attack_hit_processed = True
+        self.can_combo = False
+        self.combo_reserved = False
         if self.state == 'hit':
             self.state = 'Idle'
-        print("Player hit state reset to normal")
+        print("Player hit state reset to normal (attack cancelled and flags cleared)")
 
     def update(self, deltaTime, move_input=None, atk_input=None, combo_input=False, char_change_input=None, other_player=None, position_state='Middle', getup_input=False):
         # 위치 상태 업데이트
