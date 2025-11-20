@@ -19,7 +19,6 @@ class Player:
         self.is_grounded = True  # 지면에 있는지 체크
         self.gravity = config.GRAVITY  # 중력 가속도
 
-        # 이전 위치 저장 (충돌 시 되돌리기 위해)
         self.prev_x = x
 
         self.dir = -1  # 항상 오른쪽을 바라보도록 -1로 고정
@@ -401,8 +400,33 @@ class Player:
             elif not self.is_hit and self.state == 'hit':
                 self.state = 'Idle'
 
+        # 가드 중일 때 공격키 입력으로 가드 취소 후 즉시 공격 허용 (반격 창 유무와 관계없이)
+        if self.is_guarding and not self.is_attacking and atk_input:
+            if self.can_use_attack(atk_input):
+                # 가드 상태 해제
+                self.is_guarding = False
+                self.can_attack_after_guard = False
+                self.guard_counter_timer = 0.0
+                if hasattr(self, 'guard_animation_reset'):
+                    self.guard_animation_reset = False
+
+                # 즉시 공격 시작
+                self.state = atk_input
+                self.character.state = atk_input  # Character 상태 즉시 동기화
+                self.is_attacking = True
+                self.reset_attack_hit_flag()
+
+                # 연계 가능 설정
+                if atk_input in ['fastMiddleATK', 'strongMiddleATK', 'strongUpperATK']:
+                    self.can_combo = True
+                else:
+                    self.can_combo = False
+
+                self.combo_reserved = False
+
+                print(f"Guard canceled by attack input -> immediate attack: {atk_input}")
+                return
         # 가드 중이면 다른 행동 불가 - 상태 강제 동기화
-        # 가드 중이고 반격 창이 없을 때만 완전히 행동을 봉쇄
         if self.is_guarding and not self.can_attack_after_guard:
             # 가드 중에는 상태가 'guard'로 고정되어야 함
             if self.state != 'guard':
