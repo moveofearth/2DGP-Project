@@ -4,17 +4,14 @@ import pathlib
 
 class TitleScene:
     def __init__(self):
-        self.background = None
-
+        self.image = None
     def initialize(self):
-        # 타이틀 배경 이미지 로딩
-        base_path = pathlib.Path.cwd() / 'Resources' / 'Scene'
-        self.background = pico2d.load_image(str(base_path / 'title.png'))
-
+        path = pathlib.Path.cwd() / 'Resources' / 'Scene' / 'title.png'
+        self.image = pico2d.load_image(str(path))
     def update(self, deltaTime):
         pass
-
     def render(self):
-        if self.background:
-            # 배경을 2배 스케일링하여 전체 화면에 맞춤 (960x540 -> 1920x1080)
-            self.background.draw(960, 540, self.background.w * 2, self.background.h * 2)
+        if self.image:
+            # 1280x720 -> 1920x1080 스케일링 (1.5배)
+            self.image.draw(config.windowWidth // 2, config.windowHeight // 2,
+                          self.image.w * 1.5, self.image.h * 1.5)

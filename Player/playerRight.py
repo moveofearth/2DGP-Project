@@ -55,9 +55,9 @@ class PlayerRight(Player):
         """공격 범위의 바운딩 박스 반환 (PlayerRight 기준 - 왼쪽 방향)"""
         my_bb = self.get_bb()
 
-        # fast 공격 범위: 바운딩 박스 왼쪽 끝에서 -40 (기존 20에서 20 증가)
+        # fast 공격 범위: 바운딩 박스 왼쪽 끝에서 -70 (사용자 요청)
         if 'fast' in self.state:
-            attack_range = 40  # 20 -> 40
+            attack_range = 70  # fast 계열을 70으로 설정
             range_x2 = my_bb[0]  # 바운딩 박스 왼쪽 끝
             range_x1 = range_x2 - attack_range
             range_y1 = my_bb[1]
@@ -66,7 +66,7 @@ class PlayerRight(Player):
 
         # strong 공격 범위
         elif 'strong' in self.state:
-            attack_range = 50  # 30 -> 50 (20 증가)
+            attack_range = 100  # strong 계열을 100으로 설정
             range_x2 = my_bb[0]
             range_x1 = range_x2 - attack_range
             range_y1 = my_bb[1]

@@ -280,7 +280,9 @@ class SpriteManager:
             self.frame_timer = 0.0
             # 새로운 공격 시작 시 타격 플래그 리셋
             if self.player1_ref and 'ATK' in new_state:
+                # 공격 시작 시 기존의 타격 처리 플래그들 초기화
                 self.player1_ref.reset_attack_hit_flag()
+                self.player1_ref.can_process_hit = False
 
         character_type = self.player1_character_type
         sprites = self.get_character_sprites(character_type)
@@ -297,8 +299,11 @@ class SpriteManager:
 
                 # 공격 애니메이션 절반 지점에서 타격 처리 활성화
                 if self.player1_ref and 'ATK' in self.player1_state:
-                    hit_frame = sprite_count // 2  # 애니메이션 절반 지점
-                    if self.player1_frame == hit_frame:
+                    # 히트 허용 프레임: 중앙 프레임(center) 의 -1 ~ +1 (경계를 0..sprite_count-1로 클램프)
+                    center = sprite_count // 2
+                    hit_min = max(0, center - 1)
+                    hit_max = min(sprite_count - 1, center + 1)
+                    if hit_min <= self.player1_frame <= hit_max:
                         self.player1_ref.can_process_hit = True
 
                 # hit 상태 특별 처리 - airborne과 down 타입 추가
@@ -423,7 +428,9 @@ class SpriteManager:
             self.player2_frame_timer = 0.0
             # 새로운 공격 시작 시 타격 플래그 리셋
             if self.player2_ref and 'ATK' in new_state:
+                # 공격 시작 시 기존의 타격 처리 플래그들 초기화
                 self.player2_ref.reset_attack_hit_flag()
+                self.player2_ref.can_process_hit = False
 
         character_type = self.player2_character_type
         sprites = self.get_character_sprites(character_type)
@@ -440,8 +447,11 @@ class SpriteManager:
 
                 # 공격 애니메이션 절반 지점에서 타격 처리 활성화
                 if self.player2_ref and 'ATK' in self.player2_state:
-                    hit_frame = sprite_count // 2  # 애니메이션 절반 지점
-                    if self.player2_frame == hit_frame:
+                    # 히트 허용 프레임: 중앙 프레임(center) 의 -1 ~ +1 (경계를 0..sprite_count-1로 클램프)
+                    center = sprite_count // 2
+                    hit_min = max(0, center - 1)
+                    hit_max = min(sprite_count - 1, center + 1)
+                    if hit_min <= self.player2_frame <= hit_max:
                         self.player2_ref.can_process_hit = True
 
                 # hit 상태 특별 처리 - airborne과 down 타입 추가

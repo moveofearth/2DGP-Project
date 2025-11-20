@@ -234,9 +234,9 @@ class Player:
         """공격 범위의 바운딩 박스 반환 (PlayerLeft 기준)"""
         my_bb = self.get_bb()
 
-        # fast 공격 범위: 바운딩 박스 오른쪽 끝에서 +40 (기존 20에서 20 증가)
+        # fast 공격 범위: 바운딩 박스 오른쪽 끝에서 +70 (사용자 요청)
         if 'fast' in self.state:
-            attack_range = 40  # 20 -> 40
+            attack_range = 70  # fast 계열을 70으로 설정
             range_x1 = my_bb[2]  # 바운딩 박스 오른쪽 끝
             range_x2 = range_x1 + attack_range
             range_y1 = my_bb[1]
@@ -245,7 +245,7 @@ class Player:
 
         # strong 공격 범위는 필요에 따라 추가
         elif 'strong' in self.state:
-            attack_range = 50  # 30 -> 50 (20 증가)
+            attack_range = 100  # strong 계열을 100으로 설정
             range_x1 = my_bb[2]
             range_x2 = range_x1 + attack_range
             range_y1 = my_bb[1]
@@ -324,7 +324,8 @@ class Player:
                 vx_mag = 200.0
 
             # x 가속도를 70% 감소시킴 -> 초기 vx는 기존의 30%로 설정
-            vx_mag = vx_mag * 0.3
+            # 추가로 10% 더 감소 (0.3 * 0.9 = 0.27 -> 원래의 27%)
+            vx_mag = vx_mag * 0.8
 
             # 공격자 위치를 참고해 밀려나는 방향 결정 (공격자 기준 밖으로)
             if attacker and hasattr(attacker, 'x'):

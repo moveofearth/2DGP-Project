@@ -92,19 +92,15 @@ class Character:
         return self.hp
 
     def try_get_up(self):
-        """기상 시도 - down 상태 처리 추가"""
+        """기상 시도 - down/strong 상태에서 SpriteManager가 허용한 경우 기상 처리"""
+        # SpriteManager가 프레임 도달 시 can_get_up=True로 설정하므로,
+        # 여기서는 그 플래그만으로 기상을 허용하도록 변경.
         if self.can_get_up and self.is_hit:
-            # strong 공격으로 다운된 상태에서 기상
-            if self.hit_type == 'strong' and self.frame >= 4:
-                self.frame = 5  # 기상 모션으로 전환
+            if self.hit_type in ('strong', 'down'):
+                # 즉시 기상 프레임으로 전환하고 기상 플래그 제거
+                self.frame = 5
                 self.can_get_up = False
-                print(f"Character getting up from strong hit at frame {self.frame}")
-                return True
-            # down 상태 (strongLowerATK로 공중에서 떨어진 후)에서 기상
-            elif self.hit_type == 'down' and self.frame >= 4:
-                self.frame = 5  # 기상 모션으로 전환
-                self.can_get_up = False
-                print(f"Character getting up from down state at frame {self.frame}")
+                print(f"Character getting up from {self.hit_type} state -> frame {self.frame}")
                 return True
         return False
 
