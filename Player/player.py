@@ -10,8 +10,8 @@ class Player:
         self.x, self.y = x, config.GROUND_Y  # y를 그라운드로 설정
         self.character = Character(character_type)  # Character 인스턴스 추가
         self.character.x, self.character.y = self.x, self.y  # 캐릭터 위치 동기화
-        self.hp = 100  # HP 추가
-        self.max_hp = 100  # 최대 HP
+        self.hp = 200  # HP 추가
+        self.max_hp = 200  # 최대 HP
 
         # 물리 변수 추가
         self.velocity_y = 0.0  # Y방향 속도

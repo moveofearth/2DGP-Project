@@ -1,6 +1,7 @@
 import game
-import time
 import pico2d
+
+
 
 game = game.Game()
 game.initialize()

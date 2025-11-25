@@ -10,7 +10,7 @@ class PlayerRight(Player):
     def initialize(self):
         super().initialize()
         self.dir = 1  # 왼쪽을 바라보도록 1로 설정
-        self.hp = 100  # HP 초기화
+        self.hp = 200  # HP 초기화
         self.character.hp = self.hp  # Character HP 동기화
         self.y = config.GROUND_Y  # 그라운드에 위치
         self.is_grounded = True  # 지면에 있음
