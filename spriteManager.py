@@ -103,8 +103,8 @@ class SpriteManager:
                 'strongUpperATK': [pico2d.load_image(str(base_path / 'thief' / 'strongUpperATK' / f'{i}.png')) for i in range(5)],
                 'strongUpperATK2': [pico2d.load_image(str(base_path / 'thief' / 'strongUpperATK' / f'{i}.png')) for i in range(5, 10)],
                 'strongLowerATK': [pico2d.load_image(str(base_path / 'thief' / 'strongLowerATK' / f'{i}.png')) for i in range(4)],
-                'hit': [pico2d.load_image(str(base_path / 'priest' / 'hit' / f'{i}.png')) for i in range(6)],  # priest 공유
-                'guard': [pico2d.load_image(str(base_path / 'priest' / 'guard' / f'{i}.png')) for i in range(2)]  # priest 공유
+                'hit': [pico2d.load_image(str(base_path / 'thief' / 'hit' / f'{i}.png')) for i in range(6)],
+                'guard': [pico2d.load_image(str(base_path / 'thief' / 'Guard' / f'{i}.png')) for i in range(2)]
             }
 
             # fighter 캐릭터 스프라이트 로딩
@@ -121,8 +121,8 @@ class SpriteManager:
                 'strongUpperATK2': [pico2d.load_image(str(base_path / 'fighter' / 'strongUpperATK' / f'{i}.png')) for i in range(4, 8)],
                 'fastLowerATK': [pico2d.load_image(str(base_path / 'fighter' / 'fastLowerATK' / f'{i}.png')) for i in range(4)],  # 0~3
                 'fastUpperATK': [pico2d.load_image(str(base_path / 'fighter' / 'fastUpperATK' / f'{i}.png')) for i in range(6)],  # 0~5
-                'hit': [pico2d.load_image(str(base_path / 'priest' / 'hit' / f'{i}.png')) for i in range(6)],  # priest 공유
-                'guard': [pico2d.load_image(str(base_path / 'priest' / 'guard' / f'{i}.png')) for i in range(2)]  # priest 공유
+                'hit': [pico2d.load_image(str(base_path / 'fighter' / 'hit' / f'{i}.png')) for i in range(6)],
+                'guard': [pico2d.load_image(str(base_path / 'fighter' / 'Guard' / f'{i}.png')) for i in range(2)]
             }
         except Exception as e:
             print(f"Warning: Sprite loading failed: {e}")
