@@ -10,6 +10,7 @@ class PlayerRight(Player):
     def initialize(self):
         super().initialize()
         self.dir = 1  # 왼쪽을 바라보도록 1로 설정
+        self.facing_right = False  # 초기에는 왼쪽을 바라봄
         self.hp = 200  # HP 초기화
         self.character.hp = self.hp  # Character HP 동기화
         self.y = config.GROUND_Y  # 그라운드에 위치
@@ -42,44 +43,7 @@ class PlayerRight(Player):
         # HP 텍스트 렌더링
         self._render_hp_text()
 
-    def get_bb(self):
-        """바운딩 박스 좌표 반환 - PlayerRight용 (오른쪽으로 50, 아래로 50 이동)"""
-        # 1.5배 스케일링 적용
-        bb_width = 40 * 1.5  # 60
-        bb_height = 50 * 1.5  # 75
-        adjusted_x = self.x + (30 * 1.5)
-        adjusted_y = self.y - (50 * 1.5)
-        return adjusted_x - bb_width, adjusted_y - bb_height, adjusted_x + bb_width, adjusted_y + bb_height
+    # get_bb와 get_attack_range_bb는 부모 클래스의 동적 메서드 사용
 
-    def get_attack_range_bb(self):
-        """공격 범위의 바운딩 박스 반환 (PlayerRight 기준 - 왼쪽 방향)"""
-        my_bb = self.get_bb()
 
-        # fast 공격 범위: 바운딩 박스 왼쪽 끝에서 -70 (사용자 요청)
-        if 'fast' in self.state:
-            attack_range = 70  # fast 계열을 70으로 설정
-            range_x2 = my_bb[0]  # 바운딩 박스 왼쪽 끝
-            range_x1 = range_x2 - attack_range
-            range_y1 = my_bb[1]
-            range_y2 = my_bb[3]
-            return range_x1, range_y1, range_x2, range_y2
 
-        # strong 공격 범위
-        elif 'strong' in self.state:
-            attack_range = 100  # strong 계열을 100으로 설정
-            range_x2 = my_bb[0]
-            range_x1 = range_x2 - attack_range
-            range_y1 = my_bb[1]
-            range_y2 = my_bb[3]
-            return range_x1, range_y1, range_x2, range_y2
-
-        # rage 스킬 범위
-        elif 'rage' in self.state:
-            attack_range = 70  # 50 -> 70 (20 증가)
-            range_x2 = my_bb[0]
-            range_x1 = range_x2 - attack_range
-            range_y1 = my_bb[1]
-            range_y2 = my_bb[3]
-            return range_x1, range_y1, range_x2, range_y2
-
-        return None

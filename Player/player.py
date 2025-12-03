@@ -23,6 +23,7 @@ class Player:
         self.prev_x = x
 
         self.dir = -1  # 항상 오른쪽을 바라보도록 -1로 고정
+        self.facing_right = True  # 현재 바라보는 방향 (True: 오른쪽, False: 왼쪽)
         self.state = 'Idle'  # Idle, Walk, BackWalk
         self.position_state = 'Middle'  # High, Middle, Low 상태 추가
         self.is_attacking = False  # 공격 중인지 체크
@@ -258,38 +259,54 @@ class Player:
             return True
         return False
 
+    def get_bb(self):
+        """바운딩 박스 좌표 반환 - 방향에 따라 동적 계산"""
+        # 1.5배 스케일링 적용
+        bb_width = 40 * 1.5  # 60
+        bb_height = 50 * 1.5  # 75
+
+        # 방향에 따라 x 오프셋 조정
+        if self.facing_right:
+            # 오른쪽을 바라볼 때: 왼쪽으로 오프셋 (PlayerLeft 방식)
+            adjusted_x = self.x - (30 * 1.5)
+        else:
+            # 왼쪽을 바라볼 때: 오른쪽으로 오프셋 (PlayerRight 방식)
+            adjusted_x = self.x + (30 * 1.5)
+
+        adjusted_y = self.y - (50 * 1.5)
+        return adjusted_x - bb_width, adjusted_y - bb_height, adjusted_x + bb_width, adjusted_y + bb_height
+
     def get_attack_range_bb(self):
-        """공격 범위의 바운딩 박스 반환 (PlayerLeft 기준)"""
+        """공격 범위의 바운딩 박스 반환 (방향에 따라 동적 계산)"""
         my_bb = self.get_bb()
 
-        # fast 공격 범위: 바운딩 박스 오른쪽 끝에서 +70 (사용자 요청)
+        # 공격 범위 설정
+        attack_range = 0
         if 'fast' in self.state:
             attack_range = 70  # fast 계열을 70으로 설정
-            range_x1 = my_bb[2]  # 바운딩 박스 오른쪽 끝
-            range_x2 = range_x1 + attack_range
-            range_y1 = my_bb[1]
-            range_y2 = my_bb[3]
-            return range_x1, range_y1, range_x2, range_y2
-
-        # strong 공격 범위는 필요에 따라 추가
         elif 'strong' in self.state:
             attack_range = 100  # strong 계열을 100으로 설정
-            range_x1 = my_bb[2]
-            range_x2 = range_x1 + attack_range
-            range_y1 = my_bb[1]
-            range_y2 = my_bb[3]
-            return range_x1, range_y1, range_x2, range_y2
-
-        # rage 스킬 범위
         elif 'rage' in self.state:
-            attack_range = 70  # 50 -> 70 (20 증가)
-            range_x1 = my_bb[2]
-            range_x2 = range_x1 + attack_range
-            range_y1 = my_bb[1]
-            range_y2 = my_bb[3]
-            return range_x1, range_y1, range_x2, range_y2
+            attack_range = 70
 
-        return None
+        if attack_range == 0:
+            return None
+
+        # 방향에 따라 공격 범위 계산
+        range_y1 = my_bb[1]
+        range_y2 = my_bb[3]
+
+        if self.facing_right:
+            # 오른쪽을 바라볼 때: 바운딩 박스 오른쪽 끝에서 공격
+            range_x1 = my_bb[2]  # 바운딩 박스 오른쪽 끝
+            range_x2 = range_x1 + attack_range
+        else:
+            # 왼쪽을 바라볼 때: 바운딩 박스 왼쪽 끝에서 공격
+            range_x2 = my_bb[0]  # 바운딩 박스 왼쪽 끝
+            range_x1 = range_x2 - attack_range
+
+        return range_x1, range_y1, range_x2, range_y2
+
 
     def is_in_attack_range(self, other_player):
         """다른 플레이어가 공격 범위 내에 있는지 확인"""
@@ -364,8 +381,8 @@ class Player:
             else:
                 # 공중에서 추가 히트 (에어 콤보)
                 if 'strong' in attack_state.lower():
-                    # 강공격: 뒤로 크게 날아감 (수직은 약간만, 수평은 강하게)
-                    vy = 200.0  # 수직 속도 낮게
+                    # 강공격: 뒤로 크게 날아가면서 위로도 튀어오름
+                    vy = 400.0  # 수직 속도 증가 (200 -> 400)
                     vx_mag = 450.0  # 수평 속도 크게 (뒤로 날아가는 효과)
                 elif 'fast' in attack_state.lower():
                     # 빠른 공격: 위로 올라가며 약간 밀림

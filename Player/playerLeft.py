@@ -10,6 +10,7 @@ class PlayerLeft(Player):
     def initialize(self):
         super().initialize()
         self.dir = -1  # 오른쪽을 바라보도록 -1로 설정
+        self.facing_right = True  # 초기에는 오른쪽을 바라봄
         self.hp = 200  # HP 초기화
         self.character.hp = self.hp  # Character HP 동기화
         self.y = config.GROUND_Y  # 그라운드에 위치
@@ -49,11 +50,4 @@ class PlayerLeft(Player):
         # HP 텍스트 렌더링
         self._render_hp_text()
 
-    def get_bb(self):
-        """바운딩 박스 좌표 반환 - PlayerLeft용 (왼쪽으로 50, 아래로 50 이동)"""
-        # 1.5배 스케일링 적용
-        bb_width = 40 * 1.5  # 60
-        bb_height = 50 * 1.5  # 75
-        adjusted_x = self.x - (30 * 1.5)
-        adjusted_y = self.y - (50 * 1.5)
-        return adjusted_x - bb_width, adjusted_y - bb_height, adjusted_x + bb_width, adjusted_y + bb_height
+    # get_bb는 부모 클래스의 동적 메서드 사용

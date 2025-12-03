@@ -614,6 +614,10 @@ class SpriteManager:
                     player1_faces_right = False  # Player1은 왼쪽을 바라봄
                     player2_faces_right = True
 
+                # 플레이어의 방향 속성 업데이트 (공격 범위 동기화용)
+                self.player1_ref.facing_right = player1_faces_right
+                self.player2_ref.facing_right = player2_faces_right
+
             # 플레이어1 렌더링
             if self.player1_ref:
                 character_type = self.player1_character_type
