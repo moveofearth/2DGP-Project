@@ -7,6 +7,7 @@ from Player.playerLeft import PlayerLeft
 from Player.playerRight import PlayerRight
 from ioManager import IOManager
 from spriteManager import SpriteManager
+from handle_collision import CollisionHandler
 
 
 class Game:
@@ -29,6 +30,8 @@ class Game:
         self.sceneManager.initialize()
         self.playerLeft.initialize()
         self.playerRight.initialize()
+        # 초기 스폰 시 플레이어가 겹치지 않도록 보정
+        CollisionHandler.prevent_overlap_on_spawn(self.playerLeft, self.playerRight)
         self.spriteManager.load_sprites()
         self.spriteManager.set_player_references(self.playerLeft, self.playerRight)
         self.last_time = time.time()

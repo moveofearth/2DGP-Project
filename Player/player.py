@@ -2,6 +2,7 @@ from Character.character import Character
 import pico2d
 import pathlib
 import config
+from handle_collision import CollisionHandler
 
 
 class Player:
@@ -100,13 +101,17 @@ class Player:
             self._load_font()
 
     def apply_gravity(self, deltaTime):
-        """중력 적용 - airborne 상태 처리 추가"""
+        """중력 적용 - airborne 상태 처리 및 개선된 충돌 처리"""
         if not self.is_grounded:
             # 중력으로 인한 Y방향 속도 감소
             self.velocity_y -= self.gravity * deltaTime
             # 위치 업데이트 (포물선: x, y 둘다)
             old_y = self.y
             self.x += self.velocity_x * deltaTime
+
+            # 공중에서도 화면 경계 체크 (벽을 뚫고 나가지 않도록)
+            CollisionHandler.clamp_to_screen(self)
+
             # 공중 수평 감속(간단한 댐핑) - 초당 약 6의 감속계수로 자연스럽게 줄어듦
             damping_factor = 6.0
             self.velocity_x *= max(0.0, 1.0 - damping_factor * deltaTime)
@@ -143,44 +148,22 @@ class Player:
             self.is_grounded = False
 
     def check_collision_with_other_player(self, other_player):
-        """다른 플레이어와의 충돌 검사"""
-        if not other_player:
-            return False
-
-        my_bb = self.get_bb()
-        other_bb = other_player.get_bb()
-
-        # AABB 충돌 검사
-        return (my_bb[0] < other_bb[2] and my_bb[2] > other_bb[0] and
-                my_bb[1] < other_bb[3] and my_bb[3] > other_bb[1])
+        """다른 플레이어와의 충돌 검사 - CollisionHandler 사용"""
+        return CollisionHandler.check_player_collision(self, other_player)
 
     def resolve_collision_with_other_player(self, other_player):
-        """다른 플레이어와의 충돌 해결"""
-        if not other_player:
-            return
-
-        if self.check_collision_with_other_player(other_player):
-            # 충돌 시 이전 위치로 되돌리기
-            self.x = self.prev_x
+        """다른 플레이어와의 충돌 해결 - CollisionHandler 사용"""
+        CollisionHandler.resolve_player_collision(self, other_player)
 
     def update_position(self, new_x, other_player=None):
-        """위치 업데이트 (충돌 검사 포함)"""
-        # 이전 위치 저장
+        """위치 업데이트 (충돌 검사 포함) - 개선된 충돌 처리 사용"""
+        # 이전 위치 저장 (디버깅/롤백용)
         self.prev_x = self.x
 
-        # 새 위치로 이동
-        self.x = new_x
+        # CollisionHandler의 안전한 이동 사용
+        self.x = CollisionHandler.safe_move_player(self, new_x, other_player)
 
-        # 화면 경계 체크
-        screen_margin = 60  # 바운딩 박스 반폭 + 여유
-        if self.x < screen_margin:
-            self.x = screen_margin
-        elif self.x > config.windowWidth - screen_margin:
-            self.x = config.windowWidth - screen_margin
 
-        # 다른 플레이어와의 충돌 체크 및 해결
-        if other_player:
-            self.resolve_collision_with_other_player(other_player)
 
     def start_guard(self):
         """가드 상태 시작 - 피격 시 자동으로 발동"""
@@ -369,27 +352,30 @@ class Player:
         if should_launch:
             # 세기 결정
             if 'lower' in attack_state.lower():
-                # Lower 계열 공격 (지상에서 띄우기)
+                # Lower 계열 공격 (지상에서 띄우기 - 위로)
                 if 'strong' in attack_state.lower():
                     vy = 640.0
                     vx_mag = 300.0
                 else:
                     vy = 480.0
                     vx_mag = 200.0
+                # x 가속도를 80%로 감소
+                vx_mag = vx_mag * 0.8
             else:
                 # 공중에서 추가 히트 (에어 콤보)
                 if 'strong' in attack_state.lower():
-                    vy = 500.0  # 약간 낮게
-                    vx_mag = 250.0
+                    # 강공격: 뒤로 크게 날아감 (수직은 약간만, 수평은 강하게)
+                    vy = 200.0  # 수직 속도 낮게
+                    vx_mag = 450.0  # 수평 속도 크게 (뒤로 날아가는 효과)
                 elif 'fast' in attack_state.lower():
-                    vy = 350.0  # 더 낮게
+                    # 빠른 공격: 위로 올라가며 약간 밀림
+                    vy = 350.0
                     vx_mag = 180.0
                 else:
+                    # 기타 공격
                     vy = 400.0
                     vx_mag = 200.0
-
-            # x 가속도를 80%로 감소
-            vx_mag = vx_mag * 0.8
+                # 공중 콤보는 x 가속도 감소 없음 (그대로 유지)
 
             # 공격자 위치를 참고해 밀려나는 방향 결정 (공격자 기준 밖으로)
             if attacker and hasattr(attacker, 'x'):
@@ -408,7 +394,8 @@ class Player:
                 self.y += 5
 
             hit_type = "AIRBORNE COMBO" if was_airborne else "LAUNCH"
-            print(f"Player {hit_type} by {attack_state}! vx:{self.velocity_x}, vy:{self.velocity_y}")
+            combo_type = " (KNOCKBACK)" if was_airborne and 'strong' in attack_state.lower() else ""
+            print(f"Player {hit_type}{combo_type} by {attack_state}! vx:{self.velocity_x}, vy:{self.velocity_y}")
 
         # 공격 및 가드 상태 초기화 (피격 시 모든 행동 중단)
         # 공격을 받은 순간 현재 진행중인 공격을 취소하고,
