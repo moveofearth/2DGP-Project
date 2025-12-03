@@ -388,9 +388,9 @@ class SpriteManager:
                         self.player1_frame = next_frame
                         return
                     else:
-                        # 마지막 프레임에서 완료 처리 (단, 가드가 연장되지 않았을 때만)
-                        if self.player1_ref and self.player1_ref.is_guarding:
-                            # 추가 공격이 들어와서 가드가 연장되는지 체크
+                        # 마지막 프레임에 도달 - 완료 처리 체크
+                        if self.player1_ref:
+                            # 가드가 연장되는지 체크 (guard_animation_reset 플래그)
                             if hasattr(self.player1_ref, 'guard_animation_reset') and self.player1_ref.guard_animation_reset:
                                 # 가드 연장 - 애니메이션을 처음부터 다시 시작
                                 print("Player1 guard extended - restarting animation")
@@ -398,9 +398,14 @@ class SpriteManager:
                                 self.frame_timer = 0.0
                                 self.player1_ref.guard_animation_reset = False
                                 return
-                            else:
-                                # 정상적인 가드 완료
+                            elif self.player1_ref.is_guarding:
+                                # 정상적인 가드 완료 - 모든 가드 관련 플래그 정리
                                 self.player1_ref.is_guarding = False
+                                self.player1_ref.can_attack_after_guard = False
+                                self.player1_ref.guard_counter_timer = 0.0
+                                if hasattr(self.player1_ref, 'guard_animation_reset'):
+                                    self.player1_ref.guard_animation_reset = False
+
                                 # 상태를 확실히 Idle로 전환
                                 self.player1_ref.state = 'Idle'
                                 self.player1_ref.character.state = 'Idle'
@@ -539,9 +544,9 @@ class SpriteManager:
                         self.player2_frame = next_frame
                         return
                     else:
-                        # 마지막 프레임에서 완료 처리 (단, 가드가 연장되지 않았을 때만)
-                        if self.player2_ref and self.player2_ref.is_guarding:
-                            # 추가 공격이 들어와서 가드가 연장되는지 체크
+                        # 마지막 프레임에 도달 - 완료 처리 체크
+                        if self.player2_ref:
+                            # 가드가 연장되는지 체크 (guard_animation_reset 플래그)
                             if hasattr(self.player2_ref, 'guard_animation_reset') and self.player2_ref.guard_animation_reset:
                                 # 가드 연장 - 애니메이션을 처음부터 다시 시작
                                 print("Player2 guard extended - restarting animation")
@@ -549,9 +554,14 @@ class SpriteManager:
                                 self.player2_frame_timer = 0.0
                                 self.player2_ref.guard_animation_reset = False
                                 return
-                            else:
-                                # 정상적인 가드 완료
+                            elif self.player2_ref.is_guarding:
+                                # 정상적인 가드 완료 - 모든 가드 관련 플래그 정리
                                 self.player2_ref.is_guarding = False
+                                self.player2_ref.can_attack_after_guard = False
+                                self.player2_ref.guard_counter_timer = 0.0
+                                if hasattr(self.player2_ref, 'guard_animation_reset'):
+                                    self.player2_ref.guard_animation_reset = False
+
                                 # 상태를 확실히 Idle로 전환
                                 self.player2_ref.state = 'Idle'
                                 self.player2_ref.character.state = 'Idle'

@@ -188,23 +188,32 @@ class Player:
         if getattr(self, 'is_attacking', False):
             print("Cannot start guard while attacking")
             return
+
+        # 피격 중이면 가드 불가
+        if getattr(self, 'is_hit', False):
+            print("Cannot start guard while being hit")
+            return
+
         # 이미 가드 중이라면 가드를 연장 (애니메이션 리셋)
         if self.is_guarding:
             print(f"Guard extended! Position: {self.position_state} - Resetting guard animation")
             self.guard_animation_reset = True
+            # 반격 창도 연장
+            self.guard_counter_timer = self.guard_counter_window
+            self.can_attack_after_guard = True
         else:
             self.is_guarding = True
             self.guard_animation_reset = False
             print(f"Auto guard activated! Position: {self.position_state} - Starting guard animation")
 
+            # 가드 시작 시 짧은 반격 창 부여
+            self.guard_counter_timer = self.guard_counter_window
+            self.can_attack_after_guard = True
+            print(f"Guard counter window opened for {self.guard_counter_window} seconds")
+
         self.state = 'guard'
         # Character 상태도 즉시 동기화
         self.character.state = 'guard'
-
-        # 가드 성공 시 짧은 반격 창 부여
-        self.guard_counter_timer = self.guard_counter_window
-        self.can_attack_after_guard = True
-        print(f"Guard counter window opened for {self.guard_counter_window} seconds")
 
     def should_reset_guard_animation(self):
         """가드 애니메이션 리셋이 필요한지 확인"""
@@ -234,16 +243,34 @@ class Player:
         if getattr(self, 'is_attacking', False):
             return False
 
+        # 피격 중일 때도 가드 불가
+        if getattr(self, 'is_hit', False):
+            return False
+
         guard_mapping = {
+            # 기본 공격
             'fastUpperATK': 'High',
             'strongUpperATK': 'High',
             'fastMiddleATK': 'Middle',
             'strongMiddleATK': 'Middle',
             'fastLowerATK': 'Low',
-            'strongLowerATK': 'Low'
+            'strongLowerATK': 'Low',
+            # 연계 공격 (2단, 3단)
+            'fastMiddleATK2': 'Middle',
+            'fastMiddleATK3': 'Middle',
+            'strongMiddleATK2': 'Middle',
+            'strongUpperATK2': 'High',
+            # rage 스킬은 가드 불가
+            'rageSkill': None
         }
 
         required_position = guard_mapping.get(attack_type)
+
+        # rage 스킬은 가드 불가
+        if required_position is None:
+            return False
+
+        # 방향키 입력과 공격 타입이 일치해야 가드 성공
         if required_position and self.position_state == required_position:
             return True
         return False
@@ -423,10 +450,10 @@ class Player:
             elif not self.is_hit and self.state == 'hit':
                 self.state = 'Idle'
 
-        # 가드 중일 때 공격키 입력으로 가드 취소 후 즉시 공격 허용 (반격 창 유무와 관계없이)
+        # 가드 중일 때 공격키 입력으로 가드 취소 후 즉시 공격 허용
         if self.is_guarding and not self.is_attacking and atk_input:
             if self.can_use_attack(atk_input):
-                # 가드 상태 해제
+                # 가드 상태 완전 해제
                 self.is_guarding = False
                 self.can_attack_after_guard = False
                 self.guard_counter_timer = 0.0
@@ -449,21 +476,18 @@ class Player:
 
                 print(f"Guard canceled by attack input -> immediate attack: {atk_input}")
                 return
+            else:
+                print(f"Cannot use attack {atk_input} for current character")
+
         # 가드 중이면 다른 행동 불가 - 상태 강제 동기화
-        if self.is_guarding and not self.can_attack_after_guard:
+        if self.is_guarding:
             # 가드 중에는 상태가 'guard'로 고정되어야 함
             if self.state != 'guard':
                 self.state = 'guard'
             if self.character.state != 'guard':
                 self.character.state = 'guard'
+            # 이동 등 다른 행동은 제한
             return
-        elif self.is_guarding and self.can_attack_after_guard:
-            # 반격 창 동안은 공격 입력만 허용하도록 상태를 유지하되, 이동 등은 제한
-            if self.state != 'guard':
-                self.state = 'guard'
-            if self.character.state != 'guard':
-                self.character.state = 'guard'
-            # 이동 처리나 다른 행동은 제한되지만 공격 입력은 허용된다. (아래 공격 처리로 진행)
 
         # hit 상태일 때 기상 입력 처리 - airborne과 down 상태 구분
         if self.is_hit and self.character.can_get_up:

@@ -59,10 +59,12 @@ class Game:
                 # Player1의 공격 범위에 Player2가 있는지 확인
                 if self.playerLeft.is_in_attack_range(self.playerRight):
                     # 가드 판정 먼저 확인
-                    if self.playerRight.can_guard_against_attack(self.playerLeft.state):
-                        # 가드 성공 - 데미지 없음, 가드 지속 또는 시작
+                    can_guard = self.playerRight.can_guard_against_attack(self.playerLeft.state)
+
+                    if can_guard:
+                        # 가드 성공 - 데미지 없음, 가드 시작 또는 연장
                         self.playerRight.start_guard()
-                        print(f"Player2 successfully guarded against {self.playerLeft.state}! Position: {self.playerRight.position_state}")
+                        print(f"[GUARD SUCCESS] Player2 guarded {self.playerLeft.state}! Position: {self.playerRight.position_state}, is_attacking: {self.playerRight.is_attacking}, is_hit: {self.playerRight.is_hit}")
                         # 가드 성공 직후, 현재 입력으로 즉시 반격 가능한지 체크
                         self._try_trigger_counterattack_from_input(self.playerRight, is_player2=True)
                     else:
@@ -70,7 +72,7 @@ class Game:
                         damage = self.calculate_damage(self.playerLeft.state)
                         # 공격자 참조 전달 (포물선 방향 계산용)
                         self.playerRight.take_damage(damage, self.playerLeft.state, attacker=self.playerLeft)
-                        print(f"Player2 took {damage} damage! HP: {self.playerRight.get_hp()}, State: hit")
+                        print(f"[HIT] Player2 took {damage} damage from {self.playerLeft.state}! HP: {self.playerRight.get_hp()}, Position: {self.playerRight.position_state}, is_attacking: {self.playerRight.is_attacking}, is_hit: {self.playerRight.is_hit}")
 
                     # 타격 처리 완료 마킹
                     self.playerLeft.mark_attack_hit_processed()
@@ -96,10 +98,12 @@ class Game:
                 # Player2의 공격 범위에 Player1이 있는지 확인
                 if self.playerRight.is_in_attack_range(self.playerLeft):
                     # 가드 판정 먼저 확인
-                    if self.playerLeft.can_guard_against_attack(self.playerRight.state):
-                        # 가드 성공 - 데미지 없음, 가드 지속 또는 시작
+                    can_guard = self.playerLeft.can_guard_against_attack(self.playerRight.state)
+
+                    if can_guard:
+                        # 가드 성공 - 데미지 없음, 가드 시작 또는 연장
                         self.playerLeft.start_guard()
-                        print(f"Player1 successfully guarded against {self.playerRight.state}! Position: {self.playerLeft.position_state}")
+                        print(f"[GUARD SUCCESS] Player1 guarded {self.playerRight.state}! Position: {self.playerLeft.position_state}, is_attacking: {self.playerLeft.is_attacking}, is_hit: {self.playerLeft.is_hit}")
                         # 가드 성공 직후, 현재 입력으로 즉시 반격 가능한지 체크
                         self._try_trigger_counterattack_from_input(self.playerLeft, is_player2=False)
                     else:
@@ -107,7 +111,7 @@ class Game:
                         damage = self.calculate_damage(self.playerRight.state)
                         # 공격자 참조 전달 (포물선 방향 계산용)
                         self.playerLeft.take_damage(damage, self.playerRight.state, attacker=self.playerRight)
-                        print(f"Player1 took {damage} damage! HP: {self.playerLeft.get_hp()}, State: hit")
+                        print(f"[HIT] Player1 took {damage} damage from {self.playerRight.state}! HP: {self.playerLeft.get_hp()}, Position: {self.playerLeft.position_state}, is_attacking: {self.playerLeft.is_attacking}, is_hit: {self.playerLeft.is_hit}")
 
                     # 타격 처리 완료 마킹
                     self.playerRight.mark_attack_hit_processed()
@@ -267,32 +271,40 @@ class Game:
                 else:
                     candidate_attack = 'strongMiddleATK'
 
-        # 후보 공격이 있고 사용 가능한 공격이면 즉시 발동
-        if candidate_attack and hasattr(target_player, 'can_use_attack') and target_player.can_use_attack(candidate_attack):
-            # 현재 공격 중이 아니어야 함
-            if not target_player.is_attacking:
-                # 가드 상태 해제 및 공격 시작
-                target_player.is_guarding = False
-                if hasattr(target_player, 'can_attack_after_guard'):
-                    target_player.can_attack_after_guard = False
-                if hasattr(target_player, 'guard_counter_timer'):
-                    target_player.guard_counter_timer = 0.0
+        # 후보 공격이 있는 경우 처리
+        if candidate_attack:
+            # 사용 가능한 공격인지 확인
+            if hasattr(target_player, 'can_use_attack') and target_player.can_use_attack(candidate_attack):
+                # 현재 공격 중이 아니어야 함
+                if not target_player.is_attacking:
+                    # 가드 상태 해제 및 공격 시작
+                    target_player.is_guarding = False
+                    if hasattr(target_player, 'can_attack_after_guard'):
+                        target_player.can_attack_after_guard = False
+                    if hasattr(target_player, 'guard_counter_timer'):
+                        target_player.guard_counter_timer = 0.0
+                    if hasattr(target_player, 'guard_animation_reset'):
+                        target_player.guard_animation_reset = False
 
-                target_player.state = candidate_attack
-                target_player.is_attacking = True
-                if hasattr(target_player, 'reset_attack_hit_flag'):
-                    target_player.reset_attack_hit_flag()
+                    target_player.state = candidate_attack
+                    target_player.character.state = candidate_attack  # Character 상태도 동기화
+                    target_player.is_attacking = True
+                    if hasattr(target_player, 'reset_attack_hit_flag'):
+                        target_player.reset_attack_hit_flag()
 
-                # 연계 가능 설정 (기존 로직과 동일)
-                if candidate_attack in ['fastMiddleATK', 'strongMiddleATK', 'strongUpperATK']:
-                    target_player.can_combo = True
+                    # 연계 가능 설정 (기존 로직과 동일)
+                    if candidate_attack in ['fastMiddleATK', 'strongMiddleATK', 'strongUpperATK']:
+                        target_player.can_combo = True
+                    else:
+                        target_player.can_combo = False
+
+                    target_player.combo_reserved = False
+
+                    print(f"Counterattack triggered immediately after guard: {candidate_attack} (Player {'2' if is_player2 else '1'})")
+                    return True
                 else:
-                    target_player.can_combo = False
-
-                target_player.combo_reserved = False
-
-                print(f"Counterattack triggered immediately after guard: {candidate_attack} (Player {'2' if is_player2 else '1'})")
-                # SpriteManager는 이후 Game.update에서 상태를 전파하므로 여기서는 추가 처리가 필요 없음
-                return True
+                    print(f"Cannot counterattack while already attacking (Player {'2' if is_player2 else '1'})")
+            else:
+                print(f"Cannot use attack {candidate_attack} for current character (Player {'2' if is_player2 else '1'})")
 
         return False
