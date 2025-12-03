@@ -601,7 +601,20 @@ class SpriteManager:
     def render(self):
         """렌더링 - 예외 처리 추가"""
         try:
-            # 플레이어1 렌더링 (오른쪽을 바라봄)
+            # 플레이어1과 플레이어2의 상대적 위치를 확인하여 서로를 바라보게 함
+            player1_faces_right = True  # 기본값
+            player2_faces_right = True  # 기본값
+
+            if self.player1_ref and self.player2_ref:
+                # Player1이 Player2보다 왼쪽에 있으면 오른쪽을 바라봄
+                if self.player1_x < self.player2_x:
+                    player1_faces_right = True
+                    player2_faces_right = False  # Player2는 왼쪽을 바라봄
+                else:
+                    player1_faces_right = False  # Player1은 왼쪽을 바라봄
+                    player2_faces_right = True
+
+            # 플레이어1 렌더링
             if self.player1_ref:
                 character_type = self.player1_character_type
                 sprites = self.get_character_sprites(character_type)
@@ -614,12 +627,19 @@ class SpriteManager:
                     sprite_list = sprites[self.player1_state]
                     if sprite_list and len(sprite_list) > 0:
                         frame = self.player1_frame % len(sprite_list)
-                        # 1.5배 스케일링하여 렌더링
-                        sprite_list[frame].draw(self.player1_x, adjusted_y1,
-                                              sprite_list[frame].w * self.scale_factor,
-                                              sprite_list[frame].h * self.scale_factor)
+                        # 방향에 따라 렌더링
+                        if player1_faces_right:
+                            # 오른쪽을 바라봄 (기본)
+                            sprite_list[frame].draw(self.player1_x, adjusted_y1,
+                                                  sprite_list[frame].w * self.scale_factor,
+                                                  sprite_list[frame].h * self.scale_factor)
+                        else:
+                            # 왼쪽을 바라봄 (좌우 반전)
+                            sprite_list[frame].composite_draw(0, 'h', self.player1_x, adjusted_y1,
+                                                            sprite_list[frame].w * self.scale_factor,
+                                                            sprite_list[frame].h * self.scale_factor)
 
-            # 플레이어2 렌더링 (왼쪽을 바라봄)
+            # 플레이어2 렌더링
             if self.player2_ref:
                 character_type = self.player2_character_type
                 sprites = self.get_character_sprites(character_type)
@@ -632,10 +652,17 @@ class SpriteManager:
                     sprite_list = sprites[self.player2_state]
                     if sprite_list and len(sprite_list) > 0:
                         frame = self.player2_frame % len(sprite_list)
-                        # 왼쪽을 바라보도록 좌우 반전하면서 1.5배 스케일링
-                        sprite_list[frame].composite_draw(0, 'h', self.player2_x, adjusted_y2,
-                                                        sprite_list[frame].w * self.scale_factor,
-                                                        sprite_list[frame].h * self.scale_factor)
+                        # 방향에 따라 렌더링
+                        if player2_faces_right:
+                            # 오른쪽을 바라봄 (기본)
+                            sprite_list[frame].draw(self.player2_x, adjusted_y2,
+                                                  sprite_list[frame].w * self.scale_factor,
+                                                  sprite_list[frame].h * self.scale_factor)
+                        else:
+                            # 왼쪽을 바라봄 (좌우 반전)
+                            sprite_list[frame].composite_draw(0, 'h', self.player2_x, adjusted_y2,
+                                                            sprite_list[frame].w * self.scale_factor,
+                                                            sprite_list[frame].h * self.scale_factor)
 
             # 공격 범위 바운딩 박스 디버그 렌더링 (공격 중일 때만)
             try:
