@@ -58,21 +58,29 @@ class Game:
 
                 # Player1의 공격 범위에 Player2가 있는지 확인
                 if self.playerLeft.is_in_attack_range(self.playerRight):
-                    # 가드 판정 먼저 확인
-                    can_guard = self.playerRight.can_guard_against_attack(self.playerLeft.state)
-
-                    if can_guard:
-                        # 가드 성공 - 데미지 없음, 가드 시작 또는 연장
-                        self.playerRight.start_guard()
-                        print(f"[GUARD SUCCESS] Player2 guarded {self.playerLeft.state}! Position: {self.playerRight.position_state}, is_attacking: {self.playerRight.is_attacking}, is_hit: {self.playerRight.is_hit}")
-                        # 가드 성공 직후, 현재 입력으로 즉시 반격 가능한지 체크
-                        self._try_trigger_counterattack_from_input(self.playerRight, is_player2=True)
-                    else:
-                        # 가드 실패 - 데미지 적용
+                    # 공중 상태(airborne)일 때는 가드 불가 - 무조건 히트
+                    if target_is_airborne:
+                        # 공중에서는 가드 불가 - 데미지 적용
                         damage = self.calculate_damage(self.playerLeft.state)
                         # 공격자 참조 전달 (포물선 방향 계산용)
                         self.playerRight.take_damage(damage, self.playerLeft.state, attacker=self.playerLeft)
-                        print(f"[HIT] Player2 took {damage} damage from {self.playerLeft.state}! HP: {self.playerRight.get_hp()}, Position: {self.playerRight.position_state}, is_attacking: {self.playerRight.is_attacking}, is_hit: {self.playerRight.is_hit}")
+                        print(f"[AIRBORNE HIT] Player2 took {damage} damage from {self.playerLeft.state} while airborne! HP: {self.playerRight.get_hp()}")
+                    else:
+                        # 지상 상태에서는 가드 판정 확인
+                        can_guard = self.playerRight.can_guard_against_attack(self.playerLeft.state)
+
+                        if can_guard:
+                            # 가드 성공 - 데미지 없음, 가드 시작 또는 연장
+                            self.playerRight.start_guard()
+                            print(f"[GUARD SUCCESS] Player2 guarded {self.playerLeft.state}! Position: {self.playerRight.position_state}, is_attacking: {self.playerRight.is_attacking}, is_hit: {self.playerRight.is_hit}")
+                            # 가드 성공 직후, 현재 입력으로 즉시 반격 가능한지 체크
+                            self._try_trigger_counterattack_from_input(self.playerRight, is_player2=True)
+                        else:
+                            # 가드 실패 - 데미지 적용
+                            damage = self.calculate_damage(self.playerLeft.state)
+                            # 공격자 참조 전달 (포물선 방향 계산용)
+                            self.playerRight.take_damage(damage, self.playerLeft.state, attacker=self.playerLeft)
+                            print(f"[HIT] Player2 took {damage} damage from {self.playerLeft.state}! HP: {self.playerRight.get_hp()}, Position: {self.playerRight.position_state}, is_attacking: {self.playerRight.is_attacking}, is_hit: {self.playerRight.is_hit}")
 
                     # 타격 처리 완료 마킹
                     self.playerLeft.mark_attack_hit_processed()
@@ -97,21 +105,29 @@ class Game:
 
                 # Player2의 공격 범위에 Player1이 있는지 확인
                 if self.playerRight.is_in_attack_range(self.playerLeft):
-                    # 가드 판정 먼저 확인
-                    can_guard = self.playerLeft.can_guard_against_attack(self.playerRight.state)
-
-                    if can_guard:
-                        # 가드 성공 - 데미지 없음, 가드 시작 또는 연장
-                        self.playerLeft.start_guard()
-                        print(f"[GUARD SUCCESS] Player1 guarded {self.playerRight.state}! Position: {self.playerLeft.position_state}, is_attacking: {self.playerLeft.is_attacking}, is_hit: {self.playerLeft.is_hit}")
-                        # 가드 성공 직후, 현재 입력으로 즉시 반격 가능한지 체크
-                        self._try_trigger_counterattack_from_input(self.playerLeft, is_player2=False)
-                    else:
-                        # 가드 실패 - 데미지 적용
+                    # 공중 상태(airborne)일 때는 가드 불가 - 무조건 히트
+                    if target_is_airborne:
+                        # 공중에서는 가드 불가 - 데미지 적용
                         damage = self.calculate_damage(self.playerRight.state)
                         # 공격자 참조 전달 (포물선 방향 계산용)
                         self.playerLeft.take_damage(damage, self.playerRight.state, attacker=self.playerRight)
-                        print(f"[HIT] Player1 took {damage} damage from {self.playerRight.state}! HP: {self.playerLeft.get_hp()}, Position: {self.playerLeft.position_state}, is_attacking: {self.playerLeft.is_attacking}, is_hit: {self.playerLeft.is_hit}")
+                        print(f"[AIRBORNE HIT] Player1 took {damage} damage from {self.playerRight.state} while airborne! HP: {self.playerLeft.get_hp()}")
+                    else:
+                        # 지상 상태에서는 가드 판정 확인
+                        can_guard = self.playerLeft.can_guard_against_attack(self.playerRight.state)
+
+                        if can_guard:
+                            # 가드 성공 - 데미지 없음, 가드 시작 또는 연장
+                            self.playerLeft.start_guard()
+                            print(f"[GUARD SUCCESS] Player1 guarded {self.playerRight.state}! Position: {self.playerLeft.position_state}, is_attacking: {self.playerLeft.is_attacking}, is_hit: {self.playerLeft.is_hit}")
+                            # 가드 성공 직후, 현재 입력으로 즉시 반격 가능한지 체크
+                            self._try_trigger_counterattack_from_input(self.playerLeft, is_player2=False)
+                        else:
+                            # 가드 실패 - 데미지 적용
+                            damage = self.calculate_damage(self.playerRight.state)
+                            # 공격자 참조 전달 (포물선 방향 계산용)
+                            self.playerLeft.take_damage(damage, self.playerRight.state, attacker=self.playerRight)
+                            print(f"[HIT] Player1 took {damage} damage from {self.playerRight.state}! HP: {self.playerLeft.get_hp()}, Position: {self.playerLeft.position_state}, is_attacking: {self.playerLeft.is_attacking}, is_hit: {self.playerLeft.is_hit}")
 
                     # 타격 처리 완료 마킹
                     self.playerRight.mark_attack_hit_processed()

@@ -341,6 +341,11 @@ class Player:
 
     def take_damage(self, damage, attack_state='fastMiddleATK', attacker=None):
         """데미지를 받는 메서드 - 공격 상태에 따른 hit 타입 결정"""
+        # 현재 airborne 상태인지 체크 (추가 공격 판정용)
+        was_airborne = (hasattr(self.character, 'hit_type') and
+                       self.character.hit_type == 'airborne' and
+                       not self.is_grounded)
+
         # 공격 상태에 따른 hit 타입 결정
         # Lower 계열은 포물선로 띄우기 위해 airborne 취급
         if 'lower' in attack_state.lower():
@@ -358,18 +363,32 @@ class Player:
         self.is_hit = self.character.is_hit
         self.state = 'hit'  # Player 상태도 hit로 설정
 
-        # Lower 계열 공격에 맞았을 때 포물선으로 띄우기 (수평 + 수직)
-        if 'lower' in attack_state.lower():
-            # 세기 결정 (strong이면 더 세게)
-            if 'strong' in attack_state.lower():
-                vy = 640.0
-                vx_mag = 300.0
-            else:
-                vy = 480.0
-                vx_mag = 200.0
+        # 포물선 처리: Lower 계열 공격 또는 공중에서 추가 히트
+        should_launch = ('lower' in attack_state.lower()) or was_airborne
 
-            # x 가속도를 70% 감소시킴 -> 초기 vx는 기존의 30%로 설정
-            # 추가로 10% 더 감소 (0.3 * 0.9 = 0.27 -> 원래의 27%)
+        if should_launch:
+            # 세기 결정
+            if 'lower' in attack_state.lower():
+                # Lower 계열 공격 (지상에서 띄우기)
+                if 'strong' in attack_state.lower():
+                    vy = 640.0
+                    vx_mag = 300.0
+                else:
+                    vy = 480.0
+                    vx_mag = 200.0
+            else:
+                # 공중에서 추가 히트 (에어 콤보)
+                if 'strong' in attack_state.lower():
+                    vy = 500.0  # 약간 낮게
+                    vx_mag = 250.0
+                elif 'fast' in attack_state.lower():
+                    vy = 350.0  # 더 낮게
+                    vx_mag = 180.0
+                else:
+                    vy = 400.0
+                    vx_mag = 200.0
+
+            # x 가속도를 80%로 감소
             vx_mag = vx_mag * 0.8
 
             # 공격자 위치를 참고해 밀려나는 방향 결정 (공격자 기준 밖으로)
@@ -385,8 +404,11 @@ class Player:
             self.velocity_y = vy
             self.is_grounded = False
             # 살짝 띄워 충돌/착지 로직을 명확히
-            self.y += 5
-            print(f"Player launched into parabola by {attack_state}! vx:{self.velocity_x}, vy:{self.velocity_y}")
+            if not was_airborne:
+                self.y += 5
+
+            hit_type = "AIRBORNE COMBO" if was_airborne else "LAUNCH"
+            print(f"Player {hit_type} by {attack_state}! vx:{self.velocity_x}, vy:{self.velocity_y}")
 
         # 공격 및 가드 상태 초기화 (피격 시 모든 행동 중단)
         # 공격을 받은 순간 현재 진행중인 공격을 취소하고,
