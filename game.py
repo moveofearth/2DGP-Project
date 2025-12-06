@@ -44,14 +44,14 @@ class Game:
             self.playerLeft.can_hit_target()):
 
             # PlayerRight가 down 상태일 때 Lower 계열 공격은 히트 가능하도록 허용
-            attacker_state = self.playerLeft.state or ''
+            attacker_state = (self.playerLeft.state or '').lower()
             target = self.playerRight
             # 대상의 현재 hit_type 확인 (down 또는 airborne일 때 특별 처리 허용)
             target_hit_type = getattr(target.character, 'hit_type', None) if hasattr(target, 'character') else None
             target_is_down = (target_hit_type == 'down')
-            target_is_airborne = (target_hit_type == 'airborne')
+            target_is_airborne = (target_hit_type == 'airborne') and not target.is_grounded
             # lower 계열 공격은 down 상태에 대한 히트 허용, 그리고 공중(airborne) 상태도 추가 허용
-            allow_hit_on_down = ('lower' in attacker_state.lower()) and target_is_down
+            allow_hit_on_down = ('lower' in attacker_state) and target_is_down
             allow_hit_on_airborne = target_is_airborne
 
             # 기본적으로는 피격 상태가 아니어야 히트되지만,
@@ -81,8 +81,9 @@ class Game:
                             # 가드 실패 - 데미지 적용
                             damage = self.calculate_damage(self.playerLeft.state)
                             # 공격자 참조 전달 (포물선 방향 계산용)
-                            self.playerRight.take_damage(damage, self.playerLeft.state, attacker=self.playerLeft)
-                            print(f"[HIT] Player2 took {damage} damage from {self.playerLeft.state}! HP: {self.playerRight.get_hp()}, Position: {self.playerRight.position_state}, is_attacking: {self.playerRight.is_attacking}, is_hit: {self.playerRight.is_hit}")
+                            actual_state = self.playerLeft.state  # 원본 state 유지
+                            self.playerRight.take_damage(damage, actual_state, attacker=self.playerLeft)
+                            print(f"[HIT] Player2 took {damage} damage from {actual_state}! HP: {self.playerRight.get_hp()}, Position: {self.playerRight.position_state}, is_attacking: {self.playerRight.is_attacking}, is_hit: {self.playerRight.is_hit}")
 
                     # 타격 처리 완료 마킹
                     self.playerLeft.mark_attack_hit_processed()
@@ -95,12 +96,12 @@ class Game:
             self.playerRight.can_hit_target()):
 
             # PlayerLeft가 down 상태일 때 Lower 계열 공격은 히트 가능하도록 허용
-            attacker_state = self.playerRight.state or ''
+            attacker_state = (self.playerRight.state or '').lower()
             target = self.playerLeft
             target_hit_type = getattr(target.character, 'hit_type', None) if hasattr(target, 'character') else None
             target_is_down = (target_hit_type == 'down')
-            target_is_airborne = (target_hit_type == 'airborne')
-            allow_hit_on_down = ('lower' in attacker_state.lower()) and target_is_down
+            target_is_airborne = (target_hit_type == 'airborne') and not target.is_grounded
+            allow_hit_on_down = ('lower' in attacker_state) and target_is_down
             allow_hit_on_airborne = target_is_airborne
 
             if (not target.is_in_hit_state()) or allow_hit_on_down or allow_hit_on_airborne:
@@ -128,8 +129,9 @@ class Game:
                             # 가드 실패 - 데미지 적용
                             damage = self.calculate_damage(self.playerRight.state)
                             # 공격자 참조 전달 (포물선 방향 계산용)
-                            self.playerLeft.take_damage(damage, self.playerRight.state, attacker=self.playerRight)
-                            print(f"[HIT] Player1 took {damage} damage from {self.playerRight.state}! HP: {self.playerLeft.get_hp()}, Position: {self.playerLeft.position_state}, is_attacking: {self.playerLeft.is_attacking}, is_hit: {self.playerLeft.is_hit}")
+                            actual_state = self.playerRight.state  # 원본 state 유지
+                            self.playerLeft.take_damage(damage, actual_state, attacker=self.playerRight)
+                            print(f"[HIT] Player1 took {damage} damage from {actual_state}! HP: {self.playerLeft.get_hp()}, Position: {self.playerLeft.position_state}, is_attacking: {self.playerLeft.is_attacking}, is_hit: {self.playerLeft.is_hit}")
 
                     # 타격 처리 완료 마킹
                     self.playerRight.mark_attack_hit_processed()

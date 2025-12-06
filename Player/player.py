@@ -295,10 +295,10 @@ class Player:
 
         # 방향에 따라 x 오프셋 조정
         if self.facing_right:
-            # 오른쪽을 바라볼 때: 왼쪽으로 오프셋 (PlayerLeft 방식)
+            # 오른쪽을 바라볼 때: 왼쪽으로 오프셋
             adjusted_x = self.x - (30 * 1.5)
         else:
-            # 왼쪽을 바라볼 때: 오른쪽으로 오프셋 (PlayerRight 방식)
+            # 왼쪽을 바라볼 때: 오른쪽으로 오프셋
             adjusted_x = self.x + (30 * 1.5)
 
         adjusted_y = self.y - (50 * 1.5)
@@ -310,26 +310,26 @@ class Player:
 
         # 공격 범위 설정
         attack_range = 0
-        if 'fast' in self.state:
+        if 'fast' in self.state.lower():
             attack_range = 70  # fast 계열을 70으로 설정
-        elif 'strong' in self.state:
+        elif 'strong' in self.state.lower():
             attack_range = 100  # strong 계열을 100으로 설정
-        elif 'rage' in self.state:
+        elif 'rage' in self.state.lower():
             attack_range = 70
 
         if attack_range == 0:
             return None
 
-        # 방향에 따라 공격 범위 계산
+        # 공격 범위는 상하는 바운딩 박스와 동일
         range_y1 = my_bb[1]
         range_y2 = my_bb[3]
 
         if self.facing_right:
-            # 오른쪽을 바라볼 때: 바운딩 박스 오른쪽 끝에서 공격
+            # 오른쪽을 바라볼 때: 바운딩 박스 오른쪽 끝에서 오른쪽으로 공격
             range_x1 = my_bb[2]  # 바운딩 박스 오른쪽 끝
             range_x2 = range_x1 + attack_range
         else:
-            # 왼쪽을 바라볼 때: 바운딩 박스 왼쪽 끝에서 공격
+            # 왼쪽을 바라볼 때: 바운딩 박스 왼쪽 끝에서 왼쪽으로 공격
             range_x2 = my_bb[0]  # 바운딩 박스 왼쪽 끝
             range_x1 = range_x2 - attack_range
 
