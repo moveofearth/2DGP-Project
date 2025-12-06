@@ -168,9 +168,24 @@ class Game:
             if event.type == pico2d.SDL_QUIT:
                 self.running = False
 
-        # 타이틀 씬에서는 스페이스바만 처리
+        # 타이틀 씬에서는 스페이스바로 캐릭터 선택으로 전환
         if self.sceneManager.is_title_scene():
             if self.ioManager.handleSpaceInput(events):
+                self.sceneManager.change_to_character_select()
+            return
+
+        # 캐릭터 선택 씬 처리
+        if self.sceneManager.is_character_select_scene():
+            char_select = self.sceneManager.get_character_select_scene()
+            char_select.handle_input(events)
+
+            # 두 플레이어 모두 선택 완료시 플레이 씬으로 전환
+            if char_select.is_both_selected():
+                p1_char, p2_char = char_select.get_selected_characters()
+                # 플레이어 캐릭터 설정
+                self.playerLeft.change_character(p1_char)
+                self.playerRight.change_character(p2_char)
+                # 플레이 씬으로 전환
                 self.sceneManager.change_to_play_scene()
             return
 
@@ -220,8 +235,8 @@ class Game:
         pico2d.clear_canvas()
         self.sceneManager.render()
 
-        # 플레이 씬에서만 플레이어 렌더링
-        if not self.sceneManager.is_title_scene():
+        # 플레이 씬에서만 플레이어 렌더링 (타이틀 및 캐릭터 선택 씬 제외)
+        if not self.sceneManager.is_title_scene() and not self.sceneManager.is_character_select_scene():
             self.spriteManager.render()
             # 바운딩 박스 및 HP 렌더링을 위해 플레이어 render 호출
             self.playerLeft.render()

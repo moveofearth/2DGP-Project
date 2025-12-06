@@ -129,6 +129,20 @@ class Player:
         if not self.font:
             self._load_font()
 
+    def change_character(self, character_type):
+        """캐릭터 변경"""
+        self.character = Character(character_type)
+        self.character.x, self.character.y = self.x, self.y
+        self.character.hp = self.hp
+        self.character.initialize()
+        # 상태 초기화
+        self.state = 'Idle'
+        self.is_attacking = False
+        self.is_hit = False
+        self.is_guarding = False
+        self.can_combo = False
+        self.combo_reserved = False
+
     def apply_gravity(self, deltaTime):
         """중력 적용 - airborne 상태 처리 및 개선된 충돌 처리"""
         if not self.is_grounded:
