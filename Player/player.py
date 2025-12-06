@@ -1,6 +1,5 @@
 from Character.character import Character
 import pico2d
-import pathlib
 import config
 from handle_collision import CollisionHandler
 
@@ -10,16 +9,16 @@ class Player:
     def __init__(self, player_side='left', character_type=None):  # player_side: 'left' 또는 'right'
         # player_side에 따른 초기 설정
         if player_side == 'left':
-            self.x = 600
+            self.x = config.windowWidth * 0.3  # 화면 왼쪽 30% 위치
             self.player_side = 'left'
-            self.dir = -1  # 오른쪽을 바라보도록
+            self.dir = 1  # 왼쪽 플레이어는 오른쪽(상대방)을 바라봄
             self.facing_right = True
             if character_type is None:
                 character_type = 'thief'
         elif player_side == 'right':
-            self.x = 800
+            self.x = config.windowWidth * 0.7  # 화면 오른쪽 70% 위치
             self.player_side = 'right'
-            self.dir = 1  # 왼쪽을 바라보도록
+            self.dir = -1  # 오른쪽 플레이어는 왼쪽(상대방)을 바라봄
             self.facing_right = False
             if character_type is None:
                 character_type = 'priest'
@@ -114,11 +113,13 @@ class Player:
         self.character.hp = self.hp
         # player_side에 따른 초기화
         if self.player_side == 'left':
-            self.dir = -1
+            self.x = config.windowWidth * 0.3  # 화면 왼쪽 30% 위치
+            self.dir = 1  # 왼쪽 플레이어는 오른쪽(상대방)을 바라봄
             self.facing_right = True
             self.hp = 200
         elif self.player_side == 'right':
-            self.dir = 1
+            self.x = config.windowWidth * 0.7  # 화면 오른쪽 70% 위치
+            self.dir = -1  # 오른쪽 플레이어는 왼쪽(상대방)을 바라봄
             self.facing_right = False
             self.hp = 200
         self.character.hp = self.hp
@@ -126,7 +127,6 @@ class Player:
         self.is_grounded = True
         # 폰트 재로드 시도 (initialize 시점에서)
         if not self.font:
-            self._load_font()
             self._load_font()
 
     def apply_gravity(self, deltaTime):
@@ -597,35 +597,54 @@ class Player:
                     print(f"Starting attack: {atk_input}")
                     return
 
-            # 이동 처리 - player_side에 따라 입력 해석이 다름
+            # 이동 처리 - 상대 플레이어의 위치에 따라 동적으로 Walk/BackWalk 결정
             if not self.is_attacking and not self.is_guarding and not self.is_hit and self.is_grounded:
                 move_speed = self.get_move_speed()
 
-                if self.player_side == 'left':
-                    # PlayerLeft: 'left' 입력 시 상대에게 접근(Walk), 'right' 입력 시 후퇴(BackWalk)
-                    if move_input == 'left':
-                        new_x = self.x - move_speed * 0.5 * deltaTime
-                        self.update_position(new_x, other_player)
-                        self.state = 'Walk'
-                    elif move_input == 'right':
-                        new_x = self.x + move_speed * deltaTime
-                        self.update_position(new_x, other_player)
-                        self.state = 'BackWalk'
-                    elif not move_input:
-                        self.state = 'Idle'
+                # 상대방이 내 오른쪽에 있는지 왼쪽에 있는지 판단
+                opponent_on_right = other_player and other_player.x > self.x
 
-                elif self.player_side == 'right':
-                    # PlayerRight: 'left' 입력 시 후퇴(BackWalk), 'right' 입력 시 상대에게 접근(Walk)
-                    if move_input == 'left':
-                        new_x = self.x - move_speed * deltaTime
-                        self.update_position(new_x, other_player)
-                        self.state = 'BackWalk'
-                    elif move_input == 'right':
-                        new_x = self.x + move_speed * 0.5 * deltaTime
-                        self.update_position(new_x, other_player)
+                if move_input == 'right':
+                    # 오른쪽으로 이동
+                    if opponent_on_right:
+                        # 상대가 오른쪽에 있으면 Walk (접근) - 빠르게
+                        new_x = self.x + move_speed * deltaTime
                         self.state = 'Walk'
-                    elif not move_input:
-                        self.state = 'Idle'
+                        self.facing_right = True
+                        self.dir = 1
+                    else:
+                        # 상대가 왼쪽에 있으면 BackWalk (후퇴) - 느리게
+                        new_x = self.x + move_speed * 0.5 * deltaTime
+                        self.state = 'BackWalk'
+                        self.facing_right = False
+                        self.dir = -1
+                    self.update_position(new_x, other_player)
+
+                elif move_input == 'left':
+                    # 왼쪽으로 이동
+                    if opponent_on_right:
+                        # 상대가 오른쪽에 있으면 BackWalk (후퇴) - 느리게
+                        new_x = self.x - move_speed * 0.5 * deltaTime
+                        self.state = 'BackWalk'
+                        self.facing_right = True
+                        self.dir = 1
+                    else:
+                        # 상대가 왼쪽에 있으면 Walk (접근) - 빠르게
+                        new_x = self.x - move_speed * deltaTime
+                        self.state = 'Walk'
+                        self.facing_right = False
+                        self.dir = -1
+                    self.update_position(new_x, other_player)
+
+                elif not move_input:
+                    self.state = 'Idle'
+                    # Idle 상태에서도 상대방을 바라보도록 방향 업데이트
+                    if opponent_on_right:
+                        self.facing_right = True
+                        self.dir = 1
+                    else:
+                        self.facing_right = False
+                        self.dir = -1
 
         # 캐릭터 위치 및 상태 동기화
         self.character.x, self.character.y = self.x, self.y
