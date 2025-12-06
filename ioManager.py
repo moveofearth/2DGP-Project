@@ -108,12 +108,30 @@ class IOManager:
 
         return None
 
-    def check_player1_combo_input(self):
-        """Player1의 연계 입력 확인 및 리셋"""
-        if self.player1_combo_input:
-            self.player1_combo_input = False
-            return True
-        return False
+    def check_player1_combo_input(self, current_state):
+        """Player1의 연계 입력 확인 및 리셋 - 정확한 키 조합 체크"""
+        if not self.player1_combo_input:
+            return None
+
+        self.player1_combo_input = False
+
+        # 현재 공격 상태에 따라 필요한 키 조합 체크
+        # 중단 공격 연계: 위/아래 키 없이 같은 공격 키
+        if current_state == 'fastMiddleATK' or current_state == 'fastMiddleATK2':
+            # F키만 눌려있고 W/S는 안눌려있어야 함
+            if self.player1_keys['f'] and not self.player1_keys['w'] and not self.player1_keys['s']:
+                return 'fastMiddleATK_combo'
+        elif current_state == 'strongMiddleATK':
+            # G키만 눌려있고 W/S는 안눌려있어야 함
+            if self.player1_keys['g'] and not self.player1_keys['w'] and not self.player1_keys['s']:
+                return 'strongMiddleATK_combo'
+        # 상단 공격 연계: W키 + 같은 공격 키
+        elif current_state == 'strongUpperATK':
+            # W + G키가 눌려있어야 함
+            if self.player1_keys['g'] and self.player1_keys['w']:
+                return 'strongUpperATK_combo'
+
+        return None
 
     def handleMoveInputPlayer2(self, events):
         # 이벤트로 키 상태 업데이트
@@ -195,12 +213,30 @@ class IOManager:
 
         return None
 
-    def check_player2_combo_input(self):
-        """Player2의 연계 입력 확인 및 리셋"""
-        if self.player2_combo_input:
-            self.player2_combo_input = False
-            return True
-        return False
+    def check_player2_combo_input(self, current_state):
+        """Player2의 연계 입력 확인 및 리셋 - 정확한 키 조합 체크"""
+        if not self.player2_combo_input:
+            return None
+
+        self.player2_combo_input = False
+
+        # 현재 공격 상태에 따라 필요한 키 조합 체크
+        # 중단 공격 연계: 위/아래 키 없이 같은 공격 키
+        if current_state == 'fastMiddleATK' or current_state == 'fastMiddleATK2':
+            # 1키만 눌려있고 UP/DOWN은 안눌려있어야 함
+            if self.player2_keys['one'] and not self.player2_keys['up'] and not self.player2_keys['down']:
+                return 'fastMiddleATK_combo'
+        elif current_state == 'strongMiddleATK':
+            # 2키만 눌려있고 UP/DOWN은 안눌려있어야 함
+            if self.player2_keys['two'] and not self.player2_keys['up'] and not self.player2_keys['down']:
+                return 'strongMiddleATK_combo'
+        # 상단 공격 연계: UP키 + 같은 공격 키
+        elif current_state == 'strongUpperATK':
+            # UP + 2키가 눌려있어야 함
+            if self.player2_keys['two'] and self.player2_keys['up']:
+                return 'strongUpperATK_combo'
+
+        return None
 
     def get_player1_position_state(self):
         """Player1의 위치 상태 반환 (High, Middle, Low)"""

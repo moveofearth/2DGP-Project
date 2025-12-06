@@ -310,7 +310,12 @@ class Player:
 
         # 공격 범위 설정
         attack_range = 0
-        if 'fast' in self.state.lower():
+
+        # priest의 상단 강공격은 특별히 범위가 두 배
+        if (self.character.currentCharacter == 'priest' and
+            self.state.lower() == 'strongupperatk'):
+            attack_range = 200  # priest의 상단 강공격은 200
+        elif 'fast' in self.state.lower():
             attack_range = 70  # fast 계열을 70으로 설정
         elif 'strong' in self.state.lower():
             attack_range = 100  # strong 계열을 100으로 설정
@@ -375,10 +380,25 @@ class Player:
                        not self.is_grounded)
 
         # 공격 상태에 따른 hit 타입 결정
-        # Lower 계열은 포물선로 띄우기 위해 airborne 취급
+        # 1순위: Lower 계열은 포물선로 띄우기 위해 airborne 취급
         if 'lower' in attack_state.lower():
             attack_type = 'airborne'
-        elif 'strong' in attack_state or 'rage' in attack_state:
+        # 2순위: Upper 계열은 상단 판정
+        elif 'upper' in attack_state.lower():
+            # Upper 계열도 강도에 따라 구분
+            if 'strong' in attack_state.lower() or 'rage' in attack_state.lower():
+                attack_type = 'strong'
+            else:
+                attack_type = 'fast'
+        # 3순위: Middle 계열은 중단 판정
+        elif 'middle' in attack_state.lower():
+            # Middle 계열도 강도에 따라 구분
+            if 'strong' in attack_state.lower() or 'rage' in attack_state.lower():
+                attack_type = 'strong'
+            else:
+                attack_type = 'fast'
+        # 4순위: 기타 공격은 강도만 체크
+        elif 'strong' in attack_state.lower() or 'rage' in attack_state.lower():
             attack_type = 'strong'
         else:
             attack_type = 'fast'
@@ -566,11 +586,17 @@ class Player:
 
         # hit 상태가 아닐 때만 일반 행동 처리
         if not self.is_hit:
-            # 연계 공격 처리 (우선순위 1)
+            # 연계 공격 처리 (우선순위 1) - 정확한 키 조합으로만 발동
             if combo_input and self.can_combo and not self.combo_reserved:
-                self.combo_reserved = True
-                print(f"Combo reserved for {self.get_character_type()}")
-                return
+                # combo_input이 연계 타입을 반환 (예: 'fastMiddleATK_combo', 'strongMiddleATK_combo', 'strongUpperATK_combo')
+                # 현재 상태와 맞는 연계인지 확인
+                if (self.state == 'fastMiddleATK' and combo_input == 'fastMiddleATK_combo') or \
+                   (self.state == 'fastMiddleATK2' and combo_input == 'fastMiddleATK_combo') or \
+                   (self.state == 'strongMiddleATK' and combo_input == 'strongMiddleATK_combo') or \
+                   (self.state == 'strongUpperATK' and combo_input == 'strongUpperATK_combo'):
+                    self.combo_reserved = True
+                    print(f"Combo reserved for {self.get_character_type()}: {self.state} -> {combo_input}")
+                    return
 
             # 새로운 공격 입력 처리 (공격 중이 아닐 때만)
             if not self.is_attacking and atk_input:
@@ -607,14 +633,14 @@ class Player:
                 if move_input == 'right':
                     # 오른쪽으로 이동
                     if opponent_on_right:
-                        # 상대가 오른쪽에 있으면 Walk (접근) - 빠르게
+                        # 상대가 오른쪽에 있으면 Walk (접근)
                         new_x = self.x + move_speed * deltaTime
                         self.state = 'Walk'
                         self.facing_right = True
                         self.dir = 1
                     else:
-                        # 상대가 왼쪽에 있으면 BackWalk (후퇴) - 느리게
-                        new_x = self.x + move_speed * 0.5 * deltaTime
+                        # 상대가 왼쪽에 있으면 BackWalk (후퇴) - Walk와 동일한 속도
+                        new_x = self.x + move_speed * deltaTime
                         self.state = 'BackWalk'
                         self.facing_right = False
                         self.dir = -1
@@ -623,13 +649,13 @@ class Player:
                 elif move_input == 'left':
                     # 왼쪽으로 이동
                     if opponent_on_right:
-                        # 상대가 오른쪽에 있으면 BackWalk (후퇴) - 느리게
-                        new_x = self.x - move_speed * 0.5 * deltaTime
+                        # 상대가 오른쪽에 있으면 BackWalk (후퇴) - Walk와 동일한 속도
+                        new_x = self.x - move_speed * deltaTime
                         self.state = 'BackWalk'
                         self.facing_right = True
                         self.dir = 1
                     else:
-                        # 상대가 왼쪽에 있으면 Walk (접근) - 빠르게
+                        # 상대가 왼쪽에 있으면 Walk (접근)
                         new_x = self.x - move_speed * deltaTime
                         self.state = 'Walk'
                         self.facing_right = False

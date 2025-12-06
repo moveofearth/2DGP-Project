@@ -24,11 +24,11 @@ class Character:
         self.velocity_y = 0.0
         self.is_grounded = True
 
-        # 캐릭터별 이동속도 설정 (더 느리게 조정)
+        # 캐릭터별 이동속도 설정 (70% 증가)
         self.move_speeds = {
-            'priest': 180.0,  # 250 -> 180
-            'thief': 220.0,   # 300 -> 220
-            'fighter': 200.0  # 300 -> 200
+            'priest': 306.0,  # 180 * 1.7
+            'thief': 374.0,   # 220 * 1.7
+            'fighter': 340.0  # 200 * 1.7
         }
 
     def initialize(self):

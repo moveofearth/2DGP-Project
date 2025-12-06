@@ -190,9 +190,9 @@ class Game:
         player2_position_state = self.ioManager.get_player2_position_state()
         player2_getup_input = self.ioManager.check_player2_getup_input()  # 기상 입력 추가
 
-        # 연계 입력 확인
-        player1_combo = self.ioManager.check_player1_combo_input()
-        player2_combo = self.ioManager.check_player2_combo_input()
+        # 연계 입력 확인 (현재 상태를 전달하여 정확한 키 조합 체크)
+        player1_combo = self.ioManager.check_player1_combo_input(self.playerLeft.state)
+        player2_combo = self.ioManager.check_player2_combo_input(self.playerRight.state)
 
         # 플레이어 업데이트 (기상 입력 포함)
         self.playerLeft.update(deltaTime, player1_move_input, player1_atk_input, player1_combo, player1_char_change, self.playerRight, player1_position_state, player1_getup_input)
