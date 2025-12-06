@@ -7,8 +7,26 @@ from handle_collision import CollisionHandler
 
 class Player:
 
-    def __init__(self, x=600, y=450, character_type='priest'):  # 이미 스케일링된 위치
-        self.x, self.y = x, config.GROUND_Y  # y를 그라운드로 설정
+    def __init__(self, player_side='left', character_type=None):  # player_side: 'left' 또는 'right'
+        # player_side에 따른 초기 설정
+        if player_side == 'left':
+            self.x = 600
+            self.player_side = 'left'
+            self.dir = -1  # 오른쪽을 바라보도록
+            self.facing_right = True
+            if character_type is None:
+                character_type = 'thief'
+        elif player_side == 'right':
+            self.x = 800
+            self.player_side = 'right'
+            self.dir = 1  # 왼쪽을 바라보도록
+            self.facing_right = False
+            if character_type is None:
+                character_type = 'priest'
+        else:
+            raise ValueError("player_side must be 'left' or 'right'")
+
+        self.y = config.GROUND_Y
         self.character = Character(character_type)  # Character 인스턴스 추가
         self.character.x, self.character.y = self.x, self.y  # 캐릭터 위치 동기화
         self.hp = 200  # HP 추가
@@ -20,10 +38,7 @@ class Player:
         self.is_grounded = True  # 지면에 있는지 체크
         self.gravity = config.GRAVITY  # 중력 가속도
 
-        self.prev_x = x
-
-        self.dir = -1  # 항상 오른쪽을 바라보도록 -1로 고정
-        self.facing_right = True  # 현재 바라보는 방향 (True: 오른쪽, False: 왼쪽)
+        self.prev_x = self.x
         self.state = 'Idle'  # Idle, Walk, BackWalk
         self.position_state = 'Middle'  # High, Middle, Low 상태 추가
         self.is_attacking = False  # 공격 중인지 체크
@@ -97,8 +112,21 @@ class Player:
         self.character.initialize()  # Character 초기화
         # Character의 HP와 동기화
         self.character.hp = self.hp
+        # player_side에 따른 초기화
+        if self.player_side == 'left':
+            self.dir = -1
+            self.facing_right = True
+            self.hp = 200
+        elif self.player_side == 'right':
+            self.dir = 1
+            self.facing_right = False
+            self.hp = 200
+        self.character.hp = self.hp
+        self.y = config.GROUND_Y
+        self.is_grounded = True
         # 폰트 재로드 시도 (initialize 시점에서)
         if not self.font:
+            self._load_font()
             self._load_font()
 
     def apply_gravity(self, deltaTime):
@@ -569,19 +597,35 @@ class Player:
                     print(f"Starting attack: {atk_input}")
                     return
 
-            # 공격 중이 아닐 때만 이동 처리 (지상에 있을 때만)
-            if not self.is_attacking and self.is_grounded:
+            # 이동 처리 - player_side에 따라 입력 해석이 다름
+            if not self.is_attacking and not self.is_guarding and not self.is_hit and self.is_grounded:
                 move_speed = self.get_move_speed()
-                if move_input == 'left':
-                    new_x = self.x - move_speed * deltaTime
-                    self.update_position(new_x, other_player)
-                    self.state = 'Walk'  # 기본은 Walk, 각 플레이어에서 오버라이드
-                elif move_input == 'right':
-                    new_x = self.x + move_speed * deltaTime
-                    self.update_position(new_x, other_player)
-                    self.state = 'Walk'  # 기본은 Walk, 각 플레이어에서 오버라이드
-                elif not move_input:
-                    self.state = 'Idle'  # 입력이 없으면 Idle 상태
+
+                if self.player_side == 'left':
+                    # PlayerLeft: 'left' 입력 시 상대에게 접근(Walk), 'right' 입력 시 후퇴(BackWalk)
+                    if move_input == 'left':
+                        new_x = self.x - move_speed * 0.5 * deltaTime
+                        self.update_position(new_x, other_player)
+                        self.state = 'Walk'
+                    elif move_input == 'right':
+                        new_x = self.x + move_speed * deltaTime
+                        self.update_position(new_x, other_player)
+                        self.state = 'BackWalk'
+                    elif not move_input:
+                        self.state = 'Idle'
+
+                elif self.player_side == 'right':
+                    # PlayerRight: 'left' 입력 시 후퇴(BackWalk), 'right' 입력 시 상대에게 접근(Walk)
+                    if move_input == 'left':
+                        new_x = self.x - move_speed * deltaTime
+                        self.update_position(new_x, other_player)
+                        self.state = 'BackWalk'
+                    elif move_input == 'right':
+                        new_x = self.x + move_speed * 0.5 * deltaTime
+                        self.update_position(new_x, other_player)
+                        self.state = 'Walk'
+                    elif not move_input:
+                        self.state = 'Idle'
 
         # 캐릭터 위치 및 상태 동기화
         self.character.x, self.character.y = self.x, self.y

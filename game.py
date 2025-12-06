@@ -3,8 +3,7 @@ import config
 import time
 
 from Scenes.sceneManager import SceneManager
-from Player.playerLeft import PlayerLeft
-from Player.playerRight import PlayerRight
+from Player.player import Player
 from ioManager import IOManager
 from spriteManager import SpriteManager
 from handle_collision import CollisionHandler
@@ -15,8 +14,8 @@ class Game:
     def __init__(self):
         self.running = True
         self.sceneManager = SceneManager()
-        self.playerLeft = PlayerLeft()
-        self.playerRight = PlayerRight()
+        self.playerLeft = Player('left')
+        self.playerRight = Player('right')
         self.ioManager = IOManager()
         self.spriteManager = SpriteManager()
         self.last_time = 0
