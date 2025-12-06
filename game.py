@@ -170,6 +170,8 @@ class Game:
 
         # 타이틀 씬에서는 스페이스바로 캐릭터 선택으로 전환
         if self.sceneManager.is_title_scene():
+            # 씬 매니저 업데이트 호출 (애니메이션이 있을 경우를 대비)
+            self.sceneManager.update(deltaTime)
             if self.ioManager.handleSpaceInput(events):
                 self.sceneManager.change_to_character_select()
             return
@@ -178,6 +180,9 @@ class Game:
         if self.sceneManager.is_character_select_scene():
             char_select = self.sceneManager.get_character_select_scene()
             char_select.handle_input(events)
+
+            # 씬 매니저 업데이트 호출 (애니메이션 재생을 위해)
+            self.sceneManager.update(deltaTime)
 
             # 두 플레이어 모두 선택 완료시 플레이 씬으로 전환
             if char_select.is_both_selected():
