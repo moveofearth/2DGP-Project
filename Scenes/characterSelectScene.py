@@ -81,7 +81,7 @@ class CharacterSelectScene:
             if self.sprite_frames[char] > 0:
                 self.sprite_animation_time[char] += deltaTime
                 if self.sprite_animation_time[char] >= self.frame_time:
-                    self.sprite_animation_time[char] = 0.0
+                    self.sprite_animation_time[char] -= self.frame_time  # 수정: 0.0 대신 -= 사용
                     prev_frame = self.sprite_frame_index[char]
                     self.sprite_frame_index[char] = (self.sprite_frame_index[char] + 1) % self.sprite_frames[char]
 
@@ -96,7 +96,7 @@ class CharacterSelectScene:
             if self.sprite_frames[char] > 0:
                 self.sprite_animation_time[char] += deltaTime
                 if self.sprite_animation_time[char] >= self.frame_time:
-                    self.sprite_animation_time[char] = 0.0
+                    self.sprite_animation_time[char] -= self.frame_time  # 수정: 0.0 대신 -= 사용
                     prev_frame = self.sprite_frame_index[char]
                     self.sprite_frame_index[char] = (self.sprite_frame_index[char] + 1) % self.sprite_frames[char]
 

@@ -23,6 +23,7 @@ class Game:
         self.frame_time = 1.0 / self.target_fps
         self.game_over = False
         self.max_delta_time = 1.0 / 30.0  # 최대 deltaTime 제한 (30fps 이하로 떨어지지 않도록)
+        self.round_end_timer = 0.0  # 라운드 종료 타이머 추가
 
     def initialize(self):
         pico2d.open_canvas(config.windowWidth, config.windowHeight)
@@ -221,11 +222,27 @@ class Game:
         # 충돌 및 공격 판정
         self.check_collision()
 
-        # 게임 오버 체크
-        if not self.playerLeft.is_alive() or not self.playerRight.is_alive():
+        # 플레이씬의 라운드 체크 (3판 2선승제)
+        play_scene = self.sceneManager.play_scene
+        play_scene.check_round_end(self.playerLeft.get_hp(), self.playerRight.get_hp())
+
+        # 라운드 종료 시 처리
+        if play_scene.is_round_over() and not play_scene.is_game_over():
+            # 라운드 종료 후 일정 시간 대기 후 다음 라운드 시작
+            # (여기서는 간단히 즉시 리셋, 원한다면 타이머 추가 가능)
+            if not hasattr(self, 'round_end_timer'):
+                self.round_end_timer = 0.0
+
+            self.round_end_timer += deltaTime
+
+            # 2초 대기 후 다음 라운드 시작
+            if self.round_end_timer >= 2.0:
+                self.reset_round()
+                self.round_end_timer = 0.0
+
+        # 게임 전체 종료 체크
+        if play_scene.is_game_over():
             self.game_over = True
-            winner = "Player2" if not self.playerLeft.is_alive() else "Player1"
-            print(f"Game Over! {winner} wins!")
 
         # SpriteManager에 플레이어 상태 전달 - 플레이어 업데이트 후에 실행
         self.spriteManager.update_player1_state(self.playerLeft.state, deltaTime)
@@ -238,12 +255,23 @@ class Game:
 
     def render(self):
         pico2d.clear_canvas()
-        self.sceneManager.render()
+
+        # 플레이 씬에서는 HP 정보를 전달하여 렌더링
+        if not self.sceneManager.is_title_scene() and not self.sceneManager.is_character_select_scene():
+            play_scene = self.sceneManager.play_scene
+            play_scene.render(
+                player1_hp=self.playerLeft.get_hp(),
+                player1_max_hp=self.playerLeft.max_hp,
+                player2_hp=self.playerRight.get_hp(),
+                player2_max_hp=self.playerRight.max_hp
+            )
+        else:
+            self.sceneManager.render()
 
         # 플레이 씬에서만 플레이어 렌더링 (타이틀 및 캐릭터 선택 씬 제외)
         if not self.sceneManager.is_title_scene() and not self.sceneManager.is_character_select_scene():
             self.spriteManager.render()
-            # 바운딩 박스 및 HP 렌더링을 위해 플레이어 render 호출
+            # 바운딩 박스 렌더링을 위해 플레이어 render 호출 (HP는 플레이씬에서 렌더링)
             self.playerLeft.render()
             self.playerRight.render()
 
@@ -348,3 +376,50 @@ class Game:
                 print(f"Cannot use attack {candidate_attack} for current character (Player {'2' if is_player2 else '1'})")
 
         return False
+
+    def reset_round(self):
+        """라운드 리셋 - 플레이어 위치 및 HP 초기화"""
+        # 플레이어 HP 리셋
+        self.playerLeft.hp = self.playerLeft.max_hp
+        self.playerRight.hp = self.playerRight.max_hp
+
+        # 플레이어 위치 리셋
+        self.playerLeft.x = config.windowWidth * 0.3
+        self.playerRight.x = config.windowWidth * 0.7
+        self.playerLeft.y = config.GROUND_Y
+        self.playerRight.y = config.GROUND_Y
+
+        # 플레이어 상태 리셋
+        self.playerLeft.state = 'Idle'
+        self.playerRight.state = 'Idle'
+        self.playerLeft.is_attacking = False
+        self.playerRight.is_attacking = False
+        self.playerLeft.is_hit = False
+        self.playerRight.is_hit = False
+        self.playerLeft.is_grounded = True
+        self.playerRight.is_grounded = True
+        self.playerLeft.velocity_x = 0.0
+        self.playerRight.velocity_x = 0.0
+        self.playerLeft.velocity_y = 0.0
+        self.playerRight.velocity_y = 0.0
+
+        # 플레이어 방향 리셋
+        self.playerLeft.dir = 1
+        self.playerRight.dir = -1
+        self.playerLeft.facing_right = True
+        self.playerRight.facing_right = False
+
+        # 캐릭터 위치 동기화
+        self.playerLeft.character.x = self.playerLeft.x
+        self.playerLeft.character.y = self.playerLeft.y
+        self.playerRight.character.x = self.playerRight.x
+        self.playerRight.character.y = self.playerRight.y
+
+        # 플레이씬의 라운드 리셋
+        self.sceneManager.play_scene.reset_round()
+
+        # 겹침 방지
+        CollisionHandler.prevent_overlap_on_spawn(self.playerLeft, self.playerRight)
+
+        print("Round reset! New round starting...")
+
