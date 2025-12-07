@@ -26,6 +26,11 @@ class CharacterSelectScene:
         self.p1_animation_complete = False
         self.p2_animation_complete = False
 
+        # 선택 완료 후 대기 타이머
+        self.wait_timer = 0.0
+        self.wait_duration = 1.0  # 1초 대기
+        self.ready_to_proceed = False  # 플레이씬으로 넘어갈 준비 완료
+
     def initialize(self):
         """캐릭터 선택 스프라이트 로드"""
         for char in self.characters:
@@ -40,6 +45,24 @@ class CharacterSelectScene:
                     self.character_sprites[char].append(img)
 
             self.sprite_frames[char] = len(self.character_sprites[char])
+            self.sprite_frame_index[char] = 0
+            self.sprite_animation_time[char] = 0.0
+
+    def reset(self):
+        """캐릭터 선택 씬 초기화 (재시작용)"""
+        self.p1_index = 0
+        self.p2_index = 0
+        self.p1_selected = False
+        self.p2_selected = False
+        self.p1_character = None
+        self.p2_character = None
+        self.p1_animation_complete = False
+        self.p2_animation_complete = False
+        self.wait_timer = 0.0
+        self.ready_to_proceed = False
+
+        # 모든 캐릭터 애니메이션 리셋
+        for char in self.characters:
             self.sprite_frame_index[char] = 0
             self.sprite_animation_time[char] = 0.0
 
@@ -105,6 +128,13 @@ class CharacterSelectScene:
                         self.p2_animation_complete = True
                         print("2P animation complete!")
 
+        # 두 캐릭터 모두 선택되면 1초 대기 후 플레이씬으로 넘어가기
+        if self.p1_selected and self.p2_selected and not self.ready_to_proceed:
+            self.wait_timer += deltaTime
+            if self.wait_timer >= self.wait_duration:
+                self.ready_to_proceed = True
+                print("Ready to proceed to play scene!")
+
     def render(self):
         """캐릭터 선택 화면 렌더링"""
         # 배경 (검은색)
@@ -133,7 +163,7 @@ class CharacterSelectScene:
         else:
             # 선택 완료 시 선택한 캐릭터 위치에 표시
             p1_selected_x = char_spacing * (self.characters.index(self.p1_character) + 1)
-            self.draw_selection_box(p1_selected_x, char_y, 140, 170, (255, 0, 0))
+            self.draw_selection_box(p1_selected_x - 30, char_y - 20, 140, 170, (255, 0, 0))
 
         # 2P 선택 표시 (파란색 테두리) - 하단 선택 영역
         if not self.p2_selected:
@@ -142,7 +172,7 @@ class CharacterSelectScene:
         else:
             # 선택 완료 시 선택한 캐릭터 위치에 표시
             p2_selected_x = char_spacing * (self.characters.index(self.p2_character) + 1)
-            self.draw_selection_box(p2_selected_x, char_y, 150, 180, (0, 0, 255))
+            self.draw_selection_box(p2_selected_x - 30, char_y - 20, 150, 180, (0, 0, 255))
 
         # 선택된 캐릭터를 좌우에 크게 표시
         large_scale = 3.5  # 큰 크기
@@ -153,20 +183,22 @@ class CharacterSelectScene:
             if self.sprite_frames[self.p1_character] > 0:
                 frame_idx = self.sprite_frame_index[self.p1_character]
                 img = self.character_sprites[self.p1_character][frame_idx]
-                p1_x = config.windowWidth * 0.2  # 좌측 20% 위치
+                p1_x = config.windowWidth * 0.35  # 좌측 35% 위치 (중심에 더 가깝게)
                 img.draw(p1_x, side_y, img.w * large_scale, img.h * large_scale)
-                # 빨간색 테두리 (크게)
-                self.draw_selection_box(p1_x, side_y, 300, 350, (255, 0, 0))
 
-        # 2P 선택 캐릭터 (우측)
+        # 2P 선택 캐릭터 (우측, 좌우 반전)
         if self.p2_selected and self.p2_character:
             if self.sprite_frames[self.p2_character] > 0:
                 frame_idx = self.sprite_frame_index[self.p2_character]
                 img = self.character_sprites[self.p2_character][frame_idx]
-                p2_x = config.windowWidth * 0.8  # 우측 80% 위치
-                img.draw(p2_x, side_y, img.w * large_scale, img.h * large_scale)
-                # 파란색 테두리 (크게)
-                self.draw_selection_box(p2_x, side_y, 300, 350, (0, 0, 255))
+                p2_x = config.windowWidth * 0.65  # 우측 65% 위치 (중심에 더 가깝게)
+                # 좌우 반전하여 그리기
+                img.clip_composite_draw(
+                    0, 0, img.w, img.h,
+                    0, 'h',  # 'h'는 수평 반전을 의미
+                    p2_x, side_y,
+                    img.w * large_scale, img.h * large_scale
+                )
 
     def draw_selection_box(self, x, y, width, height, color):
         """선택 박스 그리기 (테두리만) - 여러 개의 선으로 두꺼운 테두리 표현"""
@@ -202,9 +234,8 @@ class CharacterSelectScene:
             )
 
     def is_both_selected(self):
-        """두 플레이어 모두 선택 완료하고 애니메이션도 완료했는지 확인"""
-        return (self.p1_selected and self.p2_selected and
-                self.p1_animation_complete and self.p2_animation_complete)
+        """두 플레이어 모두 선택 완료하고 1초 대기 후 플레이씬으로 넘어갈 준비가 되었는지 확인"""
+        return self.ready_to_proceed
 
     def get_selected_characters(self):
         """선택된 캐릭터 반환 (p1_character, p2_character)"""

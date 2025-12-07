@@ -97,7 +97,7 @@ class PlayScene:
         # HP바 렌더링 (hpbar.png와 hp10.png 사용)
         if self.hpbar_bg and self.hp_fill:
             # Player1 HP바 (좌측 상단)
-            hpbar_x = 200
+            hpbar_x = 350
             hpbar_y = 1000
             hpbar_scale = 2.0
             hp_segments = 10  # HP 세그먼트 개수
@@ -146,7 +146,7 @@ class PlayScene:
                     )
 
             # Player2 HP바 (우측 상단, 좌우 반전)
-            hpbar_x2 = 1720
+            hpbar_x2 = 1570
 
             # HP바 배경 (좌우 반전)
             self.hpbar_bg.clip_composite_draw(

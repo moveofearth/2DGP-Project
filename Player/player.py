@@ -9,14 +9,14 @@ class Player:
     def __init__(self, player_side='left', character_type=None):  # player_side: 'left' 또는 'right'
         # player_side에 따른 초기 설정
         if player_side == 'left':
-            self.x = config.windowWidth * 0.3  # 화면 왼쪽 30% 위치
+            self.x = config.windowWidth * 0.35  # 화면 왼쪽 35% 위치
             self.player_side = 'left'
             self.dir = 1  # 왼쪽 플레이어는 오른쪽(상대방)을 바라봄
             self.facing_right = True
             if character_type is None:
                 character_type = 'thief'
         elif player_side == 'right':
-            self.x = config.windowWidth * 0.7  # 화면 오른쪽 70% 위치
+            self.x = config.windowWidth * 0.65  # 화면 오른쪽 65% 위치
             self.player_side = 'right'
             self.dir = -1  # 오른쪽 플레이어는 왼쪽(상대방)을 바라봄
             self.facing_right = False

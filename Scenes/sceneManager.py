@@ -18,6 +18,7 @@ class SceneManager:
 
     def change_to_character_select(self):
         """캐릭터 선택 씬으로 전환"""
+        self.character_select_scene.reset()  # 씬 리셋
         self.current_scene = 'character_select'
 
     def change_to_play_scene(self):
