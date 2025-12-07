@@ -3,7 +3,7 @@ import pico2d
 class IOManager:
     def __init__(self):
         self.player1_keys = {'w': False, 's': False, 'a': False, 'd': False, 'f': False, 'g': False, 'h': False}
-        self.player2_keys = {'up': False, 'down': False, 'left': False, 'right': False, 'one': False, 'two': False, 'three': False}
+        self.player2_keys = {'up': False, 'down': False, 'left': False, 'right': False, 'ctrl': False, 'shift': False, 'three': False}
         # 연계 공격을 위한 입력 버퍼
         self.player1_combo_input = False
         self.player2_combo_input = False
@@ -171,21 +171,21 @@ class IOManager:
         # 공격 키 이벤트 처리
         for event in events:
             if event.type == pico2d.SDL_KEYDOWN:
-                if event.key == pico2d.SDLK_KP_1:
-                    self.player2_keys['one'] = True
-                    # 1키로 모든 연계 공격 처리 (thief의 fastMiddleATK와 strongMiddleATK 연계)
+                if event.key == pico2d.SDLK_RCTRL or event.key == pico2d.SDLK_LCTRL:
+                    self.player2_keys['ctrl'] = True
+                    # Ctrl키로 모든 연계 공격 처리 (thief의 fastMiddleATK와 strongMiddleATK 연계)
                     self.player2_combo_input = True
-                if event.key == pico2d.SDLK_KP_2:
-                    self.player2_keys['two'] = True
-                    # 2키는 priest의 strongMiddleATK 연계만 처리
+                if event.key == pico2d.SDLK_RSHIFT or event.key == pico2d.SDLK_LSHIFT:
+                    self.player2_keys['shift'] = True
+                    # Shift키는 priest의 strongMiddleATK 연계만 처리
                     self.player2_combo_input = True
                 if event.key == pico2d.SDLK_KP_3:
                     self.player2_keys['three'] = True
             elif event.type == pico2d.SDL_KEYUP:
-                if event.key == pico2d.SDLK_KP_1:
-                    self.player2_keys['one'] = False
-                if event.key == pico2d.SDLK_KP_2:
-                    self.player2_keys['two'] = False
+                if event.key == pico2d.SDLK_RCTRL or event.key == pico2d.SDLK_LCTRL:
+                    self.player2_keys['ctrl'] = False
+                if event.key == pico2d.SDLK_RSHIFT or event.key == pico2d.SDLK_LSHIFT:
+                    self.player2_keys['shift'] = False
                 if event.key == pico2d.SDLK_KP_3:
                     self.player2_keys['three'] = False
 
@@ -194,7 +194,7 @@ class IOManager:
             return 'rageSkill'
 
         # 공격키 조합 확인
-        if self.player2_keys['one']:
+        if self.player2_keys['ctrl']:
             # up/down키와 조합 확인
             if self.player2_keys['up']:
                 return 'fastUpperATK'
@@ -202,7 +202,7 @@ class IOManager:
                 return 'fastLowerATK'
             else:
                 return 'fastMiddleATK'
-        elif self.player2_keys['two']:
+        elif self.player2_keys['shift']:
             # up/down 키와 조합 확인
             if self.player2_keys['up']:
                 return 'strongUpperATK'
@@ -223,17 +223,17 @@ class IOManager:
         # 현재 공격 상태에 따라 필요한 키 조합 체크
         # 중단 공격 연계: 위/아래 키 없이 같은 공격 키
         if current_state == 'fastMiddleATK' or current_state == 'fastMiddleATK2':
-            # 1키만 눌려있고 UP/DOWN은 안눌려있어야 함
-            if self.player2_keys['one'] and not self.player2_keys['up'] and not self.player2_keys['down']:
+            # Ctrl키만 눌려있고 UP/DOWN은 안눌려있어야 함
+            if self.player2_keys['ctrl'] and not self.player2_keys['up'] and not self.player2_keys['down']:
                 return 'fastMiddleATK_combo'
         elif current_state == 'strongMiddleATK':
-            # 2키만 눌려있고 UP/DOWN은 안눌려있어야 함
-            if self.player2_keys['two'] and not self.player2_keys['up'] and not self.player2_keys['down']:
+            # Shift키만 눌려있고 UP/DOWN은 안눌려있어야 함
+            if self.player2_keys['shift'] and not self.player2_keys['up'] and not self.player2_keys['down']:
                 return 'strongMiddleATK_combo'
         # 상단 공격 연계: UP키 + 같은 공격 키
         elif current_state == 'strongUpperATK':
-            # UP + 2키가 눌려있어야 함
-            if self.player2_keys['two'] and self.player2_keys['up']:
+            # UP + Shift키가 눌려있어야 함
+            if self.player2_keys['shift'] and self.player2_keys['up']:
                 return 'strongUpperATK_combo'
 
         return None

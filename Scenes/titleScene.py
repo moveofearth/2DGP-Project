@@ -12,6 +12,6 @@ class TitleScene:
         pass
     def render(self):
         if self.image:
-            # 1280x720 -> 1920x1080 스케일링 (1.5배)
+            # 화면 크기에 맞게 스트레치
             self.image.draw(config.windowWidth // 2, config.windowHeight // 2,
-                          self.image.w * 1.5, self.image.h * 1.5)
+                          config.windowWidth, config.windowHeight)
