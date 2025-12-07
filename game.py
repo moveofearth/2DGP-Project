@@ -222,21 +222,36 @@ class Game:
         if self.game_over:
             return
 
-        # 플레이어 입력 처리
-        player1_move_input = self.ioManager.handleMoveInputPlayer1(events)
-        player1_atk_input = self.ioManager.handleATKInputPlayer1(events)
-        player1_char_change = self.ioManager.handleCharacterChangePlayer1(events)
-        player1_position_state = self.ioManager.get_player1_position_state()
-        player1_getup_input = self.ioManager.check_player1_getup_input()  # 기상 입력 추가
+        # 플레이어 입력 처리 - HP가 0 이하면 입력 무시
+        if self.playerLeft.get_hp() > 0:
+            player1_move_input = self.ioManager.handleMoveInputPlayer1(events)
+            player1_atk_input = self.ioManager.handleATKInputPlayer1(events)
+            player1_char_change = self.ioManager.handleCharacterChangePlayer1(events)
+            player1_position_state = self.ioManager.get_player1_position_state()
+            player1_getup_input = self.ioManager.check_player1_getup_input()  # 기상 입력 추가
+            player1_combo = self.ioManager.check_player1_combo_input(self.playerLeft.state)
+        else:
+            # HP가 0 이하면 입력 무시
+            player1_move_input = None
+            player1_atk_input = None
+            player1_char_change = None
+            player1_position_state = self.playerLeft.position_state
+            player1_getup_input = False
+            player1_combo = False
 
-        player2_move_input = self.ioManager.handleMoveInputPlayer2(events)
-        player2_atk_input = self.ioManager.handleATKInputPlayer2(events)
-        player2_position_state = self.ioManager.get_player2_position_state()
-        player2_getup_input = self.ioManager.check_player2_getup_input()  # 기상 입력 추가
-
-        # 연계 입력 확인 (현재 상태를 전달하여 정확한 키 조합 체크)
-        player1_combo = self.ioManager.check_player1_combo_input(self.playerLeft.state)
-        player2_combo = self.ioManager.check_player2_combo_input(self.playerRight.state)
+        if self.playerRight.get_hp() > 0:
+            player2_move_input = self.ioManager.handleMoveInputPlayer2(events)
+            player2_atk_input = self.ioManager.handleATKInputPlayer2(events)
+            player2_position_state = self.ioManager.get_player2_position_state()
+            player2_getup_input = self.ioManager.check_player2_getup_input()  # 기상 입력 추가
+            player2_combo = self.ioManager.check_player2_combo_input(self.playerRight.state)
+        else:
+            # HP가 0 이하면 입력 무시
+            player2_move_input = None
+            player2_atk_input = None
+            player2_position_state = self.playerRight.position_state
+            player2_getup_input = False
+            player2_combo = False
 
         # 플레이어 업데이트 (기상 입력 포함)
         self.playerLeft.update(deltaTime, player1_move_input, player1_atk_input, player1_combo, player1_char_change, self.playerRight, player1_position_state, player1_getup_input)
@@ -251,15 +266,11 @@ class Game:
 
         # 라운드 종료 시 처리
         if play_scene.is_round_over() and not play_scene.is_game_over():
-            # 라운드 종료 후 일정 시간 대기 후 다음 라운드 시작
-            # (여기서는 간단히 즉시 리셋, 원한다면 타이머 추가 가능)
-            if not hasattr(self, 'round_end_timer'):
-                self.round_end_timer = 0.0
-
+            # 라운드 종료 후 1초 대기 후 다음 라운드 시작
             self.round_end_timer += deltaTime
 
-            # 2초 대기 후 다음 라운드 시작
-            if self.round_end_timer >= 2.0:
+            # 1초 대기 후 다음 라운드 시작
+            if self.round_end_timer >= 1.0:
                 self.reset_round()
                 self.round_end_timer = 0.0
 
@@ -411,8 +422,8 @@ class Game:
         self.playerRight.character.hp = self.playerRight.max_hp
 
         # 플레이어 위치 리셋
-        self.playerLeft.x = config.windowWidth * 0.3
-        self.playerRight.x = config.windowWidth * 0.7
+        self.playerLeft.x = config.windowWidth * 0.35
+        self.playerRight.x = config.windowWidth * 0.65
         self.playerLeft.y = config.GROUND_Y
         self.playerRight.y = config.GROUND_Y
 
@@ -430,11 +441,47 @@ class Game:
         self.playerLeft.velocity_y = 0.0
         self.playerRight.velocity_y = 0.0
 
+        # 추가 플레이어 상태 리셋
+        self.playerLeft.position_state = 'Middle'
+        self.playerRight.position_state = 'Middle'
+        self.playerLeft.hit_recovery_input = False
+        self.playerRight.hit_recovery_input = False
+        self.playerLeft.can_combo = False
+        self.playerRight.can_combo = False
+        self.playerLeft.combo_reserved = False
+        self.playerRight.combo_reserved = False
+        self.playerLeft.is_guarding = False
+        self.playerRight.is_guarding = False
+        self.playerLeft.attack_hit_processed = False
+        self.playerRight.attack_hit_processed = False
+        self.playerLeft.can_process_hit = False
+        self.playerRight.can_process_hit = False
+        self.playerLeft.can_attack_after_guard = False
+        self.playerRight.can_attack_after_guard = False
+        self.playerLeft.guard_counter_timer = 0.0
+        self.playerRight.guard_counter_timer = 0.0
+
         # 플레이어 방향 리셋
         self.playerLeft.dir = 1
         self.playerRight.dir = -1
         self.playerLeft.facing_right = True
         self.playerRight.facing_right = False
+
+        # 캐릭터 피격 상태 리셋
+        self.playerLeft.character.is_hit = False
+        self.playerRight.character.is_hit = False
+        self.playerLeft.character.hit_type = None
+        self.playerRight.character.hit_type = None
+        self.playerLeft.character.can_get_up = False
+        self.playerRight.character.can_get_up = False
+        self.playerLeft.character.state = 'Idle'
+        self.playerRight.character.state = 'Idle'
+        self.playerLeft.character.frame = 0
+        self.playerRight.character.frame = 0
+        self.playerLeft.character.velocity_y = 0.0
+        self.playerRight.character.velocity_y = 0.0
+        self.playerLeft.character.is_grounded = True
+        self.playerRight.character.is_grounded = True
 
         # 캐릭터 위치 동기화
         self.playerLeft.character.x = self.playerLeft.x
