@@ -84,11 +84,15 @@ class Character:
             # 공중에 뜨는 상태 - 프레임은 공중에서 계속 0번 유지
             self.hit_frame_range = (0, 0)
             self.can_get_up = False  # 공중에서는 기상 불가
+        elif attack_type == 'down':
+            # down 상태 (땅에 누운 상태)
+            self.hit_frame_range = (4, 4)
+            self.can_get_up = True
 
         self.hit_frame_start = self.hit_frame_range[0]
         self.frame = self.hit_frame_start
 
-        print(f"Character hit! Type: {attack_type}, HP: {self.hp}")
+        print(f"Character hit! Type: {attack_type}, HP: {self.hp}, frame: {self.frame}")
         return self.hp
 
     def try_get_up(self):

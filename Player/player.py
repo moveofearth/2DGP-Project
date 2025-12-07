@@ -303,20 +303,32 @@ class Player:
         return False
 
     def get_bb(self):
-        """바운딩 박스 좌표 반환 - 방향에 따라 동적 계산"""
-        # 1.5배 스케일링 적용
-        bb_width = 40 * 1.5  # 60
-        bb_height = 50 * 1.5  # 75
+        """바운딩 박스 좌표 반환 - 방향과 상태에 따라 동적 계산"""
+        # down 상태인지 확인
+        hit_type = getattr(self.character, 'hit_type', None) if hasattr(self, 'character') else None
+        is_down = (hit_type == 'down') or (self.is_hit and not self.is_grounded and hit_type == 'airborne')
 
-        # 방향에 따라 x 오프셋 조정
-        if self.facing_right:
-            # 오른쪽을 바라볼 때: 왼쪽으로 오프셋
-            adjusted_x = self.x - (30 * 1.5)
+        if is_down:
+            # down 상태: 누워있으므로 바운딩 박스를 가로로 넓고 세로로 좁게
+            bb_width = 70 * 1.5  # 가로로 더 넓게
+            bb_height = 25 * 1.5  # 세로로 더 낮게 (바닥에 붙어있음)
+            adjusted_x = self.x
+            adjusted_y = self.y - (15 * 1.5)  # 바닥에 더 가깝게
         else:
-            # 왼쪽을 바라볼 때: 오른쪽으로 오프셋
-            adjusted_x = self.x + (30 * 1.5)
+            # 일반 상태: 1.5배 스케일링 적용
+            bb_width = 40 * 1.5  # 60
+            bb_height = 50 * 1.5  # 75
 
-        adjusted_y = self.y - (50 * 1.5)
+            # 방향에 따라 x 오프셋 조정
+            if self.facing_right:
+                # 오른쪽을 바라볼 때: 왼쪽으로 오프셋
+                adjusted_x = self.x - (30 * 1.5)
+            else:
+                # 왼쪽을 바라볼 때: 오른쪽으로 오프셋
+                adjusted_x = self.x + (30 * 1.5)
+
+            adjusted_y = self.y - (50 * 1.5)
+
         return adjusted_x - bb_width, adjusted_y - bb_height, adjusted_x + bb_width, adjusted_y + bb_height
 
     def get_attack_range_bb(self):
@@ -340,9 +352,18 @@ class Player:
         if attack_range == 0:
             return None
 
-        # 공격 범위는 상하는 바운딩 박스와 동일
-        range_y1 = my_bb[1]
-        range_y2 = my_bb[3]
+        # 공격 범위는 상하는 바운딩 박스와 동일하지만,
+        # Lower 공격은 아래쪽으로 더 넓은 범위를 가짐 (down 상태 타격용)
+        is_lower_attack = 'lower' in self.state.lower()
+
+        if is_lower_attack:
+            # Lower 공격은 바닥 근처까지 범위 확장
+            range_y1 = config.GROUND_Y - 60  # 바닥 근처까지
+            range_y2 = my_bb[3]
+        else:
+            # 일반 공격은 바운딩 박스와 동일
+            range_y1 = my_bb[1]
+            range_y2 = my_bb[3]
 
         if self.facing_right:
             # 오른쪽을 바라볼 때: 바운딩 박스 오른쪽 끝에서 오른쪽으로 공격
@@ -384,8 +405,17 @@ class Player:
         self.attack_hit_processed = True
 
     def is_in_hit_state(self):
-        """피격 상태인지 확인"""
-        return self.is_hit
+        """피격 상태인지 확인 - down 상태 구분"""
+        if not self.is_hit:
+            return False
+
+        # down 상태는 Lower 공격에 피격될 수 있으므로 특수 처리
+        # character의 hit_type을 확인하여 down 상태를 정확히 감지
+        hit_type = getattr(self.character, 'hit_type', None) if hasattr(self, 'character') else None
+
+        # down 상태는 피격 상태이지만 Lower 공격에는 반응할 수 있도록
+        # 여기서는 단순히 is_hit만 반환 (충돌 체크에서 hit_type으로 추가 판단)
+        return True
 
     def take_damage(self, damage, attack_state='fastMiddleATK', attacker=None):
         """데미지를 받는 메서드 - 공격 상태에 따른 hit 타입 결정"""

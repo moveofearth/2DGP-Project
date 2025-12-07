@@ -51,13 +51,23 @@ class Game:
             target_hit_type = getattr(target.character, 'hit_type', None) if hasattr(target, 'character') else None
             target_is_down = (target_hit_type == 'down')
             target_is_airborne = (target_hit_type == 'airborne') and not target.is_grounded
-            # lower 계열 공격은 down 상태에 대한 히트 허용, 그리고 공중(airborne) 상태도 추가 허용
+            target_is_hit = target.is_in_hit_state()
+
+            # 충돌 조건을 더 유연하게 수정
+            # 1. 일반적으로 피격 상태가 아니면 히트 가능
+            # 2. Lower 계열 공격은 down 상태에도 히트 가능
+            # 3. 공중(airborne) 상태는 항상 히트 가능 (에어 콤보)
             allow_hit_on_down = ('lower' in attacker_state) and target_is_down
             allow_hit_on_airborne = target_is_airborne
 
-            # 기본적으로는 피격 상태가 아니어야 히트되지만,
-            # down(낙하 후) 또는 airborne(공중) 상태인 경우엔 추가 히트 허용
-            if (not target.is_in_hit_state()) or allow_hit_on_down or allow_hit_on_airborne:
+            # 히트 판정: 피격 상태가 아니거나 특수 조건 만족 시
+            can_hit = (not target_is_hit) or allow_hit_on_down or allow_hit_on_airborne
+
+            # 디버그: down 상태 충돌 판정 로그
+            if target_is_down and 'lower' in attacker_state:
+                print(f"[DEBUG] Player1 Lower attack on DOWN Player2: can_hit={can_hit}, target_is_down={target_is_down}, target_hit_type={target_hit_type}")
+
+            if can_hit:
 
                 # Player1의 공격 범위에 Player2가 있는지 확인
                 if self.playerLeft.is_in_attack_range(self.playerRight):
@@ -102,10 +112,23 @@ class Game:
             target_hit_type = getattr(target.character, 'hit_type', None) if hasattr(target, 'character') else None
             target_is_down = (target_hit_type == 'down')
             target_is_airborne = (target_hit_type == 'airborne') and not target.is_grounded
+            target_is_hit = target.is_in_hit_state()
+
+            # 충돌 조건을 더 유연하게 수정
+            # 1. 일반적으로 피격 상태가 아니면 히트 가능
+            # 2. Lower 계열 공격은 down 상태에도 히트 가능
+            # 3. 공중(airborne) 상태는 항상 히트 가능 (에어 콤보)
             allow_hit_on_down = ('lower' in attacker_state) and target_is_down
             allow_hit_on_airborne = target_is_airborne
 
-            if (not target.is_in_hit_state()) or allow_hit_on_down or allow_hit_on_airborne:
+            # 히트 판정: 피격 상태가 아니거나 특수 조건 만족 시
+            can_hit = (not target_is_hit) or allow_hit_on_down or allow_hit_on_airborne
+
+            # 디버그: down 상태 충돌 판정 로그
+            if target_is_down and 'lower' in attacker_state:
+                print(f"[DEBUG] Player2 Lower attack on DOWN Player1: can_hit={can_hit}, target_is_down={target_is_down}, target_hit_type={target_hit_type}")
+
+            if can_hit:
 
                 # Player2의 공격 범위에 Player1이 있는지 확인
                 if self.playerRight.is_in_attack_range(self.playerLeft):

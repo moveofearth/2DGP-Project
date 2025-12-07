@@ -129,16 +129,16 @@ class CharacterSelectScene:
         # 1P 선택 표시 (빨간색 테두리) - 하단 선택 영역
         if not self.p1_selected:
             p1_x = char_spacing * (self.p1_index + 1)
-            self.draw_selection_box(p1_x, char_y, 150, 180, (255, 0, 0))  # 빨간색, 작게
+            self.draw_selection_box(p1_x - 30, char_y - 20, 140, 170, (255, 0, 0))  # 빨간색, 작게
         else:
             # 선택 완료 시 선택한 캐릭터 위치에 표시
             p1_selected_x = char_spacing * (self.characters.index(self.p1_character) + 1)
-            self.draw_selection_box(p1_selected_x, char_y, 150, 180, (255, 0, 0))
+            self.draw_selection_box(p1_selected_x, char_y, 140, 170, (255, 0, 0))
 
         # 2P 선택 표시 (파란색 테두리) - 하단 선택 영역
         if not self.p2_selected:
             p2_x = char_spacing * (self.p2_index + 1)
-            self.draw_selection_box(p2_x, char_y, 150, 180, (0, 0, 255))  # 파란색, 작게
+            self.draw_selection_box(p2_x - 30, char_y - 20, 150, 180, (0, 0, 255))  # 파란색, 작게
         else:
             # 선택 완료 시 선택한 캐릭터 위치에 표시
             p2_selected_x = char_spacing * (self.characters.index(self.p2_character) + 1)

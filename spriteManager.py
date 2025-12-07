@@ -319,12 +319,14 @@ class SpriteManager:
             if self.frame_timer >= current_frame_time:
                 self.frame_timer = 0.0
 
-                # 공격 애니메이션 절반 지점에서 타격 처리 활성화
+                # 공격 애니메이션 중 타격 처리 활성화 - 범위 확장으로 안정성 향상
                 if self.player1_ref and 'ATK' in self.player1_state:
-                    # 히트 허용: 정확한 중앙 프레임(애니메이션의 1/2 지점)일 때만 허용
+                    # 히트 허용: 중앙 프레임 근처(중앙-1 ~ 중앙+1)에서 허용하여 안정성 향상
                     center = sprite_count // 2
-                    # 중앙 프레임과 일치할 때만 타격 처리 허용, 그렇지 않으면 비허용
-                    self.player1_ref.can_process_hit = (self.player1_frame == center)
+                    hit_start = max(0, center - 1)
+                    hit_end = min(sprite_count - 1, center + 1)
+                    # 중앙 프레임 근처에서 타격 처리 허용
+                    self.player1_ref.can_process_hit = (hit_start <= self.player1_frame <= hit_end)
 
                 # hit 상태 특별 처리 - airborne과 down 타입 추가
                 if self.player1_state == 'hit' and self.player1_ref:
@@ -475,12 +477,14 @@ class SpriteManager:
             if self.player2_frame_timer >= current_frame_time:
                 self.player2_frame_timer = 0.0
 
-                # 공격 애니메이션 절반 지점에서 타격 처리 활성화
+                # 공격 애니메이션 중 타격 처리 활성화 - 범위 확장으로 안정성 향상
                 if self.player2_ref and 'ATK' in self.player2_state:
-                    # 히트 허용: 정확한 중앙 프레임(애니메이션의 1/2 지점)일 때만 허용
+                    # 히트 허용: 중앙 프레임 근처(중앙-1 ~ 중앙+1)에서 허용하여 안정성 향상
                     center = sprite_count // 2
-                    # 중앙 프레임과 일치할 때만 타격 처리 허용, 그렇지 않으면 비허용
-                    self.player2_ref.can_process_hit = (self.player2_frame == center)
+                    hit_start = max(0, center - 1)
+                    hit_end = min(sprite_count - 1, center + 1)
+                    # 중앙 프레임 근처에서 타격 처리 허용
+                    self.player2_ref.can_process_hit = (hit_start <= self.player2_frame <= hit_end)
 
                 # hit 상태 특별 처리 - airborne과 down 타입 추가
                 if self.player2_state == 'hit' and self.player2_ref:
