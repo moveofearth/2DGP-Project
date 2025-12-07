@@ -383,6 +383,10 @@ class Game:
         self.playerLeft.hp = self.playerLeft.max_hp
         self.playerRight.hp = self.playerRight.max_hp
 
+        # Character HP도 동기화
+        self.playerLeft.character.hp = self.playerLeft.max_hp
+        self.playerRight.character.hp = self.playerRight.max_hp
+
         # 플레이어 위치 리셋
         self.playerLeft.x = config.windowWidth * 0.3
         self.playerRight.x = config.windowWidth * 0.7

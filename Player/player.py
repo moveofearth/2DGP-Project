@@ -109,19 +109,20 @@ class Player:
 
     def initialize(self):
         self.character.initialize()  # Character 초기화
-        # Character의 HP와 동기화
-        self.character.hp = self.hp
+        # Character의 HP와 max_hp 동기화
+        self.character.max_hp = self.max_hp
+        self.character.hp = self.max_hp
         # player_side에 따른 초기화
         if self.player_side == 'left':
             self.x = config.windowWidth * 0.3  # 화면 왼쪽 30% 위치
             self.dir = 1  # 왼쪽 플레이어는 오른쪽(상대방)을 바라봄
             self.facing_right = True
-            self.hp = 200
+            self.hp = self.max_hp
         elif self.player_side == 'right':
             self.x = config.windowWidth * 0.7  # 화면 오른쪽 70% 위치
             self.dir = -1  # 오른쪽 플레이어는 왼쪽(상대방)을 바라봄
             self.facing_right = False
-            self.hp = 200
+            self.hp = self.max_hp
         self.character.hp = self.hp
         self.y = config.GROUND_Y
         self.is_grounded = True

@@ -107,30 +107,42 @@ class PlayScene:
 
             # HP바 채우기 (10개의 hp10 세그먼트로 표시)
             # 각 세그먼트는 HP 10을 나타냄 (총 HP 100)
-            hp_segment_width = self.hp_fill.w * hpbar_scale
+            # HP 바 내부 영역 계산 (패딩 고려)
+            hpbar_inner_width = self.hpbar_bg.w * hpbar_scale - 20  # 양쪽 패딩 10씩
+            hp_segment_width = hpbar_inner_width / hp_segments  # 각 세그먼트의 너비
             hp_segment_height = self.hp_fill.h * hpbar_scale
-            hp_segments_to_show = int(player1_hp / 10)  # 완전히 채워진 세그먼트 수
-            partial_hp = player1_hp % 10  # 부분적으로 채워진 세그먼트의 HP
 
-            # HP바의 시작 위치 계산 (왼쪽 정렬)
-            hp_start_x = hpbar_x - (self.hpbar_bg.w * hpbar_scale) // 2 + hp_segment_width // 2
+            # HP 계산 (0-100 범위로 클램프)
+            current_hp1 = max(0, min(player1_max_hp, player1_hp))
+            hp_segments_to_show = int(current_hp1 / 10)  # 완전히 채워진 세그먼트 수
+            partial_hp = current_hp1 % 10  # 부분적으로 채워진 세그먼트의 HP
+
+            # HP바의 시작 위치 계산 (왼쪽 정렬, 패딩 고려)
+            hp_start_x = hpbar_x - (self.hpbar_bg.w * hpbar_scale) / 2 + 10 + hp_segment_width / 2
 
             # 완전히 채워진 세그먼트 그리기
             for i in range(hp_segments_to_show):
                 segment_x = hp_start_x + i * hp_segment_width
-                self.hp_fill.draw(segment_x, hpbar_y, hp_segment_width, hp_segment_height)
+                # hp10 이미지를 세그먼트 너비에 맞게 스케일링
+                segment_scale = hp_segment_width / self.hp_fill.w
+                self.hp_fill.draw(segment_x, hpbar_y,
+                                self.hp_fill.w * segment_scale,
+                                self.hp_fill.h * hpbar_scale)
 
             # 부분적으로 채워진 세그먼트 그리기
             if partial_hp > 0 and hp_segments_to_show < hp_segments:
                 segment_x = hp_start_x + hp_segments_to_show * hp_segment_width
-                partial_width = int(self.hp_fill.w * (partial_hp / 10))
+                partial_ratio = partial_hp / 10.0
+                partial_width = int(self.hp_fill.w * partial_ratio)
+                segment_scale = hp_segment_width / self.hp_fill.w
+
                 if partial_width > 0:
                     self.hp_fill.clip_draw(
                         0, 0, partial_width, self.hp_fill.h,
-                        segment_x - (hp_segment_width - partial_width * hpbar_scale) // 2,
+                        segment_x - hp_segment_width / 2 + (partial_width * segment_scale) / 2,
                         hpbar_y,
-                        partial_width * hpbar_scale,
-                        hp_segment_height
+                        partial_width * segment_scale,
+                        self.hp_fill.h * hpbar_scale
                     )
 
             # Player2 HP바 (우측 상단, 좌우 반전)
@@ -145,34 +157,41 @@ class PlayScene:
             )
 
             # HP바 채우기 (10개의 hp10 세그먼트로 표시, 좌우 반전)
-            hp_segments_to_show2 = int(player2_hp / 10)  # 완전히 채워진 세그먼트 수
-            partial_hp2 = player2_hp % 10  # 부분적으로 채워진 세그먼트의 HP
+            # HP 계산 (0-100 범위로 클램프)
+            current_hp2 = max(0, min(player2_max_hp, player2_hp))
+            hp_segments_to_show2 = int(current_hp2 / 10)  # 완전히 채워진 세그먼트 수
+            partial_hp2 = current_hp2 % 10  # 부분적으로 채워진 세그먼트의 HP
 
-            # HP바의 시작 위치 계산 (오른쪽 정렬)
-            hp_start_x2 = hpbar_x2 + (self.hpbar_bg.w * hpbar_scale) // 2 - hp_segment_width // 2
+            # HP바의 시작 위치 계산 (오른쪽 정렬, 패딩 고려)
+            hp_start_x2 = hpbar_x2 + (self.hpbar_bg.w * hpbar_scale) / 2 - 10 - hp_segment_width / 2
 
             # 완전히 채워진 세그먼트 그리기 (좌우 반전)
             for i in range(hp_segments_to_show2):
                 segment_x2 = hp_start_x2 - i * hp_segment_width
+                segment_scale = hp_segment_width / self.hp_fill.w
                 self.hp_fill.clip_composite_draw(
                     0, 0, self.hp_fill.w, self.hp_fill.h,
                     0, 'h',
                     segment_x2, hpbar_y,
-                    hp_segment_width, hp_segment_height
+                    self.hp_fill.w * segment_scale,
+                    self.hp_fill.h * hpbar_scale
                 )
 
             # 부분적으로 채워진 세그먼트 그리기 (좌우 반전)
             if partial_hp2 > 0 and hp_segments_to_show2 < hp_segments:
                 segment_x2 = hp_start_x2 - hp_segments_to_show2 * hp_segment_width
-                partial_width2 = int(self.hp_fill.w * (partial_hp2 / 10))
+                partial_ratio2 = partial_hp2 / 10.0
+                partial_width2 = int(self.hp_fill.w * partial_ratio2)
+                segment_scale = hp_segment_width / self.hp_fill.w
+
                 if partial_width2 > 0:
                     self.hp_fill.clip_composite_draw(
                         self.hp_fill.w - partial_width2, 0, partial_width2, self.hp_fill.h,
                         0, 'h',
-                        segment_x2 + (hp_segment_width - partial_width2 * hpbar_scale) // 2,
+                        segment_x2 + hp_segment_width / 2 - (partial_width2 * segment_scale) / 2,
                         hpbar_y,
-                        partial_width2 * hpbar_scale,
-                        hp_segment_height
+                        partial_width2 * segment_scale,
+                        self.hp_fill.h * hpbar_scale
                     )
 
         # Count UI 렌더링 - 각 플레이어 2개씩
