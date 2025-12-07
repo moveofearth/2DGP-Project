@@ -97,9 +97,9 @@ class PlayScene:
         # HP바 렌더링 (hpbar.png와 hp10.png 사용)
         if self.hpbar_bg and self.hp_fill:
             # Player1 HP바 (좌측 상단)
-            hpbar_x = 350
+            hpbar_x = 480  # 350에서 480으로 이동 (중앙에 더 가깝게)
             hpbar_y = 1000
-            hpbar_scale = 2.0
+            hpbar_scale = 1.12  # 1.4에서 1.12로 감소 (20% 추가 감소)
             hp_segments = 10  # HP 세그먼트 개수
 
             # HP바 배경
@@ -146,7 +146,7 @@ class PlayScene:
                     )
 
             # Player2 HP바 (우측 상단, 좌우 반전)
-            hpbar_x2 = 1570
+            hpbar_x2 = 1440  # 1570에서 1440으로 이동 (중앙에 더 가깝게)
 
             # HP바 배경 (좌우 반전)
             self.hpbar_bg.clip_composite_draw(
@@ -196,13 +196,13 @@ class PlayScene:
 
         # Count UI 렌더링 - 각 플레이어 2개씩
         if self.count_ui and self.win_count:
-            scaled_count_width = self.count_ui.w * 1.5
-            scaled_count_height = self.count_ui.h * 1.5
+            scaled_count_width = self.count_ui.w * 0.84  # 1.5에서 0.84로 감소 (HP바와 동일한 44% 감소)
+            scaled_count_height = self.count_ui.h * 0.84
             count_spacing = scaled_count_width + 10
 
             # Player1 카운트 (좌측 상단)
-            count_start_x1 = 80
-            count_y = 900
+            count_start_x1 = 200  # 80에서 200으로 이동 (중앙에 더 가깝게)
+            count_y = 950  # 900에서 950으로 이동 (HP바에 더 가깝게)
 
             for i in range(2):
                 # Count 배경
@@ -215,7 +215,7 @@ class PlayScene:
                                       scaled_count_width, scaled_count_height)
 
             # Player2 카운트 (우측 상단, 좌우 반전)
-            count_start_x2 = 1840
+            count_start_x2 = 1720  # 1840에서 1720으로 이동 (중앙에 더 가깝게)
 
             for i in range(2):
                 # Count 배경 (좌우 반전)

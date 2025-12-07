@@ -309,13 +309,8 @@ class Game:
             self.playerLeft.render()
             self.playerRight.render()
 
-            # 게임 오버 메시지 렌더링
-            if self.game_over:
-                # 간단한 게임 오버 표시 (폰트가 있는 경우)
-                if hasattr(self.playerLeft, 'font') and self.playerLeft.font:
-                    # 왼쪽 플레이어 생존 여부에 따라 승자 결정 (정상 논리)
-                    winner = "Player2" if not self.playerLeft.is_alive() else "Player1"
-                    self.playerLeft.font.draw(960, 540, f"Game Over! {winner} wins!", (255, 255, 255))
+            # 게임 오버 메시지는 UI로 처리
+            # (폰트 기반 렌더링 제거)
 
         pico2d.update_canvas()
 

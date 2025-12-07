@@ -55,10 +55,6 @@ class Player:
         # SpriteManager와 연동되는 타격 허용 플래그 초기화 (프레임 기반 히트 판정)
         self.can_process_hit = False
 
-        # pico2d 폰트 로드 - 개선된 예외 처리
-        self.font = None
-        self._load_font()
-
         # 캐릭터별 사용 가능한 공격 정의
         self.available_attacks = {
             'priest': ['fastMiddleATK', 'strongMiddleATK', 'strongUpperATK', 'strongLowerATK', 'rageSkill', 'guard'],
@@ -73,20 +69,6 @@ class Player:
         self.guard_counter_window = 0.25  # 가드 후 0.25초 동안 반격 가능
         self.guard_counter_timer = 0.0
         self.can_attack_after_guard = False
-
-    def _load_font(self):
-        """폰트 로드 시도"""
-        try:
-            # 프로젝트 루트의 폰트 파일 시도
-            self.font = pico2d.load_font('ENCR10B.TTF', 16)
-        except:
-            try:
-                # 기본 폰트 시도 (None을 전달하면 시스템 기본 폰트)
-                self.font = pico2d.load_font(None, 16)
-            except:
-                # 폰트 로드 완전 실패
-                self.font = None
-                print("Warning: Font loading failed. HP text will not be displayed.")
 
     def get_character_type(self):
         """현재 캐릭터 타입 반환"""
@@ -126,9 +108,6 @@ class Player:
         self.character.hp = self.hp
         self.y = config.GROUND_Y
         self.is_grounded = True
-        # 폰트 재로드 시도 (initialize 시점에서)
-        if not self.font:
-            self._load_font()
 
     def change_character(self, character_type):
         """캐릭터 변경"""
@@ -761,15 +740,6 @@ class Player:
         """HP 퍼센테이지 반환 (0.0 ~ 1.0)"""
         return self.hp / self.max_hp
 
-    def _render_hp_text(self):
-        """HP 텍스트 렌더링"""
-        if self.font:
-            # HP 텍스트를 플레이어 위에 표시
-            hp_text = f"HP: {self.hp}/{self.max_hp}"
-            self.font.draw(self.x - 30, self.y + 80, hp_text, (255, 255, 255))
-
     def render(self):
         # 바운딩 박스 그리기
         pico2d.draw_rectangle(*self.get_bb())
-        # HP 텍스트 렌더링
-        self._render_hp_text()
