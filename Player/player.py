@@ -62,8 +62,8 @@ class Player:
             'fighter': ['fastMiddleATK', 'fastLowerATK', 'fastUpperATK', 'strongMiddleATK', 'strongLowerATK', 'strongUpperATK', 'guard']
         }
 
-        # 이동 속도 조정 (더 느리게)
-        self.move_speed_multiplier = 0.8  # 이동 속도 배율
+        # 이동 속도 조정
+        self.move_speed_multiplier = 1.0  # 이동 속도 배율
 
         # 가드 후 즉시 공격 가능 창 (초단위)
         self.guard_counter_window = 0.25  # 가드 후 0.25초 동안 반격 가능

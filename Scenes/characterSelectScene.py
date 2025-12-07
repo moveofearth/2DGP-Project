@@ -4,13 +4,19 @@ import pathlib
 
 class CharacterSelectScene:
     def __init__(self):
-        self.characters = ['fighter', 'priest', 'Thief']  # 선택 가능한 캐릭터
+        self.characters = ['fighter', 'priest', 'thief']  # 선택 가능한 캐릭터
         self.p1_index = 0  # 1P 현재 선택 인덱스
         self.p2_index = 0  # 2P 현재 선택 인덱스
         self.p1_selected = False  # 1P 선택 완료 여부
         self.p2_selected = False  # 2P 선택 완료 여부
         self.p1_character = None  # 1P 선택한 캐릭터
         self.p2_character = None  # 2P 선택한 캐릭터
+
+        # 배경 이미지
+        self.background = None
+
+        # 폰트
+        self.font = None
 
         # 캐릭터 스프라이트
         self.character_sprites = {}
@@ -31,8 +37,25 @@ class CharacterSelectScene:
         self.wait_duration = 1.0  # 1초 대기
         self.ready_to_proceed = False  # 플레이씬으로 넘어갈 준비 완료
 
+        # 캐릭터별 Y 오프셋 (선택 시 크게 표시될 때)
+        self.character_y_offset = {
+            'priest': 100,  # priest를 위로 100픽셀 이동
+            'fighter': 0,
+            'thief': 50  # thief를 위로 50픽셀 이동
+        }
+
     def initialize(self):
         """캐릭터 선택 스프라이트 로드"""
+        # 배경 이미지 로드
+        background_path = pathlib.Path.cwd() / 'Resources' / 'UI' / 'characterSelect.png'
+        if background_path.exists():
+            self.background = pico2d.load_image(str(background_path))
+
+        # 폰트 로드
+        font_path = pathlib.Path.cwd() / 'ENCR10B.TTF'
+        if font_path.exists():
+            self.font = pico2d.load_font(str(font_path), 40)
+
         for char in self.characters:
             self.character_sprites[char] = []
             path = pathlib.Path.cwd() / 'Resources' / 'Character' / char / 'selected'
@@ -137,8 +160,13 @@ class CharacterSelectScene:
 
     def render(self):
         """캐릭터 선택 화면 렌더링"""
-        # 배경 (검은색)
+        # 배경
         pico2d.clear_canvas()
+
+        # 배경 이미지 그리기
+        if self.background:
+            self.background.draw(config.windowWidth // 2, config.windowHeight // 2,
+                               config.windowWidth, config.windowHeight)
 
         # 선택할 캐릭터 표시 위치 (아래쪽, 작게)
         char_spacing = config.windowWidth // (len(self.characters) + 1)
@@ -160,19 +188,31 @@ class CharacterSelectScene:
         if not self.p1_selected:
             p1_x = char_spacing * (self.p1_index + 1)
             self.draw_selection_box(p1_x - 30, char_y - 20, 140, 170, (255, 0, 0))  # 빨간색, 작게
+            # 1P 텍스트 표시 (선택 박스 위)
+            if self.font:
+                self.font.draw(p1_x - 20, char_y + 100, "1P", (255, 0, 0))
         else:
             # 선택 완료 시 선택한 캐릭터 위치에 표시
             p1_selected_x = char_spacing * (self.characters.index(self.p1_character) + 1)
             self.draw_selection_box(p1_selected_x - 30, char_y - 20, 140, 170, (255, 0, 0))
+            # 1P 텍스트 표시 (선택 박스 위)
+            if self.font:
+                self.font.draw(p1_selected_x - 20, char_y + 100, "1P", (255, 0, 0))
 
         # 2P 선택 표시 (파란색 테두리) - 하단 선택 영역
         if not self.p2_selected:
             p2_x = char_spacing * (self.p2_index + 1)
             self.draw_selection_box(p2_x - 30, char_y - 20, 150, 180, (0, 0, 255))  # 파란색, 작게
+            # 2P 텍스트 표시 (선택 박스 위)
+            if self.font:
+                self.font.draw(p2_x - 20, char_y + 105, "2P", (0, 0, 255))
         else:
             # 선택 완료 시 선택한 캐릭터 위치에 표시
             p2_selected_x = char_spacing * (self.characters.index(self.p2_character) + 1)
             self.draw_selection_box(p2_selected_x - 30, char_y - 20, 150, 180, (0, 0, 255))
+            # 2P 텍스트 표시 (선택 박스 위)
+            if self.font:
+                self.font.draw(p2_selected_x - 20, char_y + 105, "2P", (0, 0, 255))
 
         # 선택된 캐릭터를 좌우에 크게 표시
         large_scale = 3.5  # 큰 크기
@@ -184,7 +224,9 @@ class CharacterSelectScene:
                 frame_idx = self.sprite_frame_index[self.p1_character]
                 img = self.character_sprites[self.p1_character][frame_idx]
                 p1_x = config.windowWidth * 0.35  # 좌측 35% 위치 (중심에 더 가깝게)
-                img.draw(p1_x, side_y, img.w * large_scale, img.h * large_scale)
+                # 캐릭터별 Y 오프셋 적용
+                y_offset = self.character_y_offset.get(self.p1_character, 0)
+                img.draw(p1_x, side_y + y_offset, img.w * large_scale, img.h * large_scale)
 
         # 2P 선택 캐릭터 (우측, 좌우 반전)
         if self.p2_selected and self.p2_character:
@@ -192,11 +234,13 @@ class CharacterSelectScene:
                 frame_idx = self.sprite_frame_index[self.p2_character]
                 img = self.character_sprites[self.p2_character][frame_idx]
                 p2_x = config.windowWidth * 0.65  # 우측 65% 위치 (중심에 더 가깝게)
+                # 캐릭터별 Y 오프셋 적용
+                y_offset = self.character_y_offset.get(self.p2_character, 0)
                 # 좌우 반전하여 그리기
                 img.clip_composite_draw(
                     0, 0, img.w, img.h,
                     0, 'h',  # 'h'는 수평 반전을 의미
-                    p2_x, side_y,
+                    p2_x, side_y + y_offset,
                     img.w * large_scale, img.h * large_scale
                 )
 

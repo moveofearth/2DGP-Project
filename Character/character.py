@@ -26,9 +26,9 @@ class Character:
 
         # 캐릭터별 이동속도 설정 (config.py 참고)
         self.move_speeds = {
-            'priest': 220.0,  # 픽셀/초
-            'thief': 290.0,   # 픽셀/초
-            'fighter': 290.0  # 픽셀/초
+            'priest': 300.0,  # 픽셀/초
+            'thief': 300.0,   # 픽셀/초
+            'fighter': 300.0  # 픽셀/초
         }
 
     def initialize(self):

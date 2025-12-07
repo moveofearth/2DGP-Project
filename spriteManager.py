@@ -92,19 +92,19 @@ class SpriteManager:
 
             # thief 캐릭터 스프라이트 로딩
             self.shared_sprites['thief'] = {
-                'Idle': [pico2d.load_image(str(base_path / 'thief' / 'idle' / f'{i}.png')) for i in range(6)],
-                'Walk': [pico2d.load_image(str(base_path / 'thief' / 'walk' / f'{i}.png')) for i in range(6)],
-                'BackWalk': [pico2d.load_image(str(base_path / 'thief' / 'BackWalk' / f'{i}.png')) for i in range(7)],
-                'fastMiddleATK': [pico2d.load_image(str(base_path / 'thief' / 'fastMiddleATK' / f'{i}.png')) for i in range(6)],
-                'fastMiddleATK2': [pico2d.load_image(str(base_path / 'thief' / 'fastMiddleATK' / f'{i}.png')) for i in range(6, 12)],
-                'fastMiddleATK3': [pico2d.load_image(str(base_path / 'thief' / 'fastMiddleATK' / f'{i}.png')) for i in range(12, 18)],
-                'strongMiddleATK': [pico2d.load_image(str(base_path / 'thief' / 'strongMiddleATK' / f'{i}.png')) for i in range(5)],
-                'strongMiddleATK2': [pico2d.load_image(str(base_path / 'thief' / 'strongMiddleATK' / f'{i}.png')) for i in range(5, 10)],
-                'strongUpperATK': [pico2d.load_image(str(base_path / 'thief' / 'strongUpperATK' / f'{i}.png')) for i in range(5)],
-                'strongUpperATK2': [pico2d.load_image(str(base_path / 'thief' / 'strongUpperATK' / f'{i}.png')) for i in range(5, 10)],
-                'strongLowerATK': [pico2d.load_image(str(base_path / 'thief' / 'strongLowerATK' / f'{i}.png')) for i in range(4)],
-                'hit': [pico2d.load_image(str(base_path / 'thief' / 'hit' / f'{i}.png')) for i in range(6)],
-                'guard': [pico2d.load_image(str(base_path / 'thief' / 'Guard' / f'{i}.png')) for i in range(2)]
+                'Idle': [pico2d.load_image(str(base_path / 'Thief' / 'idle' / f'{i}.png')) for i in range(6)],
+                'Walk': [pico2d.load_image(str(base_path / 'Thief' / 'walk' / f'{i}.png')) for i in range(6)],
+                'BackWalk': [pico2d.load_image(str(base_path / 'Thief' / 'BackWalk' / f'{i}.png')) for i in range(7)],
+                'fastMiddleATK': [pico2d.load_image(str(base_path / 'Thief' / 'fastMiddleATK' / f'{i}.png')) for i in range(6)],
+                'fastMiddleATK2': [pico2d.load_image(str(base_path / 'Thief' / 'fastMiddleATK' / f'{i}.png')) for i in range(6, 12)],
+                'fastMiddleATK3': [pico2d.load_image(str(base_path / 'Thief' / 'fastMiddleATK' / f'{i}.png')) for i in range(12, 18)],
+                'strongMiddleATK': [pico2d.load_image(str(base_path / 'Thief' / 'strongMiddleATK' / f'{i}.png')) for i in range(5)],
+                'strongMiddleATK2': [pico2d.load_image(str(base_path / 'Thief' / 'strongMiddleATK' / f'{i}.png')) for i in range(5, 10)],
+                'strongUpperATK': [pico2d.load_image(str(base_path / 'Thief' / 'strongUpperATK' / f'{i}.png')) for i in range(5)],
+                'strongUpperATK2': [pico2d.load_image(str(base_path / 'Thief' / 'strongUpperATK' / f'{i}.png')) for i in range(5, 10)],
+                'strongLowerATK': [pico2d.load_image(str(base_path / 'Thief' / 'strongLowerATK' / f'{i}.png')) for i in range(4)],
+                'hit': [pico2d.load_image(str(base_path / 'Thief' / 'hit' / f'{i}.png')) for i in range(6)],
+                'guard': [pico2d.load_image(str(base_path / 'Thief' / 'Guard' / f'{i}.png')) for i in range(2)]
             }
 
             # fighter 캐릭터 스프라이트 로딩
