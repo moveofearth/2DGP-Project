@@ -227,14 +227,33 @@ class Game:
                 self.playerLeft.facing_right = True
                 self.playerRight.facing_right = False
 
-                # spriteManager 위치 동기화
+                # spriteManager 캐릭터 타입 즉시 업데이트
+                self.spriteManager.player1_character_type = p1_char
+                self.spriteManager.player2_character_type = p2_char
+
+                # spriteManager 위치 및 상태 동기화
                 self.spriteManager.update_player1_position(self.playerLeft.x, self.playerLeft.y)
                 self.spriteManager.update_player2_position(self.playerRight.x, self.playerRight.y)
                 self.spriteManager.update_player1_direction(self.playerLeft.dir)
                 self.spriteManager.update_player2_direction(self.playerRight.dir)
 
+                # 플레이어 상태를 Idle로 초기화하고 spriteManager에 반영
+                self.playerLeft.state = 'Idle'
+                self.playerRight.state = 'Idle'
+                self.spriteManager.player1_state = 'Idle'
+                self.spriteManager.player2_state = 'Idle'
+                self.spriteManager.player1_frame = 0
+                self.spriteManager.player2_frame = 0
+                self.spriteManager.frame_timer = 0.0
+                self.spriteManager.player2_frame_timer = 0.0
+
                 # 플레이 씬으로 전환
                 self.sceneManager.change_to_play_scene()
+            return
+
+        # 씬 전환 중일 때는 씬 매니저 업데이트만 하고 게임 로직 멈춤
+        if self.sceneManager.check_is_transitioning():
+            self.sceneManager.update(deltaTime)
             return
 
         # 게임 오버 상태면 스페이스바로 타이틀 복귀
@@ -318,8 +337,17 @@ class Game:
     def render(self):
         pico2d.clear_canvas()
 
+        # 플레이씬으로 전환 중이거나 플레이 씬일 때
+        is_play_or_transitioning = (
+            (not self.sceneManager.is_title_scene() and not self.sceneManager.is_character_select_scene()) or
+            self.sceneManager.is_transitioning_to_play()
+        )
+
+        # 전환 중일 때는 sceneManager가 render 처리
+        if self.sceneManager.is_transitioning:
+            self.sceneManager.render()
         # 플레이 씬에서는 HP 정보를 전달하여 렌더링
-        if not self.sceneManager.is_title_scene() and not self.sceneManager.is_character_select_scene():
+        elif not self.sceneManager.is_title_scene() and not self.sceneManager.is_character_select_scene():
             play_scene = self.sceneManager.play_scene
             play_scene.render(
                 player1_hp=self.playerLeft.get_hp(),
@@ -330,15 +358,13 @@ class Game:
         else:
             self.sceneManager.render()
 
-        # 플레이 씬에서만 플레이어 렌더링 (타이틀 및 캐릭터 선택 씬 제외)
-        if not self.sceneManager.is_title_scene() and not self.sceneManager.is_character_select_scene():
+        # 플레이 씬이거나 플레이씬으로 전환 중일 때 플레이어 렌더링
+        if is_play_or_transitioning:
             self.spriteManager.render()
             # 바운딩 박스 렌더링을 위해 플레이어 render 호출 (HP는 플레이씬에서 렌더링)
             self.playerLeft.render()
             self.playerRight.render()
 
-            # 게임 오버 메시지는 UI로 처리
-            # (폰트 기반 렌더링 제거)
 
         pico2d.update_canvas()
 

@@ -79,6 +79,9 @@ class SceneManager:
             # 전환 완료
             if progress >= 1.0:
                 self.is_transitioning = False
+                # 플레이씬으로 전환 완료 시 카운트다운 시작
+                if self.transition_to == 'play':
+                    self.play_scene.start_countdown()
                 self.transition_from = None
                 self.transition_to = None
                 self.transition_offset = 0.0
@@ -121,22 +124,39 @@ class SceneManager:
     def _render_scene_with_offset(self, scene_name, offset_x):
         """씬을 오프셋을 적용하여 렌더링"""
         if scene_name == 'title':
-            self._render_with_clip(self.title_scene, offset_x)
+            self._render_with_clip(self.title_scene, offset_x, scene_name)
         elif scene_name == 'character_select':
-            self._render_with_clip(self.character_select_scene, offset_x)
+            self._render_with_clip(self.character_select_scene, offset_x, scene_name)
         elif scene_name == 'play':
-            self._render_with_clip(self.play_scene, offset_x)
+            self._render_with_clip(self.play_scene, offset_x, scene_name)
 
-    def _render_with_clip(self, scene, offset_x):
+    def _render_with_clip(self, scene, offset_x, scene_name):
         """클리핑 영역을 설정하고 씬 렌더링"""
-        # 임시 캔버스 생성은 pico2d에서 직접 지원하지 않으므로
         # 각 씬의 이미지를 오프셋을 적용하여 그리도록 수정
         if hasattr(scene, 'render_with_offset'):
-            scene.render_with_offset(offset_x)
+            # playScene의 경우 HP 정보가 필요하므로 별도 처리
+            if scene_name == 'play':
+                # 기본값으로 렌더링 (전환 중에는 정확한 HP 정보가 필요 없음)
+                scene.render_with_offset(offset_x, 100, 100, 100, 100)
+            else:
+                scene.render_with_offset(offset_x)
         else:
-            # 기본 렌더링 (오프셋 적용을 위해 각 씬에 메서드 추가 필요)
+            # 기본 렌더링
             scene.render()
 
     def get_character_select_scene(self):
         """캐릭터 선택 씬 반환"""
         return self.character_select_scene
+
+    def is_transitioning_to_play(self):
+        """플레이씬으로 전환 중인지 확인"""
+        return self.is_transitioning and self.transition_to == 'play'
+
+    def get_transition_to_scene(self):
+        """전환 목적지 씬 반환"""
+        return self.transition_to
+
+    def check_is_transitioning(self):
+        """전환 중인지 확인"""
+        return self.is_transitioning
+

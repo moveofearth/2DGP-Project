@@ -60,6 +60,10 @@ class PlayScene:
         """라운드 초기화"""
         self.round_over = False
         # 카운트다운 재시작
+        self.start_countdown()
+
+    def start_countdown(self):
+        """카운트다운 시작"""
         self.countdown_active = True
         self.countdown_timer = 0.0
         self.countdown_index = 0
@@ -125,6 +129,8 @@ class PlayScene:
         if self.background:
             # 배경을 2배 스케일링하여 전체 화면에 맞춤 (960x540 -> 1920x1080)
             self.background.draw(960, 540, self.background.w * 2, self.background.h * 2)
+        else:
+            print("WARNING: Background is None in render!")
 
         # HP바 렌더링 (hpbar.png와 hp10.png 사용)
         if self.hpbar_bg and self.hp_fill:
@@ -292,14 +298,150 @@ class PlayScene:
                 continue_x = 960 - continue_width // 2
                 self.small_font.draw(continue_x, 480, continue_text, (255, 255, 0))
 
-    def render_with_offset(self, offset_x):
-        """오프셋을 적용하여 렌더링 (슬라이드 효과용) - 기본 render 호출"""
-        # playScene의 경우 복잡한 렌더링이므로 기본 render를 호출
-        # 실제 게임에서는 spriteManager가 플레이어를 렌더링하므로
-        # 여기서는 배경과 UI만 오프셋 적용
+    def render_with_offset(self, offset_x, player1_hp=100, player1_max_hp=100, player2_hp=100, player2_max_hp=100):
+        """오프셋을 적용하여 렌더링 (슬라이드 효과용)"""
+        # 배경 오프셋 적용
         if self.background:
             self.background.draw(960 + int(offset_x), 540, self.background.w * 2, self.background.h * 2)
 
-        # UI는 오프셋 없이 렌더링 (고정 위치)
-        # HP바와 카운트는 화면에 고정되어야 하므로 오프셋 적용하지 않음
+        # HP바와 UI는 화면에 고정 (오프셋 적용하지 않음)
+        # HP바 렌더링
+        if self.hpbar_bg and self.hp_fill:
+            # Player1 HP바 (좌측 상단)
+            hpbar_x = 480
+            hpbar_y = 1000
+            hpbar_scale = 1.12
+            hp_segments = 10
+
+            # HP바 배경
+            self.hpbar_bg.draw(hpbar_x, hpbar_y, self.hpbar_bg.w * hpbar_scale, self.hpbar_bg.h * hpbar_scale)
+
+            # HP바 채우기
+            hpbar_inner_width = self.hpbar_bg.w * hpbar_scale - 20
+            hp_segment_width = hpbar_inner_width / hp_segments
+            hp_segment_height = self.hp_fill.h * hpbar_scale
+
+            current_hp1 = max(0, min(player1_max_hp, player1_hp))
+            hp_segments_to_show = int(current_hp1 / 10)
+            partial_hp = current_hp1 % 10
+
+            hp_start_x = hpbar_x - (self.hpbar_bg.w * hpbar_scale) / 2 + 10 + hp_segment_width / 2
+
+            for i in range(hp_segments_to_show):
+                segment_x = hp_start_x + i * hp_segment_width
+                segment_scale = hp_segment_width / self.hp_fill.w
+                self.hp_fill.draw(segment_x, hpbar_y,
+                                self.hp_fill.w * segment_scale,
+                                self.hp_fill.h * hpbar_scale)
+
+            if partial_hp > 0 and hp_segments_to_show < hp_segments:
+                segment_x = hp_start_x + hp_segments_to_show * hp_segment_width
+                partial_ratio = partial_hp / 10.0
+                partial_width = int(self.hp_fill.w * partial_ratio)
+                segment_scale = hp_segment_width / self.hp_fill.w
+
+                if partial_width > 0:
+                    self.hp_fill.clip_draw(
+                        0, 0, partial_width, self.hp_fill.h,
+                        segment_x - hp_segment_width / 2 + (partial_width * segment_scale) / 2,
+                        hpbar_y,
+                        partial_width * segment_scale,
+                        self.hp_fill.h * hpbar_scale
+                    )
+
+            # Player2 HP바 (우측 상단, 좌우 반전)
+            hpbar_x2 = 1440
+
+            self.hpbar_bg.clip_composite_draw(
+                0, 0, self.hpbar_bg.w, self.hpbar_bg.h,
+                0, 'h',
+                hpbar_x2, hpbar_y,
+                self.hpbar_bg.w * hpbar_scale, self.hpbar_bg.h * hpbar_scale
+            )
+
+            current_hp2 = max(0, min(player2_max_hp, player2_hp))
+            hp_segments_to_show2 = int(current_hp2 / 10)
+            partial_hp2 = current_hp2 % 10
+
+            hp_start_x2 = hpbar_x2 + (self.hpbar_bg.w * hpbar_scale) / 2 - 10 - hp_segment_width / 2
+
+            for i in range(hp_segments_to_show2):
+                segment_x2 = hp_start_x2 - i * hp_segment_width
+                segment_scale = hp_segment_width / self.hp_fill.w
+                self.hp_fill.clip_composite_draw(
+                    0, 0, self.hp_fill.w, self.hp_fill.h,
+                    0, 'h',
+                    segment_x2, hpbar_y,
+                    self.hp_fill.w * segment_scale,
+                    self.hp_fill.h * hpbar_scale
+                )
+
+            if partial_hp2 > 0 and hp_segments_to_show2 < hp_segments:
+                segment_x2 = hp_start_x2 - hp_segments_to_show2 * hp_segment_width
+                partial_ratio2 = partial_hp2 / 10.0
+                partial_width2 = int(self.hp_fill.w * partial_ratio2)
+                segment_scale = hp_segment_width / self.hp_fill.w
+
+                if partial_width2 > 0:
+                    self.hp_fill.clip_composite_draw(
+                        self.hp_fill.w - partial_width2, 0, partial_width2, self.hp_fill.h,
+                        0, 'h',
+                        segment_x2 + hp_segment_width / 2 - (partial_width2 * segment_scale) / 2,
+                        hpbar_y,
+                        partial_width2 * segment_scale,
+                        self.hp_fill.h * hpbar_scale
+                    )
+
+        # Count UI 렌더링
+        if self.count_ui and self.win_count:
+            scaled_count_width = self.count_ui.w * 0.84
+            scaled_count_height = self.count_ui.h * 0.84
+            count_spacing = scaled_count_width + 10
+
+            count_start_x1 = 200
+            count_y = 950
+
+            for i in range(2):
+                self.count_ui.draw(count_start_x1 + i * count_spacing, count_y,
+                                 scaled_count_width, scaled_count_height)
+                if i < self.player1_rounds_won:
+                    self.win_count.draw(count_start_x1 + i * count_spacing, count_y,
+                                      scaled_count_width, scaled_count_height)
+
+            count_start_x2 = 1720
+
+            for i in range(2):
+                self.count_ui.clip_composite_draw(
+                    0, 0, self.count_ui.w, self.count_ui.h,
+                    0, 'h',
+                    count_start_x2 - i * count_spacing, count_y,
+                    scaled_count_width, scaled_count_height
+                )
+                if i < self.player2_rounds_won:
+                    self.win_count.clip_composite_draw(
+                        0, 0, self.win_count.w, self.win_count.h,
+                        0, 'h',
+                        count_start_x2 - i * count_spacing, count_y,
+                        scaled_count_width, scaled_count_height
+                    )
+
+        # 카운트다운 텍스트 렌더링
+        if self.countdown_active and self.font:
+            if self.countdown_index < len(self.countdown_sequence):
+                text = self.countdown_sequence[self.countdown_index]
+                text_width = len(text) * 60
+                center_x = 960 - text_width // 2
+                self.font.draw(center_x, 540, text, (255, 255, 0))
+
+        # 게임 오버 시 승자 표시
+        if self.game_over and self.font and self.winner:
+            win_text = f"{self.winner} WIN!"
+            text_width = len(win_text) * 60
+            center_x = 960 - text_width // 2
+            self.font.draw(center_x, 600, win_text, (255, 255, 0))
+            if self.small_font:
+                continue_text = "Press SPACE to continue"
+                continue_width = len(continue_text) * 25
+                continue_x = 960 - continue_width // 2
+                self.small_font.draw(continue_x, 480, continue_text, (255, 255, 0))
 

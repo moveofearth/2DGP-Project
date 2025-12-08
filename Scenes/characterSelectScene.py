@@ -5,8 +5,8 @@ import pathlib
 class CharacterSelectScene:
     def __init__(self):
         self.characters = ['fighter', 'priest', 'thief']  # 선택 가능한 캐릭터
-        self.p1_index = 0  # 1P 현재 선택 인덱스
-        self.p2_index = 0  # 2P 현재 선택 인덱스
+        self.p1_index = 0  # 1P 현재 선택 인덱스 (fighter)
+        self.p2_index = 1  # 2P 현재 선택 인덱스 (priest) - 기본값을 다르게 설정
         self.p1_selected = False  # 1P 선택 완료 여부
         self.p2_selected = False  # 2P 선택 완료 여부
         self.p1_character = None  # 1P 선택한 캐릭터
@@ -74,7 +74,7 @@ class CharacterSelectScene:
     def reset(self):
         """캐릭터 선택 씬 초기화 (재시작용)"""
         self.p1_index = 0
-        self.p2_index = 0
+        self.p2_index = 1  # 기본값을 다르게 설정 (priest)
         self.p1_selected = False
         self.p2_selected = False
         self.p1_character = None
