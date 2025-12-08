@@ -8,6 +8,8 @@ class PlayScene:
         self.hp_fill = None   # HP바 내부 채우기
         self.count_ui = None
         self.win_count = None  # 승리 카운트 표시
+        self.font = None  # 카운트다운용 폰트
+        self.small_font = None  # 작은 폰트 (게임 오버 메시지용)
 
         # 3판 2선승제 시스템
         self.player1_rounds_won = 0  # Player1 승리 라운드 수
@@ -17,6 +19,13 @@ class PlayScene:
         self.game_over = False  # 전체 게임 종료 여부
         self.round_over = False  # 현재 라운드 종료 여부
         self.winner = None  # 최종 승자
+
+        # 카운트다운 시스템
+        self.countdown_active = True  # 카운트다운 진행 중 여부
+        self.countdown_timer = 0.0  # 카운트다운 타이머
+        self.countdown_sequence = ["Ready", "3", "2", "1", "Fight!"]  # 카운트다운 순서
+        self.countdown_index = 0  # 현재 카운트다운 인덱스
+        self.countdown_duration = 1.0  # 각 카운트당 지속 시간 (초)
 
     def initialize(self):
         # 플레이 배경 이미지 로딩
@@ -29,6 +38,12 @@ class PlayScene:
         self.hp_fill = pico2d.load_image(str(ui_path / 'hp10.png'))
         self.count_ui = pico2d.load_image(str(ui_path / 'count.png'))
         self.win_count = pico2d.load_image(str(ui_path / 'winCount.png'))
+
+        # 폰트 로드 (카운트다운용)
+        font_path = pathlib.Path.cwd() / 'ENCR10B.TTF'
+        if font_path.exists():
+            self.font = pico2d.load_font(str(font_path), 120)
+            self.small_font = pico2d.load_font(str(font_path), 50)
 
         # 3판 2선승제 초기화
         self.reset_game()
@@ -44,6 +59,10 @@ class PlayScene:
     def reset_round(self):
         """라운드 초기화"""
         self.round_over = False
+        # 카운트다운 재시작
+        self.countdown_active = True
+        self.countdown_timer = 0.0
+        self.countdown_index = 0
 
     def check_round_end(self, player1_hp, player2_hp):
         """라운드 종료 체크 및 승자 결정"""
@@ -85,8 +104,21 @@ class PlayScene:
         """최종 승자 반환"""
         return self.winner
 
+    def is_countdown_active(self):
+        """카운트다운 진행 중 여부 반환"""
+        return self.countdown_active
+
     def update(self, deltaTime):
-        pass
+        # 카운트다운 업데이트
+        if self.countdown_active:
+            self.countdown_timer += deltaTime
+            if self.countdown_timer >= self.countdown_duration:
+                self.countdown_timer = 0.0
+                self.countdown_index += 1
+                # 모든 카운트다운 완료
+                if self.countdown_index >= len(self.countdown_sequence):
+                    self.countdown_active = False
+                    self.countdown_index = 0
 
     def render(self, player1_hp=100, player1_max_hp=100, player2_hp=100, player2_max_hp=100):
         """HP 정보를 받아서 렌더링"""
@@ -234,3 +266,40 @@ class PlayScene:
                         count_start_x2 - i * count_spacing, count_y,
                         scaled_count_width, scaled_count_height
                     )
+
+        # 카운트다운 텍스트 렌더링 (화면 중앙, 노란색)
+        if self.countdown_active and self.font:
+            if self.countdown_index < len(self.countdown_sequence):
+                text = self.countdown_sequence[self.countdown_index]
+                # 텍스트 길이에 따라 x 위치 조정 (대략적인 중앙 정렬)
+                text_width = len(text) * 60  # 폰트 크기 120의 절반 정도로 추정
+                center_x = 960 - text_width // 2
+                # 화면 중앙에 노란색으로 표시
+                self.font.draw(center_x, 540, text, (255, 255, 0))
+
+        # 게임 오버 시 승자 표시 (화면 중앙, 노란색)
+        if self.game_over and self.font and self.winner:
+            win_text = f"{self.winner} WIN!"
+            # 텍스트 길이에 따라 x 위치 조정
+            text_width = len(win_text) * 60
+            center_x = 960 - text_width // 2
+            # 화면 중앙에 노란색으로 표시
+            self.font.draw(center_x, 600, win_text, (255, 255, 0))
+            # "Press SPACE to continue" 메시지
+            if self.small_font:
+                continue_text = "Press SPACE to continue"
+                continue_width = len(continue_text) * 25
+                continue_x = 960 - continue_width // 2
+                self.small_font.draw(continue_x, 480, continue_text, (255, 255, 0))
+
+    def render_with_offset(self, offset_x):
+        """오프셋을 적용하여 렌더링 (슬라이드 효과용) - 기본 render 호출"""
+        # playScene의 경우 복잡한 렌더링이므로 기본 render를 호출
+        # 실제 게임에서는 spriteManager가 플레이어를 렌더링하므로
+        # 여기서는 배경과 UI만 오프셋 적용
+        if self.background:
+            self.background.draw(960 + int(offset_x), 540, self.background.w * 2, self.background.h * 2)
+
+        # UI는 오프셋 없이 렌더링 (고정 위치)
+        # HP바와 카운트는 화면에 고정되어야 하므로 오프셋 적용하지 않음
+

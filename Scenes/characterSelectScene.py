@@ -190,14 +190,14 @@ class CharacterSelectScene:
             self.draw_selection_box(p1_x - 30, char_y - 20, 140, 170, (255, 0, 0))  # 빨간색, 작게
             # 1P 텍스트 표시 (선택 박스 위)
             if self.font:
-                self.font.draw(p1_x - 20, char_y + 100, "1P", (255, 0, 0))
+                self.font.draw(p1_x - 100, char_y + 105, "1P", (255, 0, 0))
         else:
             # 선택 완료 시 선택한 캐릭터 위치에 표시
             p1_selected_x = char_spacing * (self.characters.index(self.p1_character) + 1)
             self.draw_selection_box(p1_selected_x - 30, char_y - 20, 140, 170, (255, 0, 0))
-            # 1P 텍스트 표시 (선택 박스 위)
+            # 1P 텍스트 표시 (선택 박스 왼쪽 위)
             if self.font:
-                self.font.draw(p1_selected_x - 20, char_y + 100, "1P", (255, 0, 0))
+                self.font.draw(p1_selected_x - 100, char_y + 105, "1P", (255, 0, 0))
 
         # 2P 선택 표시 (파란색 테두리) - 하단 선택 영역
         if not self.p2_selected:
@@ -216,7 +216,7 @@ class CharacterSelectScene:
 
         # 선택된 캐릭터를 좌우에 크게 표시
         large_scale = 3.5  # 큰 크기
-        side_y = config.windowHeight * 0.6  # 화면 상단 60% 위치
+        side_y = config.windowHeight * 0.8  # 화면 상단 80% 위치
 
         # 1P 선택 캐릭터 (좌측)
         if self.p1_selected and self.p1_character:
@@ -284,4 +284,75 @@ class CharacterSelectScene:
     def get_selected_characters(self):
         """선택된 캐릭터 반환 (p1_character, p2_character)"""
         return self.p1_character, self.p2_character
+
+    def render_with_offset(self, offset_x):
+        """오프셋을 적용하여 렌더링 (슬라이드 효과용)"""
+        # 배경 이미지 그리기 (오프셋 적용)
+        if self.background:
+            self.background.draw(config.windowWidth // 2 + int(offset_x), config.windowHeight // 2,
+                               config.windowWidth, config.windowHeight)
+
+        # 선택할 캐릭터 표시 위치 (아래쪽, 작게)
+        char_spacing = config.windowWidth // (len(self.characters) + 1)
+        char_y = config.windowHeight // 4
+        small_scale = 1.2
+
+        # 각 캐릭터 스프라이트 그리기 (오프셋 적용)
+        for i, char in enumerate(self.characters):
+            x = char_spacing * (i + 1) + int(offset_x)
+            if self.sprite_frames[char] > 0:
+                img = self.character_sprites[char][0]
+                img.draw(x, char_y, img.w * small_scale, img.h * small_scale)
+
+        # 1P 선택 표시 (오프셋 적용)
+        if not self.p1_selected:
+            p1_x = char_spacing * (self.p1_index + 1) + int(offset_x)
+            self.draw_selection_box(p1_x - 30, char_y - 20, 140, 170, (255, 0, 0))
+            if self.font:
+                self.font.draw(p1_x - 100, char_y + 105, "1P", (255, 0, 0))
+        else:
+            p1_selected_x = char_spacing * (self.characters.index(self.p1_character) + 1) + int(offset_x)
+            self.draw_selection_box(p1_selected_x - 30, char_y - 20, 140, 170, (255, 0, 0))
+            if self.font:
+                self.font.draw(p1_selected_x - 100, char_y + 105, "1P", (255, 0, 0))
+
+        # 2P 선택 표시 (오프셋 적용)
+        if not self.p2_selected:
+            p2_x = char_spacing * (self.p2_index + 1) + int(offset_x)
+            self.draw_selection_box(p2_x - 30, char_y - 20, 150, 180, (0, 0, 255))
+            if self.font:
+                self.font.draw(p2_x - 20, char_y + 105, "2P", (0, 0, 255))
+        else:
+            p2_selected_x = char_spacing * (self.characters.index(self.p2_character) + 1) + int(offset_x)
+            self.draw_selection_box(p2_selected_x - 30, char_y - 20, 150, 180, (0, 0, 255))
+            if self.font:
+                self.font.draw(p2_selected_x - 20, char_y + 105, "2P", (0, 0, 255))
+
+        # 선택된 캐릭터를 좌우에 크게 표시 (오프셋 적용)
+        large_scale = 3.5
+        side_y = config.windowHeight * 0.8
+
+        # 1P 선택 캐릭터
+        if self.p1_selected and self.p1_character:
+            if self.sprite_frames[self.p1_character] > 0:
+                frame_idx = self.sprite_frame_index[self.p1_character]
+                img = self.character_sprites[self.p1_character][frame_idx]
+                p1_x = config.windowWidth * 0.35 + int(offset_x)
+                y_offset = self.character_y_offset.get(self.p1_character, 0)
+                img.draw(p1_x, side_y + y_offset, img.w * large_scale, img.h * large_scale)
+
+        # 2P 선택 캐릭터
+        if self.p2_selected and self.p2_character:
+            if self.sprite_frames[self.p2_character] > 0:
+                frame_idx = self.sprite_frame_index[self.p2_character]
+                img = self.character_sprites[self.p2_character][frame_idx]
+                p2_x = config.windowWidth * 0.65 + int(offset_x)
+                y_offset = self.character_y_offset.get(self.p2_character, 0)
+                img.clip_composite_draw(
+                    0, 0, img.w, img.h,
+                    0, 'h',
+                    p2_x, side_y + y_offset,
+                    img.w * large_scale, img.h * large_scale
+                )
+
 

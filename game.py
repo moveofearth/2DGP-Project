@@ -214,12 +214,40 @@ class Game:
                 # 플레이어 캐릭터 설정
                 self.playerLeft.change_character(p1_char)
                 self.playerRight.change_character(p2_char)
+
+                # 플레이어 초기 위치 설정
+                self.playerLeft.x = config.windowWidth * 0.35
+                self.playerRight.x = config.windowWidth * 0.65
+                self.playerLeft.y = config.GROUND_Y
+                self.playerRight.y = config.GROUND_Y
+
+                # 플레이어 방향 설정
+                self.playerLeft.dir = 1
+                self.playerRight.dir = -1
+                self.playerLeft.facing_right = True
+                self.playerRight.facing_right = False
+
+                # spriteManager 위치 동기화
+                self.spriteManager.update_player1_position(self.playerLeft.x, self.playerLeft.y)
+                self.spriteManager.update_player2_position(self.playerRight.x, self.playerRight.y)
+                self.spriteManager.update_player1_direction(self.playerLeft.dir)
+                self.spriteManager.update_player2_direction(self.playerRight.dir)
+
                 # 플레이 씬으로 전환
                 self.sceneManager.change_to_play_scene()
             return
 
-        # 게임 오버 상태면 업데이트 중지
+        # 게임 오버 상태면 스페이스바로 타이틀 복귀
         if self.game_over:
+            if self.ioManager.handleSpaceInput(events):
+                # 타이틀로 돌아가기
+                self.reset_to_title()
+            return
+
+        # 카운트다운 중일 때는 플레이씬 업데이트만 하고 게임 로직은 멈춤
+        play_scene = self.sceneManager.play_scene
+        if play_scene.countdown_active:
+            play_scene.update(deltaTime)
             return
 
         # 플레이어 입력 처리 - HP가 0 이하면 입력 무시
@@ -344,29 +372,25 @@ class Game:
         else:
             keys = self.ioManager.player1_keys
 
-        # 우선순위: rageSkill, fast(1/one), strong(2/two)
+        # 우선순위: fast(1/one), strong(2/two)
         candidate_attack = None
 
-        # rage 체크
-        if (is_player2 and keys.get('three')) or (not is_player2 and keys.get('h')):
-            candidate_attack = 'rageSkill'
-        else:
-            # fast / strong 분기
-            if (is_player2 and keys.get('one')) or (not is_player2 and keys.get('f')):
-                # up/down 조합 확인
-                if (is_player2 and keys.get('up')) or (not is_player2 and keys.get('w')):
-                    candidate_attack = 'fastUpperATK'
-                elif (is_player2 and keys.get('down')) or (not is_player2 and keys.get('s')):
-                    candidate_attack = 'fastLowerATK'
-                else:
-                    candidate_attack = 'fastMiddleATK'
-            elif (is_player2 and keys.get('two')) or (not is_player2 and keys.get('g')):
-                if (is_player2 and keys.get('up')) or (not is_player2 and keys.get('w')):
-                    candidate_attack = 'strongUpperATK'
-                elif (is_player2 and keys.get('down')) or (not is_player2 and keys.get('s')):
-                    candidate_attack = 'strongLowerATK'
-                else:
-                    candidate_attack = 'strongMiddleATK'
+        # fast / strong 분기
+        if (is_player2 and keys.get('one')) or (not is_player2 and keys.get('f')):
+            # up/down 조합 확인
+            if (is_player2 and keys.get('up')) or (not is_player2 and keys.get('w')):
+                candidate_attack = 'fastUpperATK'
+            elif (is_player2 and keys.get('down')) or (not is_player2 and keys.get('s')):
+                candidate_attack = 'fastLowerATK'
+            else:
+                candidate_attack = 'fastMiddleATK'
+        elif (is_player2 and keys.get('two')) or (not is_player2 and keys.get('g')):
+            if (is_player2 and keys.get('up')) or (not is_player2 and keys.get('w')):
+                candidate_attack = 'strongUpperATK'
+            elif (is_player2 and keys.get('down')) or (not is_player2 and keys.get('s')):
+                candidate_attack = 'strongLowerATK'
+            else:
+                candidate_attack = 'strongMiddleATK'
 
         # 후보 공격이 있는 경우 처리
         if candidate_attack:
@@ -491,4 +515,48 @@ class Game:
         CollisionHandler.prevent_overlap_on_spawn(self.playerLeft, self.playerRight)
 
         print("Round reset! New round starting...")
+
+    def reset_to_title(self):
+        """게임을 초기화하고 타이틀 화면으로 돌아가기"""
+        # 게임 상태 초기화
+        self.game_over = False
+        self.round_end_timer = 0.0
+
+        # 플레이씬 초기화
+        self.sceneManager.play_scene.reset_game()
+
+        # 플레이어 초기화
+        self.playerLeft.hp = self.playerLeft.max_hp
+        self.playerRight.hp = self.playerRight.max_hp
+        self.playerLeft.character.hp = self.playerLeft.max_hp
+        self.playerRight.character.hp = self.playerRight.max_hp
+
+        # 플레이어 위치 리셋
+        self.playerLeft.x = config.windowWidth * 0.35
+        self.playerRight.x = config.windowWidth * 0.65
+        self.playerLeft.y = config.GROUND_Y
+        self.playerRight.y = config.GROUND_Y
+
+        # spriteManager 위치 업데이트
+        self.spriteManager.update_player1_position(self.playerLeft.x, self.playerLeft.y)
+        self.spriteManager.update_player2_position(self.playerRight.x, self.playerRight.y)
+
+        # 플레이어 상태 리셋
+        self.playerLeft.state = 'Idle'
+        self.playerRight.state = 'Idle'
+        self.playerLeft.is_attacking = False
+        self.playerRight.is_attacking = False
+        self.playerLeft.is_hit = False
+        self.playerRight.is_hit = False
+
+        # 캐릭터 상태 리셋
+        self.playerLeft.character.state = 'Idle'
+        self.playerRight.character.state = 'Idle'
+        self.playerLeft.character.is_hit = False
+        self.playerRight.character.is_hit = False
+
+        # 타이틀 씬으로 전환
+        self.sceneManager.current_scene = 'title'
+
+        print("Returning to title screen...")
 

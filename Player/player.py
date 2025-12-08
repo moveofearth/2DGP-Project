@@ -410,19 +410,19 @@ class Player:
         # 2순위: Upper 계열은 상단 판정
         elif 'upper' in attack_state.lower():
             # Upper 계열도 강도에 따라 구분
-            if 'strong' in attack_state.lower() or 'rage' in attack_state.lower():
+            if 'strong' in attack_state.lower():
                 attack_type = 'strong'
             else:
                 attack_type = 'fast'
         # 3순위: Middle 계열은 중단 판정
         elif 'middle' in attack_state.lower():
             # Middle 계열도 강도에 따라 구분
-            if 'strong' in attack_state.lower() or 'rage' in attack_state.lower():
+            if 'strong' in attack_state.lower():
                 attack_type = 'strong'
             else:
                 attack_type = 'fast'
         # 4순위: 기타 공격은 강도만 체크
-        elif 'strong' in attack_state.lower() or 'rage' in attack_state.lower():
+        elif 'strong' in attack_state.lower():
             attack_type = 'strong'
         else:
             attack_type = 'fast'

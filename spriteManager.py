@@ -85,7 +85,6 @@ class SpriteManager:
                 'strongMiddleATK2': [pico2d.load_image(str(base_path / 'priest' / 'strongMiddleATK' / f'{i}.png')) for i in range(6, 14)],
                 'strongUpperATK': [pico2d.load_image(str(base_path / 'priest' / 'strongUpperATK' / f'{i}.png')) for i in range(12)],
                 'strongLowerATK': [pico2d.load_image(str(base_path / 'priest' / 'strongLowerATK' / f'{i}.png')) for i in range(9)],
-                'rageSkill': [pico2d.load_image(str(base_path / 'priest' / 'rageSkill' / f'{i}.png')) for i in range(18)],
                 'hit': [pico2d.load_image(str(base_path / 'priest' / 'hit' / f'{i}.png')) for i in range(6)],
                 'guard': [pico2d.load_image(str(base_path / 'priest' / 'guard' / f'{i}.png')) for i in range(2)]  # Guard 스프라이트 추가 (0~1)
             }
@@ -154,11 +153,6 @@ class SpriteManager:
                 self.player2_frame = 0
                 self.player2_frame_timer = 0.0
             print(f"Player {'1' if is_player1 else '2'} hit animation completed - reset to Idle")
-            return True
-
-        # rage 스킬 완료 처리
-        if state == 'rageSkill':
-            self._end_attack(player_ref, is_player1)
             return True
 
         # 연계 공격 처리

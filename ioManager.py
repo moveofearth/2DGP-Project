@@ -189,9 +189,6 @@ class IOManager:
                 if event.key == pico2d.SDLK_KP_3:
                     self.player2_keys['three'] = False
 
-        # rage 스킬 체크 (가장 우선순위)
-        if self.player2_keys['three']:
-            return 'rageSkill'
 
         # 공격키 조합 확인
         if self.player2_keys['ctrl']:
