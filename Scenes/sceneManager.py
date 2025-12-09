@@ -49,6 +49,23 @@ class SceneManager:
         self.transition_from = from_scene
         self.transition_to = to_scene
         self.transition_offset = 0.0
+
+        # 이전 씬의 음악 정지
+        if from_scene == 'title' and hasattr(self.title_scene, 'bgm') and self.title_scene.bgm:
+            self.title_scene.bgm.stop()
+        elif from_scene == 'character_select' and hasattr(self.character_select_scene, 'bgm') and self.character_select_scene.bgm:
+            self.character_select_scene.bgm.stop()
+        elif from_scene == 'play' and hasattr(self.play_scene, 'bgm') and self.play_scene.bgm:
+            self.play_scene.bgm.stop()
+
+        # 새 씬의 음악 재생
+        if to_scene == 'title' and hasattr(self.title_scene, 'bgm') and self.title_scene.bgm:
+            self.title_scene.bgm.repeat_play()
+        elif to_scene == 'character_select' and hasattr(self.character_select_scene, 'bgm') and self.character_select_scene.bgm:
+            self.character_select_scene.bgm.repeat_play()
+        elif to_scene == 'play' and hasattr(self.play_scene, 'bgm') and self.play_scene.bgm:
+            self.play_scene.bgm.repeat_play()
+
         # 씬을 즉시 전환 (로직은 새 씬에서 동작하도록)
         self.current_scene = to_scene
 

@@ -212,6 +212,7 @@ class SpriteManager:
 
     def _end_attack(self, player_ref, is_player1):
         """공격 종료 처리"""
+
         player_ref.is_attacking = False
         player_ref.state = 'Idle'
         player_ref.can_combo = False

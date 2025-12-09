@@ -6,6 +6,7 @@ class TitleScene:
     def __init__(self):
         self.image = None
         self.font = None
+        self.bgm = None
     def initialize(self):
         path = pathlib.Path.cwd() / 'Resources' / 'Scene' / 'title.png'
         self.image = pico2d.load_image(str(path))

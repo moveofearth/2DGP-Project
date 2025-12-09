@@ -44,6 +44,9 @@ class CharacterSelectScene:
             'thief': 50  # thief를 위로 50픽셀 이동
         }
 
+        # 배경음악
+        self.bgm = None
+
     def initialize(self):
         """캐릭터 선택 스프라이트 로드"""
         # 배경 이미지 로드
@@ -55,6 +58,12 @@ class CharacterSelectScene:
         font_path = pathlib.Path.cwd() / 'ENCR10B.TTF'
         if font_path.exists():
             self.font = pico2d.load_font(str(font_path), 40)
+
+        # 배경음악 로드 (씬 전환 시 재생됨)
+        bgm_path = pathlib.Path.cwd() / 'Resources' / 'Sound' / 'SelectMusic.mp3'
+        if bgm_path.exists():
+            self.bgm = pico2d.load_music(str(bgm_path))
+            self.bgm.set_volume(8)
 
         for char in self.characters:
             self.character_sprites[char] = []

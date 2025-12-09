@@ -71,6 +71,11 @@ class Game:
 
                 # Player1의 공격 범위에 Player2가 있는지 확인
                 if self.playerLeft.is_in_attack_range(self.playerRight):
+                    # 타격음(swoosh)은 공격 범위에 들어왔을 때 항상 재생
+                    if not self.playerLeft.attack_sound_played and hasattr(self.playerLeft, 'swoosh_sound') and self.playerLeft.swoosh_sound:
+                        self.playerLeft.swoosh_sound.play()
+                        self.playerLeft.attack_sound_played = True
+
                     # 공중 상태(airborne)일 때는 가드 불가 - 무조건 히트
                     if target_is_airborne:
                         # 공중에서는 가드 불가 - 데미지 적용
@@ -132,6 +137,11 @@ class Game:
 
                 # Player2의 공격 범위에 Player1이 있는지 확인
                 if self.playerRight.is_in_attack_range(self.playerLeft):
+                    # 타격음(swoosh)은 공격 범위에 들어왔을 때 항상 재생
+                    if not self.playerRight.attack_sound_played and hasattr(self.playerRight, 'swoosh_sound') and self.playerRight.swoosh_sound:
+                        self.playerRight.swoosh_sound.play()
+                        self.playerRight.attack_sound_played = True
+
                     # 공중 상태(airborne)일 때는 가드 불가 - 무조건 히트
                     if target_is_airborne:
                         # 공중에서는 가드 불가 - 데미지 적용

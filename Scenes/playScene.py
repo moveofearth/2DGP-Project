@@ -11,6 +11,7 @@ class PlayScene:
         self.font = None  # 카운트다운용 폰트
         self.small_font = None  # 작은 폰트 (게임 오버 메시지용)
         self.round_over_sound = None  # 라운드 종료 사운드
+        self.bgm = None  # 배경음악
 
         # 3판 2선승제 시스템
         self.player1_rounds_won = 0  # Player1 승리 라운드 수
@@ -51,6 +52,12 @@ class PlayScene:
         if round_over_sound_path.exists():
             self.round_over_sound = pico2d.load_wav(str(round_over_sound_path))
             self.round_over_sound.set_volume(10)
+
+        # 배경음악 로드 (씬 전환 시 재생됨)
+        bgm_path = pathlib.Path.cwd() / 'Resources' / 'Sound' / 'playSceneMusic.mp3'
+        if bgm_path.exists():
+            self.bgm = pico2d.load_music(str(bgm_path))
+            self.bgm.set_volume(8)
 
         # 3판 2선승제 초기화
         self.reset_game()

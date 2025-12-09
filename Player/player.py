@@ -73,6 +73,8 @@ class Player:
 
         # 사운드 초기화
         self.hit_sound = None
+        self.swoosh_sound = None
+        self.attack_sound_played = False  # 공격 사운드 재생 여부 플래그
 
     def get_character_type(self):
         """현재 캐릭터 타입 반환"""
@@ -117,7 +119,13 @@ class Player:
         if self.hit_sound is None:
             hit_sound_path = pathlib.Path.cwd() / 'Resources' / 'Sound' / 'hit.wav'
             self.hit_sound = pico2d.load_wav(str(hit_sound_path))
-            self.hit_sound.set_volume(8)
+            self.hit_sound.set_volume(32)
+
+        # 공격 사운드 로드
+        if self.swoosh_sound is None:
+            swoosh_sound_path = pathlib.Path.cwd() / 'Resources' / 'Sound' / 'swoosh.wav'
+            self.swoosh_sound = pico2d.load_wav(str(swoosh_sound_path))
+            self.swoosh_sound.set_volume(32)
 
     def change_character(self, character_type):
         """캐릭터 변경"""
@@ -384,6 +392,7 @@ class Player:
     def reset_attack_hit_flag(self):
         """새로운 공격 시작 시 타격 플래그 리셋"""
         self.attack_hit_processed = False
+        self.attack_sound_played = False
 
     def can_hit_target(self):
         """타격 처리 가능 여부 확인 (한 공격당 한 번만)"""
