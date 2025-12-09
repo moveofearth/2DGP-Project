@@ -667,22 +667,23 @@ class SpriteManager:
                                                             sprite_list[frame].w * self.scale_factor,
                                                             sprite_list[frame].h * self.scale_factor)
 
-            # 공격 범위 바운딩 박스 디버그 렌더링 (공격 중일 때만)
-            try:
-                if self.player1_ref and getattr(self.player1_ref, 'is_attacking', False):
-                    atk_bb = None
-                    if hasattr(self.player1_ref, 'get_attack_range_bb'):
-                        atk_bb = self.player1_ref.get_attack_range_bb()
-                    if atk_bb:
-                        pico2d.draw_rectangle(*atk_bb)
+            # 공격 범위 바운딩 박스 디버그 렌더링 (F1 키로 토글, 공격 중일 때만)
+            if config.SHOW_BOUNDING_BOX:
+                try:
+                    if self.player1_ref and getattr(self.player1_ref, 'is_attacking', False):
+                        atk_bb = None
+                        if hasattr(self.player1_ref, 'get_attack_range_bb'):
+                            atk_bb = self.player1_ref.get_attack_range_bb()
+                        if atk_bb:
+                            pico2d.draw_rectangle(*atk_bb)
 
-                if self.player2_ref and getattr(self.player2_ref, 'is_attacking', False):
-                    atk_bb = None
-                    if hasattr(self.player2_ref, 'get_attack_range_bb'):
-                        atk_bb = self.player2_ref.get_attack_range_bb()
-                    if atk_bb:
-                        pico2d.draw_rectangle(*atk_bb)
-            except Exception as e:
-                print(f"Warning: Attack BB rendering failed: {e}")
+                    if self.player2_ref and getattr(self.player2_ref, 'is_attacking', False):
+                        atk_bb = None
+                        if hasattr(self.player2_ref, 'get_attack_range_bb'):
+                            atk_bb = self.player2_ref.get_attack_range_bb()
+                        if atk_bb:
+                            pico2d.draw_rectangle(*atk_bb)
+                except Exception as e:
+                    print(f"Warning: Attack BB rendering failed: {e}")
         except Exception as e:
             print(f"Warning: Sprite rendering failed: {e}")

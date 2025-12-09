@@ -270,3 +270,12 @@ class IOManager:
                 if event.key == pico2d.SDLK_ESCAPE:
                     return True
         return False
+
+    def checkF1Toggle(self, events):
+        """F1 키로 바운딩 박스 토글"""
+        for event in events:
+            if event.type == pico2d.SDL_KEYDOWN:
+                if event.key == pico2d.SDLK_F1:
+                    return True
+        return False
+

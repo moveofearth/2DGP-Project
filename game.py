@@ -192,6 +192,11 @@ class Game:
 
         events = pico2d.get_events()
 
+        # F1 키로 바운딩 박스 토글
+        if self.ioManager.checkF1Toggle(events):
+            config.SHOW_BOUNDING_BOX = not config.SHOW_BOUNDING_BOX
+            print(f"[DEBUG] Bounding Box Display: {'ON' if config.SHOW_BOUNDING_BOX else 'OFF'}")
+
         # ESC 키로 종료 처리
         if self.ioManager.checkEscape(events):
             self.running = False

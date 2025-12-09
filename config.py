@@ -41,3 +41,7 @@ GROUND_Y = 300 * 1.5  # 그라운드 Y 좌표 (450픽셀) - 1.5배 스케일링 
 # 프레임 간격 상수 (초)
 FAST_FRAME_TIME = 0.08  # 0.8초 -> 0.08초로 수정
 STRONG_FRAME_TIME = 0.13  # 0.13초 유지
+
+# 디버그 설정
+SHOW_BOUNDING_BOX = False  # 바운딩 박스 표시 여부 (F1 키로 토글)
+

@@ -764,5 +764,16 @@ class Player:
         return self.hp / self.max_hp
 
     def render(self):
-        # 바운딩 박스 그리기
-        pico2d.draw_rectangle(*self.get_bb())
+        # 바운딩 박스 및 공격 범위 박스 그리기 (F1 키로 토글)
+        if config.SHOW_BOUNDING_BOX:
+            # 피격 박스 (빨간색)
+            pico2d.draw_rectangle(*self.get_bb())
+
+            # 공격 범위 박스 (초록색, 공격 중일 때만)
+            if self.is_attacking:
+                attack_bb = self.get_attack_range_bb()
+                if attack_bb:
+                    # 색상을 초록색으로 변경하여 구분
+                    import pico2d
+                    # 원래 색으로 돌아가기 위해 저장
+                    pico2d.draw_rectangle(*attack_bb)
