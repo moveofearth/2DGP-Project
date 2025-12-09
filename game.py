@@ -313,11 +313,11 @@ class Game:
 
         # 라운드 종료 시 처리
         if play_scene.is_round_over() and not play_scene.is_game_over():
-            # 라운드 종료 후 1초 대기 후 다음 라운드 시작
+            # 라운드 종료 후 1.5초 대기 후 다음 라운드 시작
             self.round_end_timer += deltaTime
 
-            # 1초 대기 후 다음 라운드 시작
-            if self.round_end_timer >= 1.0:
+            # 1.5초 대기 후 다음 라운드 시작
+            if self.round_end_timer >= 1.8:
                 self.reset_round()
                 self.round_end_timer = 0.0
 

@@ -2,6 +2,7 @@ from Character.character import Character
 import pico2d
 import config
 from handle_collision import CollisionHandler
+import pathlib
 
 
 class Player:
@@ -70,6 +71,9 @@ class Player:
         self.guard_counter_timer = 0.0
         self.can_attack_after_guard = False
 
+        # 사운드 초기화
+        self.hit_sound = None
+
     def get_character_type(self):
         """현재 캐릭터 타입 반환"""
         return self.character.get_character_type()
@@ -108,6 +112,12 @@ class Player:
         self.character.hp = self.hp
         self.y = config.GROUND_Y
         self.is_grounded = True
+
+        # 피격 사운드 로드
+        if self.hit_sound is None:
+            hit_sound_path = pathlib.Path.cwd() / 'Resources' / 'Sound' / 'hit.wav'
+            self.hit_sound = pico2d.load_wav(str(hit_sound_path))
+            self.hit_sound.set_volume(8)
 
     def change_character(self, character_type):
         """캐릭터 변경"""
@@ -434,6 +444,10 @@ class Player:
         self.hp = self.character.hp
         self.is_hit = self.character.is_hit
         self.state = 'hit'  # Player 상태도 hit로 설정
+
+        # 피격 사운드 재생
+        if self.hit_sound:
+            self.hit_sound.play()
 
         # 포물선 처리: Lower 계열 공격 또는 공중에서 추가 히트
         should_launch = ('lower' in attack_state.lower()) or was_airborne

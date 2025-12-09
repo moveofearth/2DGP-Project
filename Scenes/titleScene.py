@@ -10,6 +10,10 @@ class TitleScene:
         path = pathlib.Path.cwd() / 'Resources' / 'Scene' / 'title.png'
         self.image = pico2d.load_image(str(path))
         self.font = pico2d.load_font('ENCR10B.TTF', 48)
+        self.bgm = pico2d.load_music(str(pathlib.Path.cwd() / 'Resources' / 'Sound' / 'titleMusic.mp3'))
+        self.bgm.set_volume(8)
+        self.bgm.repeat_play()
+
     def update(self, deltaTime):
         pass
     def render(self):

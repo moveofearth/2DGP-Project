@@ -10,6 +10,7 @@ class PlayScene:
         self.win_count = None  # 승리 카운트 표시
         self.font = None  # 카운트다운용 폰트
         self.small_font = None  # 작은 폰트 (게임 오버 메시지용)
+        self.round_over_sound = None  # 라운드 종료 사운드
 
         # 3판 2선승제 시스템
         self.player1_rounds_won = 0  # Player1 승리 라운드 수
@@ -45,6 +46,12 @@ class PlayScene:
             self.font = pico2d.load_font(str(font_path), 120)
             self.small_font = pico2d.load_font(str(font_path), 50)
 
+        # 라운드 종료 사운드 로드
+        round_over_sound_path = pathlib.Path.cwd() / 'Resources' / 'Sound' / 'roundOver.wav'
+        if round_over_sound_path.exists():
+            self.round_over_sound = pico2d.load_wav(str(round_over_sound_path))
+            self.round_over_sound.set_volume(10)
+
         # 3판 2선승제 초기화
         self.reset_game()
 
@@ -77,11 +84,17 @@ class PlayScene:
         if player1_hp <= 0:
             self.player2_rounds_won += 1
             self.round_over = True
+            # 라운드 종료 사운드 재생
+            if self.round_over_sound:
+                self.round_over_sound.play()
             print(f"Player2 wins round! Score: P1({self.player1_rounds_won}) - P2({self.player2_rounds_won})")
             self.check_game_end()
         elif player2_hp <= 0:
             self.player1_rounds_won += 1
             self.round_over = True
+            # 라운드 종료 사운드 재생
+            if self.round_over_sound:
+                self.round_over_sound.play()
             print(f"Player1 wins round! Score: P1({self.player1_rounds_won}) - P2({self.player2_rounds_won})")
             self.check_game_end()
 
