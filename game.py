@@ -115,23 +115,26 @@ class Game:
             attacker_state = (self.playerRight.state or '').lower()
             target = self.playerLeft
             target_hit_type = getattr(target.character, 'hit_type', None) if hasattr(target, 'character') else None
-            target_is_down = (target_hit_type == 'down')
+            target_is_down = (target_hit_type == 'down') and target.is_grounded
             target_is_airborne = (target_hit_type == 'airborne') and not target.is_grounded
             target_is_hit = target.is_in_hit_state()
+
+            # Lower 공격인지 확인
+            is_lower_attack = 'lower' in attacker_state
 
             # 충돌 조건을 더 유연하게 수정
             # 1. 일반적으로 피격 상태가 아니면 히트 가능
             # 2. Lower 계열 공격은 down 상태에도 히트 가능
             # 3. 공중(airborne) 상태는 항상 히트 가능 (에어 콤보)
-            allow_hit_on_down = ('lower' in attacker_state) and target_is_down
+            allow_hit_on_down = is_lower_attack and target_is_down
             allow_hit_on_airborne = target_is_airborne
 
             # 히트 판정: 피격 상태가 아니거나 특수 조건 만족 시
             can_hit = (not target_is_hit) or allow_hit_on_down or allow_hit_on_airborne
 
             # 디버그: down 상태 충돌 판정 로그
-            if target_is_down and 'lower' in attacker_state:
-                print(f"[DEBUG] Player2 Lower attack on DOWN Player1: can_hit={can_hit}, target_is_down={target_is_down}, target_hit_type={target_hit_type}")
+            if is_lower_attack:
+                print(f"[DEBUG] Player2 Lower attack: target_is_down={target_is_down}, target_is_hit={target_is_hit}, target_hit_type={target_hit_type}, can_hit={can_hit}, target_grounded={target.is_grounded}")
 
             if can_hit:
 

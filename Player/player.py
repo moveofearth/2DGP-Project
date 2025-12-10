@@ -355,7 +355,8 @@ class Player:
 
         if is_lower_attack:
             # Lower 공격은 바닥 근처까지 범위 확장
-            range_y1 = config.GROUND_Y - 60  # 바닥 근처까지
+            # down 상태의 바운딩 박스를 확실히 커버하도록 범위 확대
+            range_y1 = config.GROUND_Y - 100  # 더 넓은 범위로 확장 (60 -> 100)
             range_y2 = my_bb[3]
         else:
             # 일반 공격은 바운딩 박스와 동일
