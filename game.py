@@ -619,10 +619,15 @@ class Game:
         self.spriteManager.frame_timer = 0.0
         self.spriteManager.player2_frame_timer = 0.0
 
+        # 플레이 씬 배경음악 정지
+        self.sceneManager.play_scene.stop_music()
+
         # 타이틀 씬으로 전환
         self.sceneManager.current_scene = 'title'
 
+        # 타이틀 음악 재생
+        self.sceneManager.title_scene.play_music()
+
         print("Game reset! Returning to title screen...")
 
-        print("Returning to title screen...")
 

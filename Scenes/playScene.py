@@ -62,6 +62,11 @@ class PlayScene:
         # 3판 2선승제 초기화
         self.reset_game()
 
+    def stop_music(self):
+        """배경음악 정지"""
+        if self.bgm:
+            self.bgm.stop()
+
     def reset_game(self):
         """전체 게임 초기화"""
         self.player1_rounds_won = 0
