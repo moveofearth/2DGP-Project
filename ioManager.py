@@ -3,7 +3,7 @@ import pico2d
 class IOManager:
     def __init__(self):
         self.player1_keys = {'w': False, 's': False, 'a': False, 'd': False, 'f': False, 'g': False, 'h': False}
-        self.player2_keys = {'up': False, 'down': False, 'left': False, 'right': False, 'ctrl': False, 'shift': False, 'three': False}
+        self.player2_keys = {'up': False, 'down': False, 'left': False, 'right': False, 'slash': False, 'shift': False, 'three': False}
         # 연계 공격을 위한 입력 버퍼
         self.player1_combo_input = False
         self.player2_combo_input = False
@@ -171,9 +171,9 @@ class IOManager:
         # 공격 키 이벤트 처리
         for event in events:
             if event.type == pico2d.SDL_KEYDOWN:
-                if event.key == pico2d.SDLK_RCTRL or event.key == pico2d.SDLK_LCTRL:
-                    self.player2_keys['ctrl'] = True
-                    # Ctrl키로 모든 연계 공격 처리 (thief의 fastMiddleATK와 strongMiddleATK 연계)
+                if event.key == pico2d.SDLK_SLASH:
+                    self.player2_keys['slash'] = True
+                    # /키로 모든 연계 공격 처리 (thief의 fastMiddleATK와 strongMiddleATK 연계)
                     self.player2_combo_input = True
                 if event.key == pico2d.SDLK_RSHIFT or event.key == pico2d.SDLK_LSHIFT:
                     self.player2_keys['shift'] = True
@@ -182,8 +182,8 @@ class IOManager:
                 if event.key == pico2d.SDLK_KP_3:
                     self.player2_keys['three'] = True
             elif event.type == pico2d.SDL_KEYUP:
-                if event.key == pico2d.SDLK_RCTRL or event.key == pico2d.SDLK_LCTRL:
-                    self.player2_keys['ctrl'] = False
+                if event.key == pico2d.SDLK_SLASH:
+                    self.player2_keys['slash'] = False
                 if event.key == pico2d.SDLK_RSHIFT or event.key == pico2d.SDLK_LSHIFT:
                     self.player2_keys['shift'] = False
                 if event.key == pico2d.SDLK_KP_3:
@@ -191,7 +191,7 @@ class IOManager:
 
 
         # 공격키 조합 확인
-        if self.player2_keys['ctrl']:
+        if self.player2_keys['slash']:
             # up/down키와 조합 확인
             if self.player2_keys['up']:
                 return 'fastUpperATK'
@@ -220,8 +220,8 @@ class IOManager:
         # 현재 공격 상태에 따라 필요한 키 조합 체크
         # 중단 공격 연계: 위/아래 키 없이 같은 공격 키
         if current_state == 'fastMiddleATK' or current_state == 'fastMiddleATK2':
-            # Ctrl키만 눌려있고 UP/DOWN은 안눌려있어야 함
-            if self.player2_keys['ctrl'] and not self.player2_keys['up'] and not self.player2_keys['down']:
+            # /키만 눌려있고 UP/DOWN은 안눌려있어야 함
+            if self.player2_keys['slash'] and not self.player2_keys['up'] and not self.player2_keys['down']:
                 return 'fastMiddleATK_combo'
         elif current_state == 'strongMiddleATK':
             # Shift키만 눌려있고 UP/DOWN은 안눌려있어야 함

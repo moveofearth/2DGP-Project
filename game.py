@@ -413,11 +413,11 @@ class Game:
         else:
             keys = self.ioManager.player1_keys
 
-        # 우선순위: fast(1/one), strong(2/two)
+        # 우선순위: fast(slash for P2, f for P1), strong(shift for P2, g for P1)
         candidate_attack = None
 
         # fast / strong 분기
-        if (is_player2 and keys.get('one')) or (not is_player2 and keys.get('f')):
+        if (is_player2 and keys.get('slash')) or (not is_player2 and keys.get('f')):
             # up/down 조합 확인
             if (is_player2 and keys.get('up')) or (not is_player2 and keys.get('w')):
                 candidate_attack = 'fastUpperATK'
@@ -425,7 +425,7 @@ class Game:
                 candidate_attack = 'fastLowerATK'
             else:
                 candidate_attack = 'fastMiddleATK'
-        elif (is_player2 and keys.get('two')) or (not is_player2 and keys.get('g')):
+        elif (is_player2 and keys.get('shift')) or (not is_player2 and keys.get('g')):
             if (is_player2 and keys.get('up')) or (not is_player2 and keys.get('w')):
                 candidate_attack = 'strongUpperATK'
             elif (is_player2 and keys.get('down')) or (not is_player2 and keys.get('s')):
@@ -549,6 +549,18 @@ class Game:
         self.playerRight.character.x = self.playerRight.x
         self.playerRight.character.y = self.playerRight.y
 
+        # spriteManager 상태 동기화
+        self.spriteManager.player1_state = 'Idle'
+        self.spriteManager.player2_state = 'Idle'
+        self.spriteManager.player1_frame = 0
+        self.spriteManager.player2_frame = 0
+        self.spriteManager.frame_timer = 0.0
+        self.spriteManager.player2_frame_timer = 0.0
+        self.spriteManager.update_player1_position(self.playerLeft.x, self.playerLeft.y)
+        self.spriteManager.update_player2_position(self.playerRight.x, self.playerRight.y)
+        self.spriteManager.update_player1_direction(self.playerLeft.dir)
+        self.spriteManager.update_player2_direction(self.playerRight.dir)
+
         # 플레이씬의 라운드 리셋
         self.sceneManager.play_scene.reset_round()
 
@@ -596,8 +608,18 @@ class Game:
         self.playerLeft.character.is_hit = False
         self.playerRight.character.is_hit = False
 
+        # spriteManager 상태 리셋
+        self.spriteManager.player1_state = 'Idle'
+        self.spriteManager.player2_state = 'Idle'
+        self.spriteManager.player1_frame = 0
+        self.spriteManager.player2_frame = 0
+        self.spriteManager.frame_timer = 0.0
+        self.spriteManager.player2_frame_timer = 0.0
+
         # 타이틀 씬으로 전환
         self.sceneManager.current_scene = 'title'
+
+        print("Game reset! Returning to title screen...")
 
         print("Returning to title screen...")
 
